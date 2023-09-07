@@ -1,0 +1,13 @@
+/tmp/airflow_provider_weaviate-1.0.0-py3-none-any.whl
+apache-airflow-providers-github==2.3.1
+apache-airflow-providers-slack==7.3.2
+weaviate-client==3.22.0
+streamlit==1.25.0
+html2text
+pypandoc==1.11
+langchain==0.0.240
+markdownify
+stackapi==0.2.0
+protobuf==3.20.1
+google-cloud-firestore
+openai
