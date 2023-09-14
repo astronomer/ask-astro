@@ -22,6 +22,7 @@
   let loading = true;
   // TODO: stronger typing
   let sortedMessages: any[] = [];
+  let title = "Ask Astro";
 
   $: {
     loading = $page.data.status === "in_progress";
@@ -38,7 +39,19 @@
         return 0;
       }) || [];
   }
+
+  $: {
+    title = `Ask Astro - ${$page.data.prompt.slice(0, 20)}${
+      $page.data.prompt.length > 20 ? "..." : ""
+    }`;
+  }
 </script>
+
+<svelte:head>
+  <title>
+    {title}
+  </title>
+</svelte:head>
 
 <div class="flex gap-4 flex-col">
   <div class="text-white text-xl font-bold">Thread</div>
