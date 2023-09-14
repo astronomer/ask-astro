@@ -41,8 +41,8 @@
   }
 
   $: {
-    title = `Ask Astro - ${$page.data.prompt.slice(0, 20)}${
-      $page.data.prompt.length > 20 ? "..." : ""
+    title = `Ask Astro - ${$page.data.prompt.slice(0, 40)}${
+      $page.data.prompt.length > 40 ? "..." : ""
     }`;
   }
 </script>
