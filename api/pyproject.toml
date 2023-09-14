@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "ask-astro"
+version = "0.1.0"
+description = ""
+authors = ["Philippe Gagnon <12717218+pgagnon@users.noreply.github.com>"]
+readme = "README.md"
+packages = [{include = "ask_astro"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+typing-extensions = "*"
+pydash = "*"
+aiohttp = {version = "*", extras=["speedups"]}
+sanic = {extras = ["ext"], version = "^23.6.0"}
+slack_bolt = "*"
+langchain = "*"
+openai = "*"
+faiss-cpu = "*"
+firebase-admin = "*"
+jinja2 = "*"
+zenpy = "*"
+asyncstdlib = "*"
+aiostream = "*"
+tiktoken = "*"
+aiofiles = "^23.2.1"
+weaviate-client = "*"
+pydantic = "^2.3.0"
+gunicorn = "^21.2.0"
+uvicorn = "^0.23.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
