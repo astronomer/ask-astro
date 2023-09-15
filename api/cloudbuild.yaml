@@ -1,6 +1,7 @@
 steps:
   - name: gcr.io/kaniko-project/executor
     args:
+      - --dockerfile=/api/Dockerfile
       - --destination=$_AR_HOSTNAME/$PROJECT_ID/cloud-run-source-deploy/$REPO_NAME/$_SERVICE_NAME:$COMMIT_SHA
       - --cache=true
       - --cache-ttl=8h
