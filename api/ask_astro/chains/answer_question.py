@@ -13,7 +13,7 @@ from langchain.prompts import (
 )
 from langchain.retrievers import MultiQueryRetriever
 
-with open("../templates/combine_docs_chat_prompt.txt", "r") as system_prompt_fd:
+with open("ask_astro/templates/combine_docs_chat_prompt.txt", "r") as system_prompt_fd:
     messages = [
         SystemMessagePromptTemplate.from_template(system_prompt_fd.read()),
         MessagesPlaceholder(variable_name="messages"),

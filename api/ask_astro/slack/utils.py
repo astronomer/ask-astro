@@ -23,6 +23,6 @@ def markdown_to_slack(message: str):
 
 def get_blocks(block: str, **kwargs):
     env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader("../templates"), autoescape=True
+        loader=jinja2.FileSystemLoader("ask_astro/templates"), autoescape=True
     )
     return json.loads(env.get_template(block).render(kwargs))["blocks"]
