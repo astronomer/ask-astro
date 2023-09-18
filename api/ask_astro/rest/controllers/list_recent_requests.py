@@ -36,7 +36,7 @@ async def on_list_recent_requests(_: Request):
         firestore_client.collection(FirestoreCollections.requests)
         .order_by("sent_at", direction="DESCENDING")
         .where("status", "==", "complete")
-        .where("score", "==", 1)
+        .where("is_example", "==", True)
         .limit(12)
         .get()
     )
