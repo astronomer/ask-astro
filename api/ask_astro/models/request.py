@@ -47,6 +47,14 @@ class AskAstroRequest(BaseModel):
         default_factory=lambda: int(datetime.now().timestamp()),
         description="The timestamp of the request",
     )
+    is_processed: bool = Field(
+        False,
+        description="Whether the request has been processed",
+    )
+    is_example: bool = Field(
+        False,
+        description="Whether the request is an example",
+    )
 
     def to_firestore(self) -> dict[str, Any]:
         """
@@ -69,6 +77,8 @@ class AskAstroRequest(BaseModel):
             "score": self.score,
             "sent_at": self.sent_at,
             "response_received_at": self.response_received_at,
+            "is_processed": self.is_processed,
+            "is_example": self.is_example,
         }
 
     @classmethod
@@ -93,4 +103,6 @@ class AskAstroRequest(BaseModel):
             score=dict["score"],
             sent_at=dict["sent_at"],
             response_received_at=dict.get("response_received_at"),
+            is_processed=dict.get("is_processed", False),
+            is_example=dict.get("is_example", False),
         )
