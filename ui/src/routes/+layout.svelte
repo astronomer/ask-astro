@@ -13,6 +13,14 @@
   let prompt = "";
 </script>
 
+<svelte:head>
+  <script
+    defer
+    src="https://static.cloudflareinsights.com/beacon.min.js"
+    data-cf-beacon={'{"token": "7a1f1bf468574e8a8f4b6e21cd94db42"}'}
+  ></script>
+</svelte:head>
+
 <ShootingStars />
 
 <div class="app">
