@@ -139,5 +139,11 @@
     font-size: 1.5rem;
     font-style: normal;
     font-weight: 400;
+
+    @media (max-width: 640px) {
+      font-size: 1rem;
+      padding-left: 1rem;
+      height: 3rem;
+    }
   }
 </style>

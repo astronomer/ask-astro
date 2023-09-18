@@ -6,8 +6,8 @@
   let exitY = Math.random() * 100;
 
   // enterX and exitX are either 100,0 or 0,100 - decide with 50/50 chance
-  let enterX = Math.random() > 0.5 ? 100 : 0;
-  let exitX = enterX === 100 ? 0 : 100;
+  let enterX = Math.random() > 0.5 ? 98 : 2;
+  let exitX = enterX === 98 ? 2 : 98;
 </script>
 
 <div
@@ -26,9 +26,10 @@
     position: absolute;
     width: 4px;
     height: 4px;
-    background: white;
+    background: #4c5ad4;
     border-radius: 50%;
-    animation: shooting-star var(--animation-duration) ease-in-out infinite;
+    animation: shooting-star var(--animation-duration)
+      cubic-bezier(0.4, 0, 1, 0.25);
     z-index: -1;
     top: 0;
     left: 0;
