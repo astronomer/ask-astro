@@ -2,11 +2,10 @@
   import "../app.postcss";
   import "./styles.css";
 
-  import { Input } from "$lib/components/ui/input";
-  import { Button } from "$lib/components/ui/button";
   import ShootingStars from "$lib/components/custom/ShootingStars.svelte";
   import { applyAction, enhance } from "$app/forms";
   import { page } from "$app/stores";
+  import StarsIcon from "$lib/components/custom/StarsIcon.svelte";
 
   let isSubmittingPrompt = false;
   let includeCurrentRequest = true;
@@ -25,10 +24,15 @@
 
 <div class="app">
   <main>
-    <section class="pb-8 pt-4">
-      <h1 class="mb-4">
-        <a href="/" class="text-white">Welcome to Ask Astro</a>
-      </h1>
+    <section class="pb-8 pt-12">
+      <div class="flex gap-2 items-center mb-12">
+        <div class="flex-auto" />
+        <StarsIcon />
+        <h1 class="text-white">
+          <a href="/" class="no-underline">Ask Astro</a>
+        </h1>
+        <div class="flex-auto" />
+      </div>
       <form
         method="post"
         action="/?/submitPrompt"
@@ -45,9 +49,10 @@
         }}
       >
         <div class="flex w-full gap-2">
-          <Input
+          <input
             placeholder="Ask an Airflow or Astronomer question..."
             name="prompt"
+            class="search-input flex-auto"
             bind:value={prompt}
           />
           {#if includeCurrentRequest}
@@ -57,7 +62,6 @@
               value={$page.params.request_id}
             />
           {/if}
-          <Button type="submit" disabled={isSubmittingPrompt}>Ask</Button>
         </div>
 
         {#if $page.params.request_id}
@@ -113,5 +117,27 @@
   footer a {
     color: #fff;
     text-decoration: underline;
+  }
+
+  .search-input {
+    box-sizing: border-box;
+    padding-left: 2rem;
+
+    border-radius: 30px;
+    border: 2px solid #604785;
+    background: linear-gradient(
+      116deg,
+      rgba(135, 101, 161, 0.2) 34.6%,
+      rgba(108, 70, 138, 0.2) 71.11%
+    );
+    backdrop-filter: blur(4px);
+
+    height: 4rem;
+
+    color: #c8b6d7;
+    font-family: Inter;
+    font-size: 1.5rem;
+    font-style: normal;
+    font-weight: 400;
   }
 </style>

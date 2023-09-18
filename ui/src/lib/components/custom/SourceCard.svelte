@@ -11,7 +11,7 @@
   let expanded = false;
 </script>
 
-<Card.Root class="p-2">
+<Card.Root class="p-2 astro-card-root">
   <Card.Content class="p-2">
     <Card.Title class="flex items-center">
       <Link2 class="w-4 h-4 mr-1 flex-shrink-0" />

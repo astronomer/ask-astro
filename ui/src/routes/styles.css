@@ -1,14 +1,10 @@
-@import "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap";
-
 @font-face {
-  font-family: "Aeonik Pro";
-  font-style: normal;
-  font-weight: 400;
-  src: url("https://www.astronomer.io/fonts/AeonikPro/variable/AeonikPro-VF.woff2");
+  font-family: Inter;
+  src: url("/fonts/Inter-VariableFont_slnt,wght.ttf") format("truetype");
 }
 
 :root {
-  --font-heading: "Aeonik Pro", sans-serif;
+  --font-heading: "Inter", sans-serif;
   --font-body: "Inter", sans-serif;
   --color-bg-0: rgb(202, 216, 228);
   --color-bg-1: hsl(209, 36%, 86%);
@@ -25,11 +21,14 @@
 body {
   min-height: 100vh;
   margin: 0;
-  background-attachment: fixed;
-  background-color: rgb(47, 44, 65);
-  background-size: 512px 320px;
-  background-image: url("/starsBackground.png");
-  background-repeat: repeat;
+  background-color: #110f23;
+  background-size: 1326px 1021px, 1707px 580px;
+  background-image: url("/cornerGraphic.svg"), url("/starsBackground.svg");
+  background-repeat: no-repeat, repeat, no-repeat;
+  background-position: 0 0, 0 0, 0 0;
+}
+
+.bg-image {
 }
 
 h1,
@@ -49,8 +48,7 @@ p {
 }
 
 a {
-  color: var(--color-theme-1);
-  text-decoration: none;
+  text-decoration: underline;
 }
 
 a:hover {
@@ -112,4 +110,59 @@ button:focus:not(:focus-visible) {
   position: absolute;
   width: 1px;
   white-space: nowrap;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  transition: background-color 0s 600000s, color 0s 600000s;
+}
+
+.card-root {
+  color: white;
+}
+
+.astro-card-root {
+  border-radius: 30px;
+  border: 2px solid #604785;
+  background: linear-gradient(
+    116deg,
+    rgba(135, 101, 161, 0.2) 34.6%,
+    rgba(108, 70, 138, 0.2) 71.11%
+  );
+  backdrop-filter: blur(4px);
+
+  color: #edd7ff;
+  font-family: Inter;
+  font-weight: 200;
+}
+
+.human-card-root {
+  border-radius: 30px;
+  border: 2px solid #716f6b;
+  background: linear-gradient(
+    116deg,
+    rgba(163, 163, 163, 0.2) 34.6%,
+    rgba(75, 75, 75, 0.2) 71.11%
+  );
+  backdrop-filter: blur(4px);
+}
+
+.home-card {
+  cursor: pointer;
+}
+.home-card:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.rendered-md {
+  font-weight: 200;
+}
+
+.rendered-md p {
+  margin-bottom: 1rem;
+  font-weight: 200;
+}
+
+.rendered-md p:last-child {
+  margin-bottom: 0;
 }
