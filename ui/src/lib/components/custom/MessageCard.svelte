@@ -2,11 +2,10 @@
   import * as Card from "$lib/components/ui/card";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import SvelteMarkdown from "svelte-markdown";
-  import { Person, Laptop, Check, Cross2 } from "radix-icons-svelte";
+  import { Person, Check, Cross2 } from "radix-icons-svelte";
   import * as HoverCard from "$lib/components/ui/hover-card";
   import Button from "../ui/button/button.svelte";
   import { enhance } from "$app/forms";
-  import { fade } from "svelte/transition";
   import { onMount } from "svelte";
   import StarsIcon from "./StarsIcon.svelte";
 
@@ -76,7 +75,7 @@
           <Skeleton class="w-full h-4" />
         </div>
       {:else}
-        <div class="rendered-md mb-4">
+        <div class="rendered-md">
           <SvelteMarkdown source={translatedContent} />
         </div>
       {/if}
@@ -85,7 +84,7 @@
     {#if showFeedback && requestUuid && hasReacted !== undefined}
       <Card.Footer>
         {#if hasReacted === false}
-          <div class="flex gap-2 items-center w-full" in:fade>
+          <div class="flex gap-2 items-center w-full mt-4">
             <div class="flex-auto" />
             <p class="mr-4">Is this correct?</p>
             <form
@@ -122,7 +121,7 @@
             </form>
           </div>
         {:else}
-          <div class="flex mt-4" transition:fade>
+          <div class="flex mt-4">
             <div class="flex-auto" />
             <p>Thanks for the feedback!</p>
           </div>

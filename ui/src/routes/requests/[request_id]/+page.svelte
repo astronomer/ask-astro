@@ -41,9 +41,11 @@
   }
 
   $: {
-    title = `Ask Astro - ${$page.data.prompt.slice(0, 40)}${
-      $page.data.prompt.length > 40 ? "..." : ""
-    }`;
+    if ($page.data.prompt) {
+      title = `Ask Astro - ${$page.data.prompt.slice(0, 40)}${
+        $page.data.prompt.length > 40 ? "..." : ""
+      }`;
+    }
   }
 </script>
 
@@ -64,13 +66,11 @@
       additional_kwargs={{
         ts: $page.data.sent_at,
       }}
-      highlight
     />
   {:else}
     <MessageCard
       type="ai"
       content={$page.data.response}
-      highlight
       requestUuid={$page.params.request_id}
       additional_kwargs={{
         ts: $page.data.response_received_at,
@@ -83,7 +83,6 @@
       additional_kwargs={{
         ts: $page.data.sent_at,
       }}
-      highlight
     />
   {/if}
 

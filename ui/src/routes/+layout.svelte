@@ -2,7 +2,6 @@
   import "../app.postcss";
   import "./styles.css";
 
-  import ShootingStars from "$lib/components/custom/ShootingStars.svelte";
   import { applyAction, enhance } from "$app/forms";
   import { page } from "$app/stores";
   import StarsIcon from "$lib/components/custom/StarsIcon.svelte";
@@ -13,19 +12,18 @@
 </script>
 
 <svelte:head>
-  <script
-    defer
-    src="https://static.cloudflareinsights.com/beacon.min.js"
-    data-cf-beacon={'{"token": "7a1f1bf468574e8a8f4b6e21cd94db42"}'}
-  ></script>
+  <link
+    rel="preload"
+    href="/fonts/Inter-VariableFont_slnt,wght.ttf"
+    as="font"
+    crossorigin="anonymous"
+  />
 </svelte:head>
-
-<ShootingStars />
 
 <div class="app">
   <main>
     <section class="pb-8 pt-12">
-      <div class="flex gap-2 items-center mb-12">
+      <div class="flex gap-2 items-center mb-4">
         <div class="flex-auto" />
         <StarsIcon />
         <h1 class="text-white">
@@ -33,6 +31,20 @@
         </h1>
         <div class="flex-auto" />
       </div>
+
+      <div class="text-white text-center mb-8">
+        Ask Astro is an open-source, reference implementation of
+        <a
+          href="https://a16z.com/emerging-architectures-for-llm-applications/"
+          target="_blank">Andreessen Horowitz's LLM Application Architecture</a
+        >. It's meant to showcase how to build an LLM application on top of
+        Apache Airflow. You can read more about the project and find the source
+        code
+        <a href="https://github.com/astronomer/ask-astro"> on GitHub</a>. Note
+        that anything you ask Astro may be publicly visible and should not
+        include any sensitive information.
+      </div>
+
       <form
         method="post"
         action="/?/submitPrompt"
@@ -86,7 +98,10 @@
   <footer>
     Made with ❤️ by <a href="https://astronomer.io" target="_blank"
       >Astronomer</a
-    >
+    >. See the
+    <a href="http://github.com/astronomer/ask-astro" target="_blank"
+      >source code</a
+    >.
   </footer>
 </div>
 
@@ -145,5 +160,8 @@
       padding-left: 1rem;
       height: 3rem;
     }
+  }
+  ::placeholder {
+    filter: opacity(0.5);
   }
 </style>

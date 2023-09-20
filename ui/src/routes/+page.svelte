@@ -9,24 +9,20 @@
   <title>Ask Astro</title>
 </svelte:head>
 
-<section>
-  <div class="grid gap-2 pt-6 home-grid-cols">
+<div class="grid gap-2 pt-6 home-grid-cols">
+  {#if data.requests && data.requests.length > 0}
     {#each data.requests as req}
-      <RequestCard {...req} />
+      <RequestCard
+        uuid={req.uuid}
+        prompt={req.prompt}
+        sources={req.sources}
+        messages={req.messages}
+      />
     {/each}
-  </div>
-</section>
+  {/if}
+</div>
 
 <style>
-  section {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: fit-content;
-    margin: auto;
-  }
-
   .home-grid-cols {
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     width: 100%;
