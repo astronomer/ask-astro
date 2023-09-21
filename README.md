@@ -16,7 +16,7 @@ Ask Astro is an open-source reference implementation of [Andreessen Horowitz's L
 
 These are generally divided into three categories: data retrieval & embedding, prompt orchestration, and feedback loops. The rest of this README contains more in-depth detail on each of the categories in advance of a series of blog posts that will be written about the topics.
 
-If you have any questions, feedback, or want to share similar use cases, reach out to julian@astronomer.io.
+If you have any questions, feedback, or want to share similar use cases, reach out to ai@astronomer.io.
 
 ## Data Retrieval & Embedding
 <p align="center">
