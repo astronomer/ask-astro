@@ -9,7 +9,7 @@
 
 <svelte:head>
   <script>
-    const inEU = window.localStorage.getItem("inEU");
+    const inEU = true;
     window.consentManagerConfig = function (exports) {
       let React = exports.React;
       let bannerContent = React.createElement(
@@ -115,3 +115,17 @@
 </svelte:head>
 
 <div id="consent-manager" class="absolute w-full bottom-0" />
+
+<style>
+  #consent-manager button:first-child {
+    background-color: rgb(71, 184, 129);
+  }
+
+  #consent-manager button:last-child {
+    background-color: rgb(255, 255, 255);
+  }
+
+  #consent-manager p > button {
+    background-color: transparent !important;
+  }
+</style>
