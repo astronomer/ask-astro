@@ -27,6 +27,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@segment/in-eu": "astronomer/in-eu",
     "bits-ui": "^0.5.7",
     "clsx": "^2.0.0",
     "radix-icons-svelte": "^1.2.1",

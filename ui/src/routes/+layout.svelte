@@ -5,6 +5,7 @@
   import { applyAction, enhance } from "$app/forms";
   import { page } from "$app/stores";
   import StarsIcon from "$lib/components/custom/StarsIcon.svelte";
+  import ConsentManager from "$lib/components/custom/ConsentManager.svelte";
 
   let isSubmittingPrompt = false;
   let includeCurrentRequest = true;
@@ -103,6 +104,8 @@
       >source code</a
     >.
   </footer>
+
+  <ConsentManager />
 </div>
 
 <style>
