@@ -32,7 +32,7 @@
   />
   <link
     rel="preload"
-    href="/fonts/IntelOneMono-Regular.ttf"
+    href="/fonts/IntelOneMono-Light.ttf"
     as="font"
     crossorigin="anonymous"
   />
