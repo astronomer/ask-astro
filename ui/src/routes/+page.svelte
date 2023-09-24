@@ -9,7 +9,9 @@
   <title>Ask Astro</title>
 </svelte:head>
 
-<div class="grid gap-2 pt-6 home-grid-cols">
+<p class="previously-asked pt-4">Previously asked questions</p>
+
+<div class="grid gap-2 pt-2 pb-12 home-grid-cols">
   {#if data.requests && data.requests.length > 0}
     {#each data.requests as req}
       <RequestCard
@@ -23,6 +25,11 @@
 </div>
 
 <style>
+  .previously-asked {
+    color: #8c80b0;
+    font-weight: 300;
+  }
+
   .home-grid-cols {
     grid-template-rows: 1fr;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
