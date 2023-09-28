@@ -116,9 +116,9 @@ def ask_astro_load_bulk():
     @task(trigger_rule='none_failed')
     def extract_github_markdown(source:dict):
 
-        # df = extract.extract_github_markdown(source, github_conn_id=_GITHUB_CONN_ID)
+        df = extract.extract_github_markdown(source, github_conn_id=_GITHUB_CONN_ID)
 
-        # df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
+        df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
         df = pd.read_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
 
         return df
@@ -126,9 +126,9 @@ def ask_astro_load_bulk():
     @task(trigger_rule='none_failed')
     def extract_github_rst(source:dict):
 
-        # df = extract.extract_github_rst(source, rst_exclude_docs, _GITHUB_CONN_ID)
+        df = extract.extract_github_rst(source, rst_exclude_docs, _GITHUB_CONN_ID)
 
-        # df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
+        df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
         df = pd.read_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
 
         return df
@@ -136,9 +136,9 @@ def ask_astro_load_bulk():
     @task(trigger_rule='none_failed')
     def extract_github_python(source:dict):
 
-        # df = extract.extract_github_python(source, _GITHUB_CONN_ID)
+        df = extract.extract_github_python(source, _GITHUB_CONN_ID)
 
-        # df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
+        df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
         df = pd.read_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
 
         return df
@@ -146,9 +146,9 @@ def ask_astro_load_bulk():
     @task(trigger_rule='none_failed')
     def extract_stack_overflow(tag:dict, stackoverflow_cutoff_date:str):
 
-        # df = extract.extract_stack_overflow_archive(tag, stackoverflow_cutoff_date)
+        df = extract.extract_stack_overflow_archive(tag, stackoverflow_cutoff_date)
 
-        # df.to_parquet('include/data/stackoverflow_base.parquet')
+        df.to_parquet('include/data/stackoverflow_base.parquet')
         df = pd.read_parquet('include/data/stackoverflow_base.parquet')
 
         return df
@@ -163,9 +163,9 @@ def ask_astro_load_bulk():
     @task(trigger_rule='none_failed')
     def extract_github_issues(source:dict):
 
-        # df = extract.extract_github_issues(source, _GITHUB_CONN_ID)
+        df = extract.extract_github_issues(source, _GITHUB_CONN_ID)
 
-        # df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
+        df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
         df = pd.read_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
 
         return df
@@ -173,9 +173,9 @@ def ask_astro_load_bulk():
     @task(trigger_rule='none_failed')
     def extract_astro_registry_cell_types():
         
-        # df = extract.extract_astro_registry_cell_types()[0]
+        df = extract.extract_astro_registry_cell_types()[0]
 
-        # df.to_parquet('include/data/registry_cells.parquet')        
+        df.to_parquet('include/data/registry_cells.parquet')        
         df = pd.read_parquet('include/data/registry_cells.parquet')
 
         return [df]
@@ -183,9 +183,9 @@ def ask_astro_load_bulk():
     @task(trigger_rule='none_failed')
     def extract_astro_registry_dags():
 
-        # df = extract.extract_astro_registry_dags()[0]
+        df = extract.extract_astro_registry_dags()[0]
         
-        # df.to_parquet('include/data/registry_dags.parquet')
+        df.to_parquet('include/data/registry_dags.parquet')
         df = pd.read_parquet('include/data/registry_dags.parquet')
 
         return [df]
@@ -193,9 +193,9 @@ def ask_astro_load_bulk():
     @task(trigger_rule='none_failed')
     def extract_astro_blogs():
         
-        # df = extract.extract_astro_blogs(blog_cutoff_date)[0]
+        df = extract.extract_astro_blogs(blog_cutoff_date)[0]
 
-        # df.to_parquet('include/data/astro_blogs.parquet')
+        df.to_parquet('include/data/astro_blogs.parquet')
         df = pd.read_parquet('include/data/astro_blogs.parquet')
 
         return [df]
