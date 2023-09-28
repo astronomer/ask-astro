@@ -4,10 +4,10 @@ services:
     networks:
     - airflow
     environment:
-      AIRFLOW_CONN_WEAVIATE_LOCAL: '{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_DEV: '{"conn_type": "weaviate", "host": "${WCS_DEV_HOST}", "extra": {"token":"${WCS_DEV_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_TEST: '{"conn_type": "weaviate", "host": "${WCS_TEST_HOST}", "extra": {"token":"${WCS_TEST_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_PROD: '{"conn_type": "weaviate", "host": "${WCS_PROD_HOST}", "extra": {"token":"${WCS_PROD_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
+      AIRFLOW_CONN_WEAVIATE_LOCAL: '{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}'
+      AIRFLOW_CONN_WEAVIATE_DEV: '{"conn_type": "weaviate", "host": "${WCS_DEV_HOST}", "extra": {"token":"${WCS_DEV_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
+      AIRFLOW_CONN_WEAVIATE_TEST: '{"conn_type": "weaviate", "host": "${WCS_TEST_HOST}", "extra": {"token":"${WCS_TEST_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
+      AIRFLOW_CONN_WEAVIATE_PROD: '{"conn_type": "weaviate", "host": "${WCS_PROD_HOST}", "extra": {"token":"${WCS_PROD_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
   scheduler:
     ports:
     - 8501:8501
@@ -17,16 +17,13 @@ services:
       ASK_ASTRO_ENV: ${ASK_ASTRO_ENV}
       AIRFLOW_CONN_GITHUB_MPG: '{"conn_type": "github", "password": "${GITHUB_PAT}"}'
       AIRFLOW_CONN_SLACK_API_PGDEV: '{"conn_type": "slack", "password": "${SLACK_TOKEN_PGDEV}"}'
-      AIRFLOW_CONN_WEAVIATE_LOCAL: '{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_DEV: '{"conn_type": "weaviate", "host": "${WCS_DEV_HOST}", "extra": {"token":"${WCS_DEV_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_TEST: '{"conn_type": "weaviate", "host": "${WCS_TEST_HOST}", "extra": {"token":"${WCS_TEST_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_PROD: '{"conn_type": "weaviate", "host": "${WCS_PROD_HOST}", "extra": {"token":"${WCS_PROD_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
+      AIRFLOW_CONN_WEAVIATE_LOCAL: '{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
+      AIRFLOW_CONN_WEAVIATE_DEV: '{"conn_type": "weaviate", "host": "${WCS_DEV_HOST}", "extra": {"token":"${WCS_DEV_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
+      AIRFLOW_CONN_WEAVIATE_TEST: '{"conn_type": "weaviate", "host": "${WCS_TEST_HOST}", "extra": {"token":"${WCS_TEST_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
+      AIRFLOW_CONN_WEAVIATE_PROD: '{"conn_type": "weaviate", "host": "${WCS_PROD_HOST}", "extra": {"token":"${WCS_PROD_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
   weaviate:
     image: semitechnologies/weaviate:1.21.0
-    # platform: linux/amd64
     command: "--host 0.0.0.0 --port '8081' --scheme http"
-    ports:
-    - 8081:8081
     volumes:
     - ${PWD}/include/weaviate/backup:/var/lib/weaviate/backup
     environment:
@@ -34,7 +31,7 @@ services:
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
-      ENABLE_MODULES: 'text2vec-openai, backup-filesystem, qna-openai, generative-openai'
+      ENABLE_MODULES: 'text2vec-openai, backup-filesystem, qna-openai, generative-openai, text2vec-cohere, reranker-cohere'
       BACKUP_FILESYSTEM_PATH: '/var/lib/weaviate/backup'
       CLUSTER_HOSTNAME: 'node1'
     networks:
