@@ -30,7 +30,7 @@ unittests.cfg
 # MacOS
 .DS_Store
 **pycache**
-.env
+airflow/.env
 .git
 airflow_settings.yaml
 airflow/include/weaviate/data
