@@ -39,6 +39,7 @@
                     "name": "docLink",
                     "description": "The url of source data",
                     "dataType": ["text"],
+                    "tokenization": "field",
                     "moduleConfig": {
                         "text2vec-openai": {
                             "skip": "True",

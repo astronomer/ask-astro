@@ -4,20 +4,23 @@ services:
     networks:
     - airflow
     environment:
-      AIRFLOW_CONN_WEAVIATE_DEFAULT: '{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_WCS: '{"conn_type": "weaviate", "host": "${WCS_HOST}", "extra": {"token":"${WCS_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
+      AIRFLOW_CONN_WEAVIATE_LOCAL: '{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
+      AIRFLOW_CONN_WEAVIATE_DEV: '{"conn_type": "weaviate", "host": "${WCS_DEV_HOST}", "extra": {"token":"${WCS_DEV_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
       AIRFLOW_CONN_WEAVIATE_TEST: '{"conn_type": "weaviate", "host": "${WCS_TEST_HOST}", "extra": {"token":"${WCS_TEST_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
+      AIRFLOW_CONN_WEAVIATE_PROD: '{"conn_type": "weaviate", "host": "${WCS_PROD_HOST}", "extra": {"token":"${WCS_PROD_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
   scheduler:
     ports:
     - 8501:8501
     networks:
     - airflow
     environment:
-      AIRFLOW_CONN_GITHUB_DEFAULT: '{"conn_type": "github", "password": "${GITHUB_PAT}"}'
-      AIRFLOW_CONN_SLACK_API_DEFAULT: '{"conn_type": "slack", "password": "${SLACK_TOKEN_PGDEV}"}'
-      AIRFLOW_CONN_WEAVIATE_DEFAULT: '{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_WCS: '{"conn_type": "weaviate", "host": "${WCS_HOST}", "extra": {"token":"${WCS_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
+      ASK_ASTRO_ENV: ${ASK_ASTRO_ENV}
+      AIRFLOW_CONN_GITHUB_MPG: '{"conn_type": "github", "password": "${GITHUB_PAT}"}'
+      AIRFLOW_CONN_SLACK_API_PGDEV: '{"conn_type": "slack", "password": "${SLACK_TOKEN_PGDEV}"}'
+      AIRFLOW_CONN_WEAVIATE_LOCAL: '{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
+      AIRFLOW_CONN_WEAVIATE_DEV: '{"conn_type": "weaviate", "host": "${WCS_DEV_HOST}", "extra": {"token":"${WCS_DEV_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
       AIRFLOW_CONN_WEAVIATE_TEST: '{"conn_type": "weaviate", "host": "${WCS_TEST_HOST}", "extra": {"token":"${WCS_TEST_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
+      AIRFLOW_CONN_WEAVIATE_PROD: '{"conn_type": "weaviate", "host": "${WCS_PROD_HOST}", "extra": {"token":"${WCS_PROD_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
   weaviate:
     image: semitechnologies/weaviate:1.21.0
     # platform: linux/amd64

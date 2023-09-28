@@ -1,4 +1,4 @@
-/tmp/airflow_provider_weaviate-1.0.0-py3-none-any.whl
+/tmp/airflow_provider_weaviate-0.0.1-py3-none-any.whl
 apache-airflow-providers-github==2.3.1
 apache-airflow-providers-slack==7.3.2
 weaviate-client==3.22.0
@@ -9,5 +9,7 @@ langchain==0.0.240
 markdownify
 stackapi==0.2.0
 protobuf==3.20.1
-google-cloud-firestore
-openai
+google-cloud-firestore==2.12.0
+openai==0.28.1
+bs4==0.0.1
+lxml==4.9.3
