@@ -17,8 +17,12 @@ if ask_astro_env == 'prod':
     _WEAVIATE_CONN_ID = 'weaviate_prod'
     _SLACK_CONN_ID = 'slack_api_pgdev'
     _GITHUB_CONN_ID = 'github_mpg'
-elif ask_astro_env == 'dev':
+elif ask_astro_env == 'local':
     _WEAVIATE_CONN_ID = 'weaviate_local'
+    _SLACK_CONN_ID = 'slack_api_pgdev'
+    _GITHUB_CONN_ID = 'github_mpg'
+elif ask_astro_env == 'dev':
+    _WEAVIATE_CONN_ID = 'weaviate_dev'
     _SLACK_CONN_ID = 'slack_api_pgdev'
     _GITHUB_CONN_ID = 'github_mpg'
 elif ask_astro_env == 'test':

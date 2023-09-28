@@ -1,26 +1,10 @@
 version: '3.1'
 services:
-  triggerer:
-    networks:
-    - airflow
-    environment:
-      AIRFLOW_CONN_WEAVIATE_LOCAL: '{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}'
-      AIRFLOW_CONN_WEAVIATE_DEV: '{"conn_type": "weaviate", "host": "${WCS_DEV_HOST}", "extra": {"token":"${WCS_DEV_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_TEST: '{"conn_type": "weaviate", "host": "${WCS_TEST_HOST}", "extra": {"token":"${WCS_TEST_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_PROD: '{"conn_type": "weaviate", "host": "${WCS_PROD_HOST}", "extra": {"token":"${WCS_PROD_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
   scheduler:
     ports:
     - 8501:8501
     networks:
     - airflow
-    environment:
-      ASK_ASTRO_ENV: ${ASK_ASTRO_ENV}
-      AIRFLOW_CONN_GITHUB_MPG: '{"conn_type": "github", "password": "${GITHUB_PAT}"}'
-      AIRFLOW_CONN_SLACK_API_PGDEV: '{"conn_type": "slack", "password": "${SLACK_TOKEN_PGDEV}"}'
-      AIRFLOW_CONN_WEAVIATE_LOCAL: '{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_DEV: '{"conn_type": "weaviate", "host": "${WCS_DEV_HOST}", "extra": {"token":"${WCS_DEV_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_TEST: '{"conn_type": "weaviate", "host": "${WCS_TEST_HOST}", "extra": {"token":"${WCS_TEST_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_PROD: '{"conn_type": "weaviate", "host": "${WCS_PROD_HOST}", "extra": {"token":"${WCS_PROD_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}"}}'
   weaviate:
     image: semitechnologies/weaviate:1.21.0
     command: "--host 0.0.0.0 --port '8081' --scheme http"
