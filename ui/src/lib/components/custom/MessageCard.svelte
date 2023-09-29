@@ -67,7 +67,7 @@
       {/if}
     </Card.Title>
 
-    <div class="pt-4 overflow-x-scroll">
+    <div class="pt-4 overflow-x-auto">
       {#if isLoading}
         <div class="flex flex-col gap-2">
           <Skeleton class="w-full h-4" />
