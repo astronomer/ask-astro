@@ -120,6 +120,7 @@ def ask_astro_load_github():
                     .partial(class_name='Docs', primary_key='docLink')\
                     .expand(dfs=[split_md_docs, split_code_docs])
     
-    _check_schema >> [_slack_schema_alert] + markdown_tasks + python_code_tasks
+    _check_schema >> _slack_schema_alert 
+    _check_schema >> md_docs >> rst_docs >> issues_docs >> python_code_tasks
 
 ask_astro_load_github()

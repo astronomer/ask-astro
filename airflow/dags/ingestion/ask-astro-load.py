@@ -91,7 +91,8 @@ def ask_astro_load_bulk():
     def check_object_count(weaviate_doc_count:dict, class_name:str) -> str:
         try:
             weaviate_hook = WeaviateHook(_WEAVIATE_CONN_ID)
-            response = weaviate_hook.run(f'{{Aggregate {{ {class_name} {{ meta {{ count }} }} }} }}')
+            weaviate_client=weaviate_hook.get_conn()
+            response = weaviate_client.query.aggregate(class_name=class_name).with_meta_count().do()
         except Exception as e:
             if e.status_code == 422 and 'no graphql provider present' in e.message:
                 response = None
