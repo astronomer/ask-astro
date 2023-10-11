@@ -8,17 +8,22 @@
   export let loading: boolean = false;
 
   // TODO: move to backend
-  const translatedUrl = name
-    ?.replace(
-      "https://github.com/astronomer/docs/blob/main",
-      "https://docs.astronomer.io"
-    )
-    ?.replace(
-      "github.com/apache/airflow/blob/main/docs/apache-airflow",
-      "airflow.apache.org/docs/apache-airflow/stable"
-    )
-    ?.replace(".md", ".html")
-    ?.replace(".rst", ".html");
+
+  const codesamplesPrefix = "https://github.com/astronomer/docs/blob/main/code-samples/dags";
+
+  const translatedUrl = name.startsWith(codesamplesPrefix)
+    ? name
+    : name
+      ?.replace(
+        "https://github.com/astronomer/docs/blob/main",
+        "https://docs.astronomer.io"
+      )
+      ?.replace(
+        "github.com/apache/airflow/blob/main/docs/apache-airflow",
+        "airflow.apache.org/docs/apache-airflow/stable"
+      )
+      ?.replace(".md", ".html")
+      ?.replace(".rst", ".html");
 
   let expanded = false;
 </script>
