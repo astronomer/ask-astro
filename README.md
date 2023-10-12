@@ -77,3 +77,26 @@ A project like Ask Astro is never "complete", and there are always more methods 
 - **Feedback Loops**: what else can we do with information about the accuracy of answers? For example, can we infer source usefulness based on how frequently (or infrequently) a source is used in accurate answers?
 - **Experimentation**: how do we effectively experiment and measure accuracy or performance improvements as a result of experiments?
 - **LLM Operations and Observability**: how do we ensure we have good visibility into what the model's doing, particularly given that it's making multiple API & LLM calls?
+
+
+## Local dev env
+
+You can use local dev [script](./scripts/local_dev.py) to start UI, API server and API
+
+````bash
+python3 scripts/local_dev.py run-api-server # To run backend
+python3 scripts/local_dev.py run-ui         # To run UI
+python3 scripts/local_dev.py run-airflow    # To run Airflow
+````
+
+**Backend API sever**
+
+- [Run ask-astro API server](./api/README.md)
+
+**User Interface**
+
+- [Run ask-astro UI](./ui/README.md)
+
+**Apache Airflow**
+
+- [Run airflow](./airflow/README.md)

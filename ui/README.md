@@ -8,6 +8,12 @@ Install dependencies:
 npm install
 ```
 
+Add backend API sever url in `ui/.env` file
+
+```bash
+ASK_ASTRO_API_URL=http://0.0.0.0:8080
+```
+
 Run the development server:
 
 ```bash
