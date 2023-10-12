@@ -1,31 +1,21 @@
-from datetime import datetime 
-from stackapi import StackAPI
-from pathlib import Path
-import pandas as pd
-import pypandoc
-import html2text
-import re
-import requests
-
+from datetime import datetime
 from typing import List
 
-from airflow.decorators import dag, task, task_group
-from airflow.exceptions import AirflowException
-from airflow.providers.github.hooks.github import GithubHook
-from airflow.providers.slack.operators.slack import SlackAPIPostOperator
-from airflow.providers.slack.hooks.slack import SlackHook
-from weaviate_provider.hooks.weaviate import WeaviateHook
-from weaviate_provider.operators.weaviate import (
-    WeaviateCreateSchemaOperator,
-    WeaviateCheckSchemaOperator,
-    WeaviateImportDataOperator,
-    )
-from weaviate.util import generate_uuid5
+import html2text
+import pandas as pd
+from langchain.schema import Document
 from langchain.text_splitter import (
-    MarkdownHeaderTextSplitter, 
     RecursiveCharacterTextSplitter,
 )
-from langchain.schema import Document
+from weaviate.util import generate_uuid5
+from weaviate_provider.hooks.weaviate import WeaviateHook
+from weaviate_provider.operators.weaviate import (
+    WeaviateCheckSchemaOperator,
+    WeaviateCreateSchemaOperator,
+    WeaviateImportDataOperator,
+)
+
+from airflow.decorators import dag, task
 
 _WEAVIATE_CONN_ID = 'weaviate_test'
 _GITHUB_CONN_ID = 'github_default'
@@ -33,7 +23,7 @@ _SLACK_CONN_ID = 'slack_api_default'
 
 # doc_dir:baseurl pairs for dynamic tasks
 markdown_docs_sources = [
-    {'doc_dir': 'learn', 'repo_base': 'astronomer/docs'}, 
+    {'doc_dir': 'learn', 'repo_base': 'astronomer/docs'},
     {'doc_dir': 'astro', 'repo_base': 'astronomer/docs'}
     ]
 rst_docs_sources = [
@@ -46,9 +36,9 @@ issues_docs_sources = [
     {'doc_dir': 'issues', 'repo_base': 'apache/airflow'}
 ]
 slack_channel_sources = [
-    {'channel_name': 'troubleshooting', 
-      'channel_id': 'CCQ7EGB1P', 
-      'team_id': 'TCQ18L22Z', 
+    {'channel_name': 'troubleshooting',
+      'channel_id': 'CCQ7EGB1P',
+      'team_id': 'TCQ18L22Z',
       'team_name' : 'Airflow Slack Community',
       'slack_api_conn_id' : 'TBD'}
 ]
@@ -81,7 +71,7 @@ def ask_astro_load_bulk():
     is included for each function, the data is frozen as a parquet file for simple ingest and the steps
     to create are commented out.
     """
-    _check_schema = WeaviateCheckSchemaOperator(task_id='check_schema', 
+    _check_schema = WeaviateCheckSchemaOperator(task_id='check_schema',
                                                 weaviate_conn_id=_WEAVIATE_CONN_ID,
                                                 class_object_data='file://include/data/schema.json')
 
@@ -110,23 +100,23 @@ def ask_astro_load_bulk():
             print('Initial Upload complete. Skipping')
             return None
         else:
-            return ["extract_github_markdown", 
-                    "extract_github_rst", 
-                    "extract_github_python", 
+            return ["extract_github_markdown",
+                    "extract_github_rst",
+                    "extract_github_python",
                     "extract_stack_overflow",
                     "extract_slack",
                     "extract_registry",
                     "extract_github_issues"]
-       
-    _create_schema = WeaviateCreateSchemaOperator(task_id='create_schema', 
+
+    _create_schema = WeaviateCreateSchemaOperator(task_id='create_schema',
                                                   weaviate_conn_id=_WEAVIATE_CONN_ID,
                                                   class_object_data='file://include/data/schema.json',
                                                   existing='fail')
-    
+
     @task(trigger_rule='none_failed')
     def extract_github_markdown(source:dict):
         """
-        This task downloads github content as markdown documents in a 
+        This task downloads github content as markdown documents in a
         pandas dataframe.
 
         Dataframe fields are:
@@ -135,14 +125,14 @@ def ask_astro_load_bulk():
         'docLink': URL for the specific document in github.
         'content': Entire document content in markdown format.
 
-        Code is provided for the processing of questions and answers but is 
+        Code is provided for the processing of questions and answers but is
         commented out as the historical data is provided as a parquet file.
         """
 
         # downloaded_docs = []
-        
+
         # gh_hook = GithubHook(_GITHUB_CONN_ID)
-        
+
         # repo = gh_hook.client.get_repo(source['repo_base'])
         # contents = repo.get_contents(source['doc_dir'])
 
@@ -155,16 +145,16 @@ def ask_astro_load_bulk():
         #     elif Path(file_content.name).suffix == '.md':
 
         #         print(file_content.name)
-                
+
         #         row = {
-        #             "docLink": file_content.html_url, 
+        #             "docLink": file_content.html_url,
         #             "sha": file_content.sha,
         #             "content": file_content.decoded_content.decode(),
-        #             "docSource": source['doc_dir'], 
+        #             "docSource": source['doc_dir'],
         #         }
 
         #         downloaded_docs.append(row)
-                
+
         # df = pd.DataFrame(downloaded_docs)
 
         # df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
@@ -175,12 +165,12 @@ def ask_astro_load_bulk():
     @task(trigger_rule='none_failed')
     def extract_github_rst(source:dict):
         """
-        This task downloads github content as rst documents 
+        This task downloads github content as rst documents
         in a pandas dataframe.
 
-        The 'content' field is converted from RST to Markdown (via pypandoc).  After 
-        removing the preamble (apache license), any empty lines and 'include' footers 
-        any empty docs are removed.  Document links and references are not included 
+        The 'content' field is converted from RST to Markdown (via pypandoc).  After
+        removing the preamble (apache license), any empty lines and 'include' footers
+        any empty docs are removed.  Document links and references are not included
         in the content.
 
         Dataframe fields are:
@@ -189,12 +179,12 @@ def ask_astro_load_bulk():
         'docLink': URL for the specific document in github.
         'content': Entire document in markdown format.
 
-        Code is provided for the processing of questions and answers but is 
+        Code is provided for the processing of questions and answers but is
         commented out as the historical data is provided as a parquet file.
         """
 
         # downloaded_docs = []
-        
+
         # gh_hook = GithubHook(_GITHUB_CONN_ID)
 
         # repo = gh_hook.client.get_repo(source['repo_base'])
@@ -213,21 +203,21 @@ def ask_astro_load_bulk():
         #         print(file_content.name)
 
         #         row = {
-        #             "docLink": file_content.html_url, 
+        #             "docLink": file_content.html_url,
         #             "sha": file_content.sha,
         #             "content": file_content.decoded_content.decode(),
-        #             "docSource": source['doc_dir'], 
+        #             "docSource": source['doc_dir'],
         #         }
 
         #         downloaded_docs.append(row)
-                
+
         # df = pd.DataFrame(downloaded_docs)
 
         # df['content'] = df['content'].apply(lambda x: x.replace(apache_license_text, ''))
         # df['content'] = df['content'].apply(lambda x: re.sub(r".*include.*", "", x))
         # df['content'] = df['content'].apply(lambda x: re.sub(r'^\s*$', "", x))
         # df = df[df['content']!='']
-        # df['content'] = df['content'].apply(lambda x: pypandoc.convert_text(source=x, to='md', 
+        # df['content'] = df['content'].apply(lambda x: pypandoc.convert_text(source=x, to='md',
         #                                                                     format='rst',
         #                                                                     extra_args=['--atx-headers']))
 
@@ -241,7 +231,7 @@ def ask_astro_load_bulk():
         """
         This task downloads github content as python code in a pandas dataframe.
 
-        The 'content' field of the dataframe is currently not split as the context 
+        The 'content' field of the dataframe is currently not split as the context
         window is large enough. Code for splitting is provided but commented out.
 
         Dataframe fields are:
@@ -251,14 +241,14 @@ def ask_astro_load_bulk():
         'content': The python code
         'header': a placeholder of 'python' for bm25 search
 
-        Code is provided for the processing of questions and answers but is 
+        Code is provided for the processing of questions and answers but is
         commented out as the historical data is provided as a parquet file.
         """
-    
+
         # downloaded_docs = []
 
         # gh_hook = GithubHook(_GITHUB_CONN_ID)
-        
+
         # repo = gh_hook.client.get_repo(source['repo_base'])
         # contents = repo.get_contents(source['doc_dir'])
 
@@ -270,15 +260,15 @@ def ask_astro_load_bulk():
 
         #     elif Path(file_content.name).suffix == '.py':
         #         print(file_content.name)
-                                
+
         #         row = {
-        #             "docLink": file_content.html_url, 
+        #             "docLink": file_content.html_url,
         #             "sha": file_content.sha,
         #             "content": file_content.decoded_content.decode(),
-        #             "docSource": source['doc_dir'], 
-        #             "header": 'python', 
+        #             "docSource": source['doc_dir'],
+        #             "header": 'python',
         #         }
-                
+
         #         downloaded_docs.append(row)
 
         # df = pd.DataFrame(downloaded_docs)
@@ -287,11 +277,11 @@ def ask_astro_load_bulk():
         df = pd.read_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
 
         return df
-    
+
     @task(trigger_rule='none_failed')
     def extract_stack_overflow(tag:dict, stackoverflow_cutoff_date:str):
         """
-        This task generates stack overflow questions and answers as markdown 
+        This task generates stack overflow questions and answers as markdown
         documents in a pandas dataframe.
 
         Dataframe fields are:
@@ -300,7 +290,7 @@ def ask_astro_load_bulk():
         'content': The base64 encoded content of the question/answer in markdown format.
         'header': document type. (ie. 'question' or 'answer')
 
-        Code is provided for the processing of questions and answers but is 
+        Code is provided for the processing of questions and answers but is
         commented out as the historical data is provided as a parquet file.
         """
 
@@ -318,31 +308,31 @@ def ask_astro_load_bulk():
         #     '7': 'WikiPlaceholder',
         #     '8': 'PrivilegeWiki'}
         # posts_columns = {
-        #     '_COL_0':'post_id', 
-        #     '_COL_1':'type', 
-        #     '_COL_3':'parent_id', 
-        #     '_COL_4':'created_on', 
-        #     '_COL_6':'score', 
+        #     '_COL_0':'post_id',
+        #     '_COL_1':'type',
+        #     '_COL_3':'parent_id',
+        #     '_COL_4':'created_on',
+        #     '_COL_6':'score',
         #     '_COL_8':'body',
-        #     '_COL_9':'user_id', 
+        #     '_COL_9':'user_id',
         #     '_COL_10':'user_name',
         #     '_COL_15':'title',
         #     '_COL_17':'answer_count'}
         # comments_columns = {
-        #     '_COL_0':'comment_id', 
-        #     '_COL_1':'post_id', 
-        #     '_COL_2':'comment_score', 
+        #     '_COL_0':'comment_id',
+        #     '_COL_1':'post_id',
+        #     '_COL_2':'comment_score',
         #     '_COL_3':'comment_body',
         #     '_COL_4':'comment_created_on',
         #     '_COL_5':'comment_user_name',
         #     '_COL_6':'comment_user_id'}
-        
+
         # posts_df = pd.read_parquet('include/data/StackOverflow/Posts/data_0_0_0.snappy.parquet')[posts_columns.keys()]
         # comments_df = pd.concat([
         #     pd.read_parquet('include/data/StackOverflow/Comments/data_0_0_0.snappy.parquet')[comments_columns.keys()],
         #     pd.read_parquet('include/data/StackOverflow/Comments/data_0_1_0.snappy.parquet')[comments_columns.keys()]
         #     ], ignore_index=True)
-        
+
         # posts_df.rename(posts_columns, axis=1, inplace=True)
         # posts_df['type'] = posts_df['type'].apply(lambda x: post_types[x])
         # posts_df['created_on'] = pd.to_datetime(posts_df['created_on'])
@@ -403,7 +393,7 @@ def ask_astro_load_bulk():
 
         # answers_df = questions_df.join(answers_df).apply(lambda x: pd.Series([
         #     f'stackoverflow {tag}',
-        #     x.docLink, 
+        #     x.docLink,
         #     x.answer_text]), axis=1)
         # answers_df.columns=['docSource', 'docLink','content']
         # answers_df['header'] = 'answer'
@@ -427,7 +417,7 @@ def ask_astro_load_bulk():
         'content': The message/reply content in markdown format.
         'header': document type. (ie. 'question' or 'answer')
 
-        Code is provided for the processing of questions and answers but is 
+        Code is provided for the processing of questions and answers but is
         commented out as the historical data is provided as a parquet file.
         """
 
@@ -440,12 +430,12 @@ def ask_astro_load_bulk():
         df = df[['user', 'text', 'ts', 'thread_ts', 'client_msg_id', 'type']]\
                 .drop_duplicates()\
                 .reset_index(drop=True)
-        
+
         df['thread_ts'] = df['thread_ts'].astype(float)
         df['ts'] = df['ts'].astype(float)
 
         df['thread_ts'].fillna(value=df.ts, inplace=True)
-        
+
         df['content'] = df.apply(lambda x: reply_md_format.format(ts=datetime.fromtimestamp(x.ts),
                                                                   user=x.user,
                                                                   text=x.text), axis=1)
@@ -455,7 +445,7 @@ def ask_astro_load_bulk():
         df['content'] = df['content'].apply(lambda x: message_md_format.format(team_name=source['team_name'],
                                                                      channel_name=source['channel_name'],
                                                                      content=x))
-       
+
         df['docLink'] = df['thread_ts'].apply(lambda x: link_format.format(team_id=source['team_id'],
                                                                     channel_id=source['channel_id'],
                                                                     ts=str(x).replace('.','')))
@@ -478,11 +468,11 @@ def ask_astro_load_bulk():
         'content': The base64 encoded content of the question/answer in markdown format.
         'header': document type. (ie. 'airflow issue')
 
-        Code is provided for the processing of questions and answers but is 
+        Code is provided for the processing of questions and answers but is
         commented out as the historical data is provided as a parquet file.
         """
         # gh_hook = GithubHook(_GITHUB_CONN_ID)
-        
+
         # repo = gh_hook.client.get_repo(source['repo_base'])
         # issues = repo.get_issues()
 
@@ -495,9 +485,9 @@ def ask_astro_load_bulk():
 
         # downloaded_docs = []
         # page_num = 0
-        
+
         # page = issues.get_page(page_num)
-        
+
         # while page:
 
         #     for issue in page:
@@ -506,24 +496,24 @@ def ask_astro_load_bulk():
         #         for comment in issue.get_comments():
         #             #TODO: this is very slow.  Look for vectorized approach.
         #             if not any(substring in comment.body for substring in drop_content):
-        #                 comments.append(comment_markdown_template.format(user=comment.user.login, 
-        #                                                                  date=issue.created_at.strftime("%m-%d-%Y"), 
+        #                 comments.append(comment_markdown_template.format(user=comment.user.login,
+        #                                                                  date=issue.created_at.strftime("%m-%d-%Y"),
         #                                                                  body=comment.body))
         #         downloaded_docs.append({
-        #             "docLink": issue.html_url, 
+        #             "docLink": issue.html_url,
         #             "sha": '',
-        #             "content": issue_markdown_template.format(title=issue.title, 
-        #                                                       date=issue.created_at.strftime("%m-%d-%Y"), 
+        #             "content": issue_markdown_template.format(title=issue.title,
+        #                                                       date=issue.created_at.strftime("%m-%d-%Y"),
         #                                                       user=issue.user.login,
-        #                                                       state=issue.state, 
+        #                                                       state=issue.state,
         #                                                       body=issue.body,
         #                                                       comments='\n'.join(comments)),
-        #             "docSource": f"{source['repo_base']} {source['doc_dir']}", 
-        #             "header": f"{source['repo_base']} issue", 
+        #             "docSource": f"{source['repo_base']} {source['doc_dir']}",
+        #             "header": f"{source['repo_base']} issue",
         #         })
         #     page_num=page_num+1
         #     page = issues.get_page(page_num)
-                
+
         # df = pd.DataFrame(downloaded_docs)
 
         # df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
@@ -548,29 +538,29 @@ def ask_astro_load_bulk():
         # df.rename({'githubUrl': 'docLink', 'searchId': 'sha'}, axis=1, inplace=True)
         # df['docSource'] = source['name']
         # df['description'] = df['description'].apply(lambda x: html2text.html2text(x) if x else 'No Description')
-        # df['content'] = df.apply(lambda x: md_template.format(providerName=x.providerName, 
-        #                                                       version=x.version, 
+        # df['content'] = df.apply(lambda x: md_template.format(providerName=x.providerName,
+        #                                                       version=x.version,
         #                                                       name=x.name,
         #                                                       description=x.description), axis=1)
 
         # df = df[['docSource', 'sha', 'content', 'docLink']]
 
         # df.to_parquet('include/data/registry.parquet')
-        
+
         df = pd.read_parquet('include/data/registry.parquet')
 
         return df
-    
+
     @task()
-    def split_data(md_dfs:List[pd.DataFrame], 
-                   rst_dfs:List[pd.DataFrame], 
-                   slack_dfs:List[pd.DataFrame], 
-                   stackoverflow_dfs:List[pd.DataFrame], 
-                   code_dfs:List[pd.DataFrame], 
-                   issues_dfs:List[pd.DataFrame], 
+    def split_data(md_dfs:List[pd.DataFrame],
+                   rst_dfs:List[pd.DataFrame],
+                   slack_dfs:List[pd.DataFrame],
+                   stackoverflow_dfs:List[pd.DataFrame],
+                   code_dfs:List[pd.DataFrame],
+                   issues_dfs:List[pd.DataFrame],
                    reg_dfs:List[pd.DataFrame]):
         """
-        This task concatenates multiple dataframes from upstream dynamic tasks and 
+        This task concatenates multiple dataframes from upstream dynamic tasks and
         splits markdown content on markdown headers.
 
         Dataframe fields are:
@@ -589,11 +579,11 @@ def ask_astro_load_bulk():
         issues_df = pd.concat(issues_dfs, axis=0, ignore_index=True)
         reg_df = pd.concat(reg_dfs, axis=0, ignore_index=True)
 
-        df = pd.concat([md_df, 
-                        rst_df, 
-                        slack_df, 
-                        reg_df, 
-                        code_df, 
+        df = pd.concat([md_df,
+                        rst_df,
+                        slack_df,
+                        reg_df,
+                        code_df,
                         stackoverflow_df,
                         issues_df,
                     ], axis=0, ignore_index=True)
@@ -624,15 +614,15 @@ def ask_astro_load_bulk():
     @task.weaviate_import(weaviate_conn_id=_WEAVIATE_CONN_ID)
     def import_data(md_docs:pd.DataFrame, class_name:str):
         """
-        This task concatenates multiple dataframes from upstream dynamic tasks and 
+        This task concatenates multiple dataframes from upstream dynamic tasks and
         vectorizes with import to weaviate.
 
-        A 'uuid' is generated based on the content and metadata (the git sha, document url,  
+        A 'uuid' is generated based on the content and metadata (the git sha, document url,
         the document source (ie. astro) and a concatenation of the headers).
 
         Vectorization includes the headers for bm25 search.
         """
-        
+
         df = pd.concat([md_docs], ignore_index=True)
 
         df['uuid'] = df.apply(lambda x: generate_uuid5(x.to_dict()), axis=1)
@@ -640,7 +630,7 @@ def ask_astro_load_bulk():
         print(f"Passing {len(df)} objects for import.")
 
         return {"data": df, "class_name": class_name, "uuid_column": "uuid", "batch_size": 1000, "error_threshold": 12}
-    
+
     _recreate_schema_branch = recreate_schema_branch(_check_schema.output)
     _check_object_count = check_object_count(weaviate_doc_count, 'Docs')
 
@@ -651,9 +641,9 @@ def ask_astro_load_bulk():
     stackoverflow_md = extract_stack_overflow.partial(stackoverflow_cutoff_date=stackoverflow_cutoff_date).expand(tag=stackoverflow_tags)
     slack_md = extract_slack.partial().expand(source=slack_channel_sources)
     registry_md = extract_registry.partial().expand(source=http_json_sources)
-    
-    split_md_docs = split_data(md_dfs=md_docs, 
-                               rst_dfs=rst_docs, 
+
+    split_md_docs = split_data(md_dfs=md_docs,
+                               rst_dfs=rst_docs,
                                stackoverflow_dfs=stackoverflow_md,
                                code_dfs=code_samples,
                                slack_dfs=slack_md,
@@ -661,8 +651,8 @@ def ask_astro_load_bulk():
                                reg_dfs=registry_md)
 
     _unimported_md = import_data(md_docs=split_md_docs, class_name='Docs')
-    
-    _check_schema >> _recreate_schema_branch >> [_create_schema, _check_object_count] 
+
+    _check_schema >> _recreate_schema_branch >> [_create_schema, _check_object_count]
     _check_object_count >> [md_docs, rst_docs, code_samples, stackoverflow_md, issues_md, slack_md, registry_md]
     _create_schema >> [md_docs, rst_docs, code_samples, stackoverflow_md, issues_md, slack_md, registry_md]
 
@@ -674,13 +664,12 @@ def test():
     search = weaviate_client.query\
         .get(properties = ['content'], class_name='Docs')\
         .with_limit(2000)\
-        .with_where({"path": ["docSource"], 
-                     "operator": "Equal", 
+        .with_where({"path": ["docSource"],
+                     "operator": "Equal",
                      "valueText": "registry_cell_types"}).do()
     len(search['data']['Get']['Docs'])
 
-    self = WeaviateImportDataOperator(task_id='test',
+    WeaviateImportDataOperator(task_id='test',
                                       data=df,
                                       class_name='Docs',
                                       uuid_column='uuid')
-

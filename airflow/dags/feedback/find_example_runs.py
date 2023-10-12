@@ -4,22 +4,16 @@ through LangSmith's evaluators. If something is correct, useful, and public,
 it marks it as an example to be shown to users.
 """
 
-import os
+from datetime import datetime
 from typing import Any
 
-from datetime import datetime
+from google.cloud import firestore
+from langchain.evaluation import StringEvaluator, load_evaluator
+from langchain.evaluation.schema import EvaluatorType
+from langsmith import Client
 
 from airflow.decorators import dag, task
 from airflow.operators.empty import EmptyOperator
-
-from langsmith import Client
-
-from airflow.providers.google.firebase.hooks.firestore import CloudFirestoreHook
-from google.cloud import firestore
-from google.oauth2 import service_account
-
-from langchain.evaluation import load_evaluator, StringEvaluator
-from langchain.evaluation.schema import EvaluatorType
 
 
 def get_firestore_client():
@@ -110,7 +104,7 @@ def process_run(run: dict[str, Any]):
     # if all the evaluators agree that the response is correct, useful, and public,
     # mark it as an example and processed
     update_dict = {"is_processed": True}
-    if all([score > 0.9 for score in feedback.values()]):
+    if all(score > 0.9 for score in feedback.values()):
         update_dict["is_example"] = True
         print("Marking run as example")
 

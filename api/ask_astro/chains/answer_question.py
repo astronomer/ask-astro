@@ -6,14 +6,14 @@ from langchain.chains.conversational_retrieval.prompts import CONDENSE_QUESTION_
 from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import AzureChatOpenAI
 from langchain.prompts import (
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
     ChatPromptTemplate,
+    HumanMessagePromptTemplate,
     MessagesPlaceholder,
+    SystemMessagePromptTemplate,
 )
 from langchain.retrievers import MultiQueryRetriever
 
-with open("ask_astro/templates/combine_docs_chat_prompt.txt", "r") as system_prompt_fd:
+with open("ask_astro/templates/combine_docs_chat_prompt.txt") as system_prompt_fd:
     messages = [
         SystemMessagePromptTemplate.from_template(system_prompt_fd.read()),
         MessagesPlaceholder(variable_name="messages"),

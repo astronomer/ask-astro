@@ -2,8 +2,8 @@
 
 # TODO: Refactor with https://sanic.dev/en/guide/deployment/configuration.html
 
-import os
 import json
+import os
 
 
 class FirestoreCollections:

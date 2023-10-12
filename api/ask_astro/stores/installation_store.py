@@ -3,7 +3,6 @@ from logging import Logger
 from typing import Optional
 
 import google.cloud.firestore
-
 from slack_sdk.oauth.installation_store.async_installation_store import (
     AsyncInstallationStore,
 )
@@ -88,7 +87,7 @@ class AsyncFirestoreInstallationStore(AsyncInstallationStore):
             await doc_ref.update(
                 {
                     self.fp("bot", "latest"): entity,
-                    self.fp(f"bot", history_version): entity,
+                    self.fp("bot", history_version): entity,
                 },
             )
         else:

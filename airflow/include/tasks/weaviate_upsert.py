@@ -3,17 +3,16 @@ Tasks for interacting with Weaviate.
 """
 
 import time
-import weaviate
-
-import pandas as pd
-from airflow.decorators import task
+from itertools import chain
 from logging import getLogger
 
-from itertools import chain
+import pandas as pd
+import weaviate
+from include.config import Connections
 from weaviate.util import generate_uuid5
 from weaviate_provider.hooks.weaviate import WeaviateHook
 
-from include.config import Connections
+from airflow.decorators import task
 
 logger = getLogger(__name__)
 

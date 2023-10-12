@@ -1,11 +1,11 @@
 "Contains a function to register all controllers with the app."
 
-from slack_bolt.async_app import AsyncApp
-from ask_astro.slack.controllers.mention import on_mention
-from ask_astro.slack.controllers.feedback.good import handle_feedback_good
-from ask_astro.slack.controllers.feedback.bad import handle_feedback_bad
-
 from logging import getLogger
+
+from ask_astro.slack.controllers.feedback.bad import handle_feedback_bad
+from ask_astro.slack.controllers.feedback.good import handle_feedback_good
+from ask_astro.slack.controllers.mention import on_mention
+from slack_bolt.async_app import AsyncApp
 
 logger = getLogger(__name__)
 

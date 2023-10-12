@@ -1,13 +1,11 @@
 "Handles app mention events from Slack"
 import asyncio
-
+from logging import getLogger
 from typing import Any
 
-from ask_astro.config import FirestoreCollections
 from ask_astro.clients.firestore import firestore_client
 from ask_astro.clients.langsmith_ import langsmith_client
-
-from logging import getLogger
+from ask_astro.config import FirestoreCollections
 
 logger = getLogger(__name__)
 

@@ -1,11 +1,9 @@
 from datetime import datetime
-
-from uuid import UUID
 from typing import Any
+from uuid import UUID
 
+from langchain.schema import AIMessage, BaseMessage, HumanMessage
 from pydantic.v1 import BaseModel, Field
-
-from langchain.schema import BaseMessage, AIMessage, HumanMessage
 
 
 class Source(BaseModel):

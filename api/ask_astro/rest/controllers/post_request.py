@@ -3,19 +3,16 @@ Handles GET requests to the /ask/{question_id} endpoint.
 """
 
 import uuid
-
 from logging import getLogger
 
-from sanic import json, Request
-from sanic_ext import openapi
-
-from pydantic.v1 import BaseModel, Field
-from langchain.schema import AIMessage, HumanMessage
-
+from ask_astro.clients.firestore import firestore_client
 from ask_astro.config import FirestoreCollections
 from ask_astro.models.request import AskAstroRequest
 from ask_astro.services.questions import answer_question
-from ask_astro.clients.firestore import firestore_client
+from langchain.schema import AIMessage, HumanMessage
+from pydantic.v1 import BaseModel, Field
+from sanic import Request, json
+from sanic_ext import openapi
 
 logger = getLogger(__name__)
 

@@ -1,15 +1,13 @@
 "Generates the slack app and the slack app handler."
 
-from slack_bolt.oauth.async_oauth_settings import AsyncOAuthSettings
-from slack_bolt.adapter.sanic import AsyncSlackRequestHandler
-from slack_bolt.app.async_app import AsyncApp
-
-from ask_astro.config import SlackAppConfig, FirestoreCollections
+from ask_astro.config import FirestoreCollections, SlackAppConfig
 from ask_astro.stores import (
     AsyncFirestoreInstallationStore,
     AsyncFirestoreOAuthStateStore,
 )
-
+from slack_bolt.adapter.sanic import AsyncSlackRequestHandler
+from slack_bolt.app.async_app import AsyncApp
+from slack_bolt.oauth.async_oauth_settings import AsyncOAuthSettings
 
 oauth_settings = AsyncOAuthSettings(
     client_id=SlackAppConfig.client_id,
