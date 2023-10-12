@@ -1,7 +1,6 @@
 import pandas as pd
 from typing import List
 
-from airflow.decorators import task
 
 from langchain.text_splitter import (
     RecursiveCharacterTextSplitter,
