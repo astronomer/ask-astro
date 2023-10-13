@@ -1,8 +1,4 @@
 ---
-ci:
-  skip:
-    - mypy  # requires additional dependencies in ci
-    - identity  # output is too verbose for ci; pre-commit.ci truncates almost all output after that
 default_stages: [commit, push]
 default_language_version:
   python: python3  # force all unspecified python hooks to run python3
@@ -15,7 +11,7 @@ repos:
       - id: check-hooks-apply
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.5.0
     hooks:
       - id: check-merge-conflict
       - id: check-yaml
@@ -34,7 +30,7 @@ repos:
         types: [python]
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.5.1
+    rev: v1.5.4
     hooks:
       - id: forbid-crlf
       - id: remove-crlf
@@ -44,14 +40,14 @@ repos:
         exclude: ^mk/|^docs/Makefile|^Makefile$
 
   - repo: https://github.com/psf/black
-    rev: 23.7.0
+    rev: 23.9.1
     hooks:
       - id: black
         args: ["--config", "pyproject.toml"]
         types: [python]
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: 1.15.0
+    rev: 1.16.0
     hooks:
       - id: blacken-docs
         alias: black
@@ -59,7 +55,7 @@ repos:
         types: [python]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.278'
+    rev: 'v0.0.292'
     hooks:
       - id: ruff
         args:
@@ -67,7 +63,7 @@ repos:
         types: [python]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.5
+    rev: v2.2.6
     hooks:
       - id: codespell
         name: Run codespell to check for common misspellings in files
@@ -76,7 +72,7 @@ repos:
         exclude: ^mk/.*\.mk$|^tests/modified_constraint_file.txt$
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.9.0
+    rev: v3.15.0
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
