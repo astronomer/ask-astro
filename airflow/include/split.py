@@ -1,17 +1,15 @@
 import pandas as pd
-from typing import List
-
-
-from langchain.text_splitter import (
-    RecursiveCharacterTextSplitter,
-    Language,
-)
 from langchain.schema import Document
+from langchain.text_splitter import (
+    Language,
+    RecursiveCharacterTextSplitter,
+)
+
 
 # @task
-def split_markdown(df:pd.DataFrame):
+def split_markdown(df: pd.DataFrame):
     """
-    This task concatenates multiple dataframes from upstream dynamic tasks and 
+    This task concatenates multiple dataframes from upstream dynamic tasks and
     splits the documents before import
 
     Dataframe fields are:
@@ -21,23 +19,24 @@ def split_markdown(df:pd.DataFrame):
     'content': Chunked content in markdown format.
 
     """
-    
+
     df = pd.concat(df, axis=0, ignore_index=True)
 
     splitter = RecursiveCharacterTextSplitter()
-    
-    df['doc_chunks'] = df['content'].apply(lambda x: splitter.split_documents([Document(page_content=x)]))
-    df = df.explode('doc_chunks', ignore_index=True)
-    df['content'] = df['doc_chunks'].apply(lambda x: x.page_content)
-    df.drop(['doc_chunks'], inplace=True, axis=1)
+
+    df["doc_chunks"] = df["content"].apply(lambda x: splitter.split_documents([Document(page_content=x)]))
+    df = df.explode("doc_chunks", ignore_index=True)
+    df["content"] = df["doc_chunks"].apply(lambda x: x.page_content)
+    df.drop(["doc_chunks"], inplace=True, axis=1)
     df.reset_index(inplace=True, drop=True)
 
     return df
 
+
 # @task
-def split_python(df:pd.DataFrame):
+def split_python(df: pd.DataFrame):
     """
-    This task concatenates multiple dataframes from upstream dynamic tasks and 
+    This task concatenates multiple dataframes from upstream dynamic tasks and
     splits python code
 
     Dataframe fields are:
@@ -50,14 +49,16 @@ def split_python(df:pd.DataFrame):
 
     df = pd.concat(df, axis=0, ignore_index=True)
 
-    splitter = RecursiveCharacterTextSplitter.from_language(language=Language.PYTHON, 
-                                                            # chunk_size=50, 
-                                                            chunk_overlap=0)
-    
-    df['doc_chunks'] = df['content'].apply(lambda x: splitter.split_documents([Document(page_content=x)]))
-    df = df.explode('doc_chunks', ignore_index=True)
-    df['content'] = df['doc_chunks'].apply(lambda x: x.page_content)
-    df.drop(['doc_chunks'], inplace=True, axis=1)
+    splitter = RecursiveCharacterTextSplitter.from_language(
+        language=Language.PYTHON,
+        # chunk_size=50,
+        chunk_overlap=0,
+    )
+
+    df["doc_chunks"] = df["content"].apply(lambda x: splitter.split_documents([Document(page_content=x)]))
+    df = df.explode("doc_chunks", ignore_index=True)
+    df["content"] = df["doc_chunks"].apply(lambda x: x.page_content)
+    df.drop(["doc_chunks"], inplace=True, axis=1)
     df.reset_index(inplace=True, drop=True)
 
     return df
