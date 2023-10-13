@@ -1,78 +1,78 @@
 {
-	"blocks": [
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": {{ message | tojson }}
-			}
-		},
+    "blocks": [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": {{ message | tojson }}
+            }
+        },
 {%  if sources %}
-		{
-			"type": "section",
-			"text": {
-				"type": "mrkdwn",
-				"text": {{ sources | tojson }}
-			}
-		},
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": {{ sources | tojson }}
+            }
+        },
 {%  endif %}
-		{
-			"type": "context",
-			"elements": [
-				{
-					"type": "plain_text",
-					"text": "⚠️ AI-generated content may be incorrect",
-					"emoji": true
-				}
-			]
-		},
-		{
-			"type": "actions",
-			"elements": [
-				{
-					"type": "button",
-					"style": "primary",
-					"text": {
-						"type": "plain_text",
-						"text": "👍",
-						"emoji": true
-					},
-					"value": "{{ feedback_value }}",
-					"action_id": "feedback_good"
-				},
-				{
-					"type": "button",
-					"style": "danger",
-					"text": {
-						"type": "plain_text",
-						"text": "👎",
-						"emoji": true
-					},
-					"value": "{{ feedback_value }}",
-					"action_id": "feedback_bad"
-				}{% if show_customer_actions %},
-				{
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"text": "🔧 Open a support case",
-						"emoji": true
-					},
-					"value": "feedback_support",
-					"action_id": "feedback_support"
-				},
-				{
-					"type": "button",
-					"text": {
-						"type": "plain_text",
-						"text": "📅 Book an office hour",
-						"emoji": true
-					},
-					"value": "feedback_morehelp",
-					"action_id": "feedback_morehelp",
-					"url": "https://calendly.com/d/yy2-tvp-xtv/astro-data-engineering-office-hours-ade"
-				}{% endif %}
-			]
-		}
-	]
+        {
+            "type": "context",
+            "elements": [
+                {
+                    "type": "plain_text",
+                    "text": "⚠️ AI-generated content may be incorrect",
+                    "emoji": true
+                }
+            ]
+        },
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "style": "primary",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "👍",
+                        "emoji": true
+                    },
+                    "value": "{{ feedback_value }}",
+                    "action_id": "feedback_good"
+                },
+                {
+                    "type": "button",
+                    "style": "danger",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "👎",
+                        "emoji": true
+                    },
+                    "value": "{{ feedback_value }}",
+                    "action_id": "feedback_bad"
+                }{% if show_customer_actions %},
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "🔧 Open a support case",
+                        "emoji": true
+                    },
+                    "value": "feedback_support",
+                    "action_id": "feedback_support"
+                },
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "📅 Book an office hour",
+                        "emoji": true
+                    },
+                    "value": "feedback_morehelp",
+                    "action_id": "feedback_morehelp",
+                    "url": "https://calendly.com/d/yy2-tvp-xtv/astro-data-engineering-office-hours-ade"
+                }{% endif %}
+            ]
+        }
+    ]
 }

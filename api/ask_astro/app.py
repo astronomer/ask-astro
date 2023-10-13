@@ -1,15 +1,14 @@
 """
 Initialize the Sanic app and route requests to the Slack app.
 """
-import os
 import logging
+import os
 from logging import getLogger
 
-from sanic import Sanic, Request
-
-from ask_astro.slack.app import slack_app, app_handler
-from ask_astro.slack.controllers import register_controllers
 from ask_astro.rest.controllers import register_routes
+from ask_astro.slack.app import app_handler, slack_app
+from ask_astro.slack.controllers import register_controllers
+from sanic import Request, Sanic
 
 # set the logging level based on an env var
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
@@ -24,7 +23,7 @@ api = Sanic(name="ask_astro")
 @api.get("/slack/install", name="install")
 @api.post("/slack/events", name="events")
 async def endpoint(req: Request):
-    "Forward requests to the Slack bolt hander"
+    """Forward requests to the Slack bolt handler."""
     return await app_handler.handle(req)
 
 

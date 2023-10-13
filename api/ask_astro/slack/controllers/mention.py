@@ -1,20 +1,17 @@
 "Handles app mention events from Slack"
 
-from asyncio import TaskGroup
-import asyncio
 import uuid
+from asyncio import TaskGroup
+from logging import getLogger
 from typing import Any
 
-from slack_bolt.async_app import AsyncAck, AsyncSay
-from slack_sdk.web.async_client import AsyncWebClient
-from slack_sdk.errors import SlackApiError
-from langchain.schema import HumanMessage, AIMessage
-
+from ask_astro.models.request import AskAstroRequest
 from ask_astro.services.questions import answer_question
 from ask_astro.slack.utils import get_blocks, markdown_to_slack
-from ask_astro.models.request import AskAstroRequest
-
-from logging import getLogger
+from langchain.schema import AIMessage, HumanMessage
+from slack_bolt.async_app import AsyncAck, AsyncSay
+from slack_sdk.errors import SlackApiError
+from slack_sdk.web.async_client import AsyncWebClient
 
 logger = getLogger(__name__)
 
@@ -82,9 +79,7 @@ async def on_mention(
 
             # turn the slack messages into a list of langchain messages
             request.messages = [
-                (AIMessage if msg.get("bot_id") == bot_id else HumanMessage)(
-                    content=msg["text"], additional_kwargs=msg
-                )
+                (AIMessage if msg.get("bot_id") == bot_id else HumanMessage)(content=msg["text"], additional_kwargs=msg)
                 for msg in slack_messages["messages"]
                 if msg.get("type") == "message" and msg.get("ts") != ts
             ]
@@ -96,7 +91,7 @@ async def on_mention(
             (
                 f"<{link}|[{n_}]>"
                 for n_, link in enumerate(
-                    [*set(s.name for s in request.sources if s.name)],
+                    [*{s.name for s in request.sources if s.name}],
                     start=1,
                 )
             )

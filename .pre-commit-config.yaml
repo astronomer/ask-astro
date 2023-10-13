@@ -1,0 +1,83 @@
+---
+ci:
+  skip:
+    - mypy  # requires additional dependencies in ci
+    - identity  # output is too verbose for ci; pre-commit.ci truncates almost all output after that
+default_stages: [commit, push]
+default_language_version:
+  python: python3  # force all unspecified python hooks to run python3
+minimum_pre_commit_version: "1.20.0"
+exclude: ^.*poetry.lock|ui/package-lock.json$
+repos:
+  - repo: meta
+    hooks:
+      - id: identity
+      - id: check-hooks-apply
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: debug-statements
+        types: [python]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: python-no-log-warn
+        types: [python]
+      - id: python-check-mock-methods
+        types: [python]
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.1
+    hooks:
+      - id: forbid-crlf
+      - id: remove-crlf
+      - id: forbid-tabs
+        exclude: ^mk/|^docs/Makefile|^Makefile$
+      - id: remove-tabs
+        exclude: ^mk/|^docs/Makefile|^Makefile$
+
+  - repo: https://github.com/psf/black
+    rev: 23.7.0
+    hooks:
+      - id: black
+        args: ["--config", "pyproject.toml"]
+        types: [python]
+
+  - repo: https://github.com/asottile/blacken-docs
+    rev: 1.15.0
+    hooks:
+      - id: blacken-docs
+        alias: black
+        additional_dependencies: [black>=22.10.0]
+        types: [python]
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: 'v0.0.278'
+    hooks:
+      - id: ruff
+        args:
+          - --config=./ruff.toml
+        types: [python]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.5
+    hooks:
+      - id: codespell
+        name: Run codespell to check for common misspellings in files
+        language: python
+        types: [text]
+        exclude: ^mk/.*\.mk$|^tests/modified_constraint_file.txt$
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.9.0
+    hooks:
+      - id: pyupgrade
+        args: [--py39-plus]
+        types: [python]

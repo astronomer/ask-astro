@@ -1,8 +1,8 @@
 import weaviate
-from weaviate import Client as WeaviateClient
 from ask_astro.config import AzureOpenAIParams, WeaviateConfig
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Weaviate
+from weaviate import Client as WeaviateClient
 
 embeddings = OpenAIEmbeddings(
     **AzureOpenAIParams.us_east,

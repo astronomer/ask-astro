@@ -3,17 +3,16 @@ Tasks for interacting with Weaviate.
 """
 
 import time
-import weaviate
-
-import pandas as pd
-from airflow.decorators import task
+from itertools import chain
 from logging import getLogger
 
-from itertools import chain
+import pandas as pd
+import weaviate
+from include.config import Connections
 from weaviate.util import generate_uuid5
 from weaviate_provider.hooks.weaviate import WeaviateHook
 
-from include.config import Connections
+from airflow.decorators import task
 
 logger = getLogger(__name__)
 
@@ -45,15 +44,11 @@ def weaviate_upsert(outputs: list[list[dict[str, str]]], weaviate_class: str):
             if client.data_object.exists(uuid=uuid, class_name=weaviate_class):
                 logger.info("Object with uuid %s exists, replacing", uuid)
 
-                client.data_object.replace(
-                    uuid=uuid, class_name=weaviate_class, data_object=doc
-                )
+                client.data_object.replace(uuid=uuid, class_name=weaviate_class, data_object=doc)
             else:
                 logger.info("Object with uuid %s does not exist, inserting", uuid)
 
-                client.data_object.create(
-                    class_name=weaviate_class, uuid=uuid, data_object=doc
-                )
+                client.data_object.create(class_name=weaviate_class, uuid=uuid, data_object=doc)
         except weaviate.UnexpectedStatusCodeException as e:
             if "Rate limit reached" in str(e):
                 new_delay = delay * 2 if delay > 0 else 1

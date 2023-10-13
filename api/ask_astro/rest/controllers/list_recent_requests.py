@@ -2,14 +2,12 @@
 Handles GET requests to the /ask/{question_id} endpoint.
 """
 
-from sanic import json, Request
-from sanic_ext import openapi
-
-from pydantic.v1 import BaseModel, Field
-
-from ask_astro.config import FirestoreCollections
 from ask_astro.clients.firestore import firestore_client
+from ask_astro.config import FirestoreCollections
 from ask_astro.models.request import AskAstroRequest
+from pydantic.v1 import BaseModel, Field
+from sanic import Request, json
+from sanic_ext import openapi
 
 
 class RecentRequestsResponse(BaseModel):
@@ -43,9 +41,7 @@ async def on_list_recent_requests(_: Request):
 
     return json(
         RecentRequestsResponse(
-            requests=[
-                AskAstroRequest.from_dict(request.to_dict()) for request in requests
-            ]
+            requests=[AskAstroRequest.from_dict(request.to_dict()) for request in requests]
         ).to_dict(),
         status=200,
     )

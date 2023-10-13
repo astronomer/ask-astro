@@ -1,2 +1,49 @@
+.git
+coverage.xml
+**/.coverage*
+**/.python-version
+test-connections.yaml
+.idea
+.env
+airflow_settings.yaml
+*.pyc
+*/__pycache__/*
+.idea%
+/build/
+/dist/
+**/dist/
+venv
+env
+dumps
+.vscode
+.nox
+
+# Benchmark
+airflow.db
+airflow.cfg
+unittests.db
+unittests.cfg
+
+# VIM
+*.sw[a-z]
+
+# MacOS
 .DS_Store
-**pycache**
+*/.DS_Store
+
+# docker
+**/dev/dags
+**/dev/logs
+**/dev/plugins
+
+# Airflow
+**/.airflowignore
+
+*.egg-info/
+
+# sphinx-related
+/docs/_build/
+/docs/_build/*
+/docs/autoapi/
+/.nox/
+.idea

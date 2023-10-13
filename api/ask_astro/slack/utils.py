@@ -1,5 +1,6 @@
 import json
 import re
+
 import jinja2
 
 
@@ -10,7 +11,7 @@ def markdown_to_slack(message: str):
         (re.compile("^    - ", flags=re.M), "    ⬩ "),  # ◆
         (re.compile("^      - ", flags=re.M), "    ◽ "),
         (re.compile("^#+ (.+)$", flags=re.M), r"*\1*"),
-        (re.compile("\*\*"), "*"),
+        (re.compile(r"\*\*"), "*"),
         (re.compile(r"\[(.+)]\((.+)\)"), r"<\2|\1>"),
         (re.compile("```\\S+\\n"), r"```\n"),
     )
@@ -22,7 +23,5 @@ def markdown_to_slack(message: str):
 
 
 def get_blocks(block: str, **kwargs):
-    env = jinja2.Environment(
-        loader=jinja2.FileSystemLoader("ask_astro/templates"), autoescape=True
-    )
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader("ask_astro/templates"), autoescape=True)
     return json.loads(env.get_template(block).render(kwargs))["blocks"]

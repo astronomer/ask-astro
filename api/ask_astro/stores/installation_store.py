@@ -3,7 +3,6 @@ from logging import Logger
 from typing import Optional
 
 import google.cloud.firestore
-
 from slack_sdk.oauth.installation_store.async_installation_store import (
     AsyncInstallationStore,
 )
@@ -88,7 +87,7 @@ class AsyncFirestoreInstallationStore(AsyncInstallationStore):
             await doc_ref.update(
                 {
                     self.fp("bot", "latest"): entity,
-                    self.fp(f"bot", history_version): entity,
+                    self.fp("bot", history_version): entity,
                 },
             )
         else:
@@ -144,12 +143,7 @@ class AsyncFirestoreInstallationStore(AsyncInstallationStore):
                 .get("latest")
             )
         else:
-            data = (
-                (await doc_ref.get([self.fp("installer", "latest")]))
-                .to_dict()
-                .get("installer", {})
-                .get("latest")
-            )
+            data = (await doc_ref.get([self.fp("installer", "latest")])).to_dict().get("installer", {}).get("latest")
 
         if data:
             installation = Installation(**data) if data else None
@@ -162,10 +156,7 @@ class AsyncFirestoreInstallationStore(AsyncInstallationStore):
                     team_id=team_id,
                     is_enterprise_install=is_enterprise_install,
                 )
-                if (
-                    latest_bot_installation is not None
-                    and installation.bot_token != latest_bot_installation.bot_token
-                ):
+                if latest_bot_installation is not None and installation.bot_token != latest_bot_installation.bot_token:
                     # NOTE: this logic is based on the assumption that every single installation has bot scopes
                     # If you need to installation patterns without bot scopes in the same S3 bucket,
                     # please fork this code and implement your own logic.
@@ -173,12 +164,8 @@ class AsyncFirestoreInstallationStore(AsyncInstallationStore):
                     installation.bot_user_id = latest_bot_installation.bot_user_id
                     installation.bot_token = latest_bot_installation.bot_token
                     installation.bot_scopes = latest_bot_installation.bot_scopes
-                    installation.bot_refresh_token = (
-                        latest_bot_installation.bot_refresh_token
-                    )
-                    installation.bot_token_expires_at = (
-                        latest_bot_installation.bot_token_expires_at
-                    )
+                    installation.bot_refresh_token = latest_bot_installation.bot_refresh_token
+                    installation.bot_token_expires_at = latest_bot_installation.bot_token_expires_at
 
             return installation
         else:
@@ -186,9 +173,7 @@ class AsyncFirestoreInstallationStore(AsyncInstallationStore):
             self.logger.debug(message)
             return None
 
-    async def async_delete_bot(
-        self, *, enterprise_id: Optional[str], team_id: Optional[str]
-    ) -> None:
+    async def async_delete_bot(self, *, enterprise_id: Optional[str], team_id: Optional[str]) -> None:
         none = "none"
         e_id = enterprise_id or none
         t_id = team_id or none

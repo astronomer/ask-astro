@@ -4,12 +4,10 @@ Handles POST requests to the /requests/{question_id}/feedback endpoint.
 
 from uuid import UUID
 
-from sanic import Request, HTTPResponse
-from sanic_ext import openapi
-
-from pydantic.v1 import BaseModel, Field
-
 from ask_astro.services.feedback import submit_feedback
+from pydantic.v1 import BaseModel, Field
+from sanic import HTTPResponse, Request
+from sanic_ext import openapi
 
 
 class PostRequestBody(BaseModel):

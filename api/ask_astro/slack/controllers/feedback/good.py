@@ -1,22 +1,16 @@
-import asyncio
-
+from asyncio import TaskGroup
 from logging import getLogger
-
 from typing import Any
 
-from slack_bolt.async_app import AsyncAck, AsyncRespond
-from slack_sdk.web.async_client import AsyncWebClient
-from slack_sdk.errors import SlackApiError
-from asyncio import TaskGroup
-
 from ask_astro.services.feedback import submit_feedback
+from slack_bolt.async_app import AsyncAck, AsyncRespond
+from slack_sdk.errors import SlackApiError
+from slack_sdk.web.async_client import AsyncWebClient
 
 logger = getLogger(__name__)
 
 
-async def handle_feedback_good(
-    body: dict[str, Any], ack: AsyncAck, respond: AsyncRespond, client: AsyncWebClient
-):
+async def handle_feedback_good(body: dict[str, Any], ack: AsyncAck, respond: AsyncRespond, client: AsyncWebClient):
     await ack()
 
     try:
@@ -61,7 +55,7 @@ async def handle_feedback_good(
                     channel=channel,
                     timestamp=message_ts,
                 )
-            except:
+            except Exception:
                 pass
 
         tg.create_task(
