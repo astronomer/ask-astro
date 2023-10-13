@@ -46,9 +46,7 @@ async def on_post_request(request: Request):
         logger.info("Received request to continue %s", from_request_uuid)
 
         from_request = await (
-            firestore_client.collection(FirestoreCollections.requests)
-            .document(from_request_uuid)
-            .get()
+            firestore_client.collection(FirestoreCollections.requests).document(from_request_uuid).get()
         )
         if not from_request.exists:
             return json(

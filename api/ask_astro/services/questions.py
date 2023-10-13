@@ -19,9 +19,9 @@ async def answer_question(request: AskAstroRequest):
     try:
         # first, mark the request as in_progress and add it to the database
         request.status = "in_progress"
-        await firestore_client.collection(FirestoreCollections.requests).document(
-            str(request.uuid)
-        ).set(request.to_firestore())
+        await firestore_client.collection(FirestoreCollections.requests).document(str(request.uuid)).set(
+            request.to_firestore()
+        )
 
         # then, run the question answering chain
         with callbacks.collect_runs() as cb:
@@ -52,17 +52,17 @@ async def answer_question(request: AskAstroRequest):
             if doc.metadata.get("docLink", "").startswith("https://")
         ]
 
-        await firestore_client.collection(FirestoreCollections.requests).document(
-            str(request.uuid)
-        ).set(request.to_firestore())
+        await firestore_client.collection(FirestoreCollections.requests).document(str(request.uuid)).set(
+            request.to_firestore()
+        )
 
     except Exception as e:
         # if there's an error, mark the request as errored and add it to the database
         request.status = "error"
         request.response = "Sorry, something went wrong. Please try again later."
-        await firestore_client.collection(FirestoreCollections.requests).document(
-            str(request.uuid)
-        ).set(request.to_firestore())
+        await firestore_client.collection(FirestoreCollections.requests).document(str(request.uuid)).set(
+            request.to_firestore()
+        )
 
         # then propagate the error
         raise e

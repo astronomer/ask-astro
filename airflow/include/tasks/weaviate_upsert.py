@@ -44,15 +44,11 @@ def weaviate_upsert(outputs: list[list[dict[str, str]]], weaviate_class: str):
             if client.data_object.exists(uuid=uuid, class_name=weaviate_class):
                 logger.info("Object with uuid %s exists, replacing", uuid)
 
-                client.data_object.replace(
-                    uuid=uuid, class_name=weaviate_class, data_object=doc
-                )
+                client.data_object.replace(uuid=uuid, class_name=weaviate_class, data_object=doc)
             else:
                 logger.info("Object with uuid %s does not exist, inserting", uuid)
 
-                client.data_object.create(
-                    class_name=weaviate_class, uuid=uuid, data_object=doc
-                )
+                client.data_object.create(class_name=weaviate_class, uuid=uuid, data_object=doc)
         except weaviate.UnexpectedStatusCodeException as e:
             if "Rate limit reached" in str(e):
                 new_delay = delay * 2 if delay > 0 else 1

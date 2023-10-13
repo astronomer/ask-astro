@@ -41,9 +41,7 @@ async def on_list_recent_requests(_: Request):
 
     return json(
         RecentRequestsResponse(
-            requests=[
-                AskAstroRequest.from_dict(request.to_dict()) for request in requests
-            ]
+            requests=[AskAstroRequest.from_dict(request.to_dict()) for request in requests]
         ).to_dict(),
         status=200,
     )

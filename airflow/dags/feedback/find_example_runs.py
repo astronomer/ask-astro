@@ -34,11 +34,7 @@ def get_unprocessed_runs():
     firestore_client = get_firestore_client()
 
     # get all requests that don't have a `is_example` field
-    unprocessed_runs = (
-        firestore_client.collection("ask-astro-dev-requests")
-        .where("is_processed", "==", False)
-        .get()
-    )
+    unprocessed_runs = firestore_client.collection("ask-astro-dev-requests").where("is_processed", "==", False).get()
 
     return [obj.to_dict() for obj in unprocessed_runs]
 
@@ -59,14 +55,17 @@ def process_run(run: dict[str, Any]):
     firestore_client = get_firestore_client()
 
     feedback = {}
+    on_topicness = (
+        "Is the prompt or answer related to Apache Airflow, Astronomer, or "
+        "Data Engineering? If yes, return Y. If no, return N."
+    )
+    publicness_txt = (
+        "Does the prompt or answer contain only public (non-private) info? If yes, return Y. If no, return N."
+    )
     for criteria in [
         "helpfulness",
-        {
-            "publicness": "Does the prompt or answer contain only public (non-private) info? If yes, return Y. If no, return N."
-        },
-        {
-            "on-topicness": "Is the prompt or answer related to Apache Airflow, Astronomer, or Data Engineering? If yes, return Y. If no, return N."
-        },
+        {"publicness": publicness_txt},
+        {"on-topicness": on_topicness},
     ]:
         evaluator = load_evaluator(
             EvaluatorType.CRITERIA,
@@ -108,9 +107,7 @@ def process_run(run: dict[str, Any]):
         update_dict["is_example"] = True
         print("Marking run as example")
 
-    firestore_client.collection("ask-astro-dev-requests").document(run["uuid"]).set(
-        update_dict, merge=True
-    )
+    firestore_client.collection("ask-astro-dev-requests").document(run["uuid"]).set(update_dict, merge=True)
 
     return feedback
 

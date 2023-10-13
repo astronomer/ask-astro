@@ -79,9 +79,7 @@ async def on_mention(
 
             # turn the slack messages into a list of langchain messages
             request.messages = [
-                (AIMessage if msg.get("bot_id") == bot_id else HumanMessage)(
-                    content=msg["text"], additional_kwargs=msg
-                )
+                (AIMessage if msg.get("bot_id") == bot_id else HumanMessage)(content=msg["text"], additional_kwargs=msg)
                 for msg in slack_messages["messages"]
                 if msg.get("type") == "message" and msg.get("ts") != ts
             ]

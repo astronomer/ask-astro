@@ -10,9 +10,7 @@ from slack_sdk.web.async_client import AsyncWebClient
 logger = getLogger(__name__)
 
 
-async def handle_feedback_good(
-    body: dict[str, Any], ack: AsyncAck, respond: AsyncRespond, client: AsyncWebClient
-):
+async def handle_feedback_good(body: dict[str, Any], ack: AsyncAck, respond: AsyncRespond, client: AsyncWebClient):
     await ack()
 
     try:
@@ -57,7 +55,7 @@ async def handle_feedback_good(
                     channel=channel,
                     timestamp=message_ts,
                 )
-            except:
+            except Exception:
                 pass
 
         tg.create_task(

@@ -20,11 +20,7 @@ async def on_get_request(_: Request, request_id: UUID):
     Handles GET requests to the /requests/{request_id} endpoint.
     """
     logger.info("Received GET request for request %s", request_id)
-    request = await (
-        firestore_client.collection(FirestoreCollections.requests)
-        .document(str(request_id))
-        .get()
-    )
+    request = await firestore_client.collection(FirestoreCollections.requests).document(str(request_id)).get()
     logger.info("Request %s exists: %s", request_id, request.exists)
 
     if not request.exists:

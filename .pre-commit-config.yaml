@@ -7,6 +7,7 @@ default_stages: [commit, push]
 default_language_version:
   python: python3  # force all unspecified python hooks to run python3
 minimum_pre_commit_version: "1.20.0"
+exclude: ^.*poetry.lock|ui/package-lock.json$
 repos:
   - repo: meta
     hooks:
@@ -78,5 +79,5 @@ repos:
     rev: v3.9.0
     hooks:
       - id: pyupgrade
-        args: [--py37-plus]
+        args: [--py39-plus]
         types: [python]
