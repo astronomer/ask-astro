@@ -5,6 +5,9 @@
             "description": "Document from github or stackoverflow",
             "vectorizer": "text2vec-openai",
             "moduleConfig": {
+                "reranker-cohere": {
+                    "model": "rerank-multilingual-v2.0"
+                },
                 "text2vec-openai": {
                     "model": "ada",
                     "modelVersion": "002",
@@ -39,6 +42,7 @@
                     "name": "docLink",
                     "description": "The url of source data",
                     "dataType": ["text"],
+                    "tokenization": "field",
                     "moduleConfig": {
                         "text2vec-openai": {
                             "skip": "True",
