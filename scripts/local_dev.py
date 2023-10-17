@@ -81,7 +81,7 @@ def run_airflow() -> None:
 
 
 if __name__ == "__main__":
-    commands = ["run-api-server", "run-ui", "run-airflow"]
+    commands = ["run-api-server", "run-ui", "run-airflow", "api-env-template"]
     if len(sys.argv) < 2:
         raise ValueError(f"Command is missing. Valid command is one of {commands}")
     command = sys.argv[1]
