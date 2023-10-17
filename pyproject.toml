@@ -1,10 +1,22 @@
+[tool.poetry]
+name = "ask-astro"
+version = "0.1.0"
+description = ""
+authors = ["Wei Lee <weilee.rx@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
 [tool.black]
 line-length = 120
 target-version = ['py39']
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
 
 [tool.ruff]
 line-length = 120
@@ -13,7 +25,7 @@ line-length = 120
 extend-select = [
     "W",    # pycodestyle warnings
     "I",    # isort
-#    "C90",  # Complexity # TODO: enable this and the score below
+#    "C90",  # Complexity  # TODO: enable this and the score below
 #    "B",    # flake8-bugbear
     "C",    # flake8-comprehensions
 #    "ANN",  # flake8-comprehensions
