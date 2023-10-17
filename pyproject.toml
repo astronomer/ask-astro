@@ -5,3 +5,38 @@ target-version = ['py39']
 [tool.isort]
 profile = "black"
 multi_line_output = 3
+
+[tool.ruff]
+line-length = 120
+
+# Enable Pyflakes `E` and `F` codes by default.
+extend-select = [
+    "W",    # pycodestyle warnings
+    "I",    # isort
+#    "C90",  # Complexity # TODO: enable this and the score below
+#    "B",    # flake8-bugbear
+    "C",    # flake8-comprehensions
+#    "ANN",  # flake8-comprehensions
+    "ISC",  # flake8-implicit-str-concat
+    "T10",  # flake8-debugger
+    "A",    # flake8-builtins
+    "UP",   # pyupgrade
+]
+extend-ignore = ["A002", "C901"]
+
+# Exclude a variety of commonly ignored directories.
+extend-exclude = [
+    "__pycache__",
+    "docs/source/conf.py",
+]
+target-version = "py39"
+fix = true
+
+[tool.ruff.per-file-ignores]
+
+# TODO: Decrease the complexity and fix the errors.
+# [mccabe]
+# max-complexity = 6
+
+[tool.ruff.isort]
+combine-as-imports = true
