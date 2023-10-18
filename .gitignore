@@ -47,3 +47,12 @@ unittests.cfg
 /docs/autoapi/
 /.nox/
 .idea
+
+package-lock.json
+
+./api/.env
+./api/gcp.json
+
+./ui/.env
+
+.pytest_cache/
