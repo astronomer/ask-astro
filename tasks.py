@@ -7,6 +7,12 @@ api_container_name = "ask-astro-api"
 
 
 @task
+def run_api_server_with_poetry(ctx: Context) -> None:
+    with ctx.cd("api"):
+        ctx.run("poetry run python -m ask_astro.app")
+
+
+@task
 def run_api_server(
     ctx: Context,
     build_image: bool = False,
