@@ -11,7 +11,7 @@ build configuration [/api/cloudbuild.yaml](../api/cloudbuild.yaml).
 
 ![create cloud run service](./images/cloud_run_home.png)
 
-3. Select "continuously deploy new revision from source repository" and "SET UP WITH CLOUD BUILD"
+3. Select "continuously deploy new revision from source repository" and "Set up with cloud build"
 4. Select Repository provider as "GitHub" and click on next
 
 ![create cloud build config](./images/cloud_run_ci_deploy.png)
