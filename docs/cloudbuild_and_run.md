@@ -1,7 +1,7 @@
 # Backend API CI/CD
 
 Currently, we use [Google cloud run](https://cloud.google.com/run/docs/overview/what-is-cloud-run) to run API server,
-and we deploy the backend API with [cloud build](https://cloud.google.com/build/docs/overview). You can find the cloud 
+and we deploy the backend API with [cloud build](https://cloud.google.com/build/docs/overview). You can find the cloud
 build configuration [/api/cloudbuild.yaml](../api/cloudbuild.yaml).
 
 ## Create cloud run service
@@ -16,9 +16,9 @@ build configuration [/api/cloudbuild.yaml](../api/cloudbuild.yaml).
 
 ![create cloud build config](./images/cloud_run_ci_deploy.png)
 
-5. Set up build configuration 
-   1. Branch name: main 
-   2. Build type: Python via buildpacks 
+5. Set up build configuration
+   1. Branch name: main
+   2. Build type: Python via buildpacks
    3. build context directory: /api
 
 ![create cloud build config](./images/cloud_run_build_config.png)
