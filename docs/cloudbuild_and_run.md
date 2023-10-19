@@ -47,7 +47,7 @@ Above steps will create a cloud service and also template for cloud build
 
 1. Go to https://console.cloud.google.com/ and search for "cloud build" service.
 
-![cloud buid trigger](./images/cloud_build_trigger.png)
+![cloud build trigger](./images/cloud_build_trigger.png)
 
 2. Click on "Triggers"
 3. The previous steps will have already created a cloud trigger template for you which you can edit
