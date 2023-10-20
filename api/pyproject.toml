@@ -3,7 +3,6 @@ name = "ask-astro"
 version = "0.1.0"
 description = ""
 authors = ["Philippe Gagnon <12717218+pgagnon@users.noreply.github.com>"]
-readme = "README.md"
 packages = [{include = "ask_astro"}]
 
 [tool.poetry.dependencies]
