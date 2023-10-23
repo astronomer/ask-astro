@@ -1,7 +1,7 @@
 <br />
 
 <p align="center">
-  <img src="/static/logo.svg" />
+  <img src="static/logo.svg" />
 </p>
 
 <br />
@@ -20,7 +20,7 @@ If you have any questions, feedback, or want to share similar use cases, reach o
 
 ## Data Retrieval & Embedding
 <p align="center">
-  <img src="/static/ingestion.png" />
+  <img src="static/ingestion.png" />
 </p>
 
 In order to make the responses as factual and accurate as possible, it's generally best practice to use [Retrieval Augmented Generation (RAG)](https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html). However, in order for RAG to be effective, a vector database needs to be populated with the most up-to-date and relevant information.
@@ -32,17 +32,20 @@ Ask Astro uses a set of Airflow DAGs that: ingest data from a source via an API 
 - [Astronomer blog](https://www.astronomer.io/blog/)
 - [Astronomer Registry](https://registry.astronomer.io)
 - [Apache Airflow GitHub](https://github.com/apache/airflow) issues and pull requests
-- Apache Airflow Slack's #troubleshooting channel
+- [OpenLineage GitHub](https://github.com/OpenLineage/OpenLineage)
+- [OpenLineage GitHub docs](https://github.com/OpenLineage/docs)
+- Apache Airflow Slack's [#troubleshooting channel](https://app.slack.com/client/TCQ18L22Z/CCQ7EGB1P)
 - [StackOverflow's Stack Exchange Data Dump](https://archive.org/details/stackexchange)
 
 Generally, each of these sources has a DAG that handles the ingestion flow. We use LangChain's built-in text splitters for processing Markdown, RST, and Python code into smaller chunks to ensure each document is small enough to give accurate results when doing embeddings. We then use a Weaviate provider that we've built (and plan to publish) to both embed and store each document as a vector in Weaviate using OpenAI's embedding model.
 
-In addition to the individual DAGs per source, we have one DAG to do full-database refreshes based on an offline archive of all data. This offline archive allows us to experiment with new vector databases, embedding models, chunking strategies, etc.
+In addition to the individual DAGs per source, we have one DAG to do full-database refreshes based on a baseline of all data. The first time the `ask-astro-load-bulk` DAG runs it saves extracted documents in parquet files for a point-in-time baseline.  This baseline allows us to experiment with new vector databases, embedding models, chunking strategies, etc. much more quickly.
 
+See the [Ingest README](https://github.com/astronomer/ask-astro/tree/main/airflow/README.md) for details on configuring ingest with sources and connection details.
 
 ## Prompt Orchestration
 <p align="center">
-  <img src="/static/prompt-orchestration.png" />
+  <img src="static/prompt-orchestration.png" />
 </p>
 
 Ask Astro uses LangChain's `ConversationalRetrievalChain` to generate a response. This chain does the following:
@@ -57,7 +60,7 @@ This generally works well. For prompt rewording, we use `gpt-3.5-turbo`, which r
 
 ## Feedback Loops
 <p align="center">
-  <img src="/static/feedback-loops.png" />
+  <img src="static/feedback-loops.png" />
 </p>
 
 Airflow is critical in improving model performance over time. Feedback on answers come from two places:
