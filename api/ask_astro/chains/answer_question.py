@@ -13,6 +13,15 @@ from langchain.prompts import (
 )
 from langchain.retrievers import MultiQueryRetriever
 
+# Skip Slack as data source.
+where_filter = {"path": ["docSource"], "operator": "NotEqual", "valueString": "troubleshooting"}
+
+query = {
+    "where": where_filter,
+}
+
+docsearch_results = docsearch.search(query=query, search_type="similarity")
+
 with open("ask_astro/templates/combine_docs_chat_prompt.txt") as system_prompt_fd:
     messages = [
         SystemMessagePromptTemplate.from_template(system_prompt_fd.read()),
@@ -26,7 +35,7 @@ retriever = MultiQueryRetriever.from_llm(
         deployment_name="gpt-35-turbo",
         temperature=0,
     ),
-    retriever=docsearch.as_retriever(),
+    retriever=docsearch_results.as_retriever(),
 )
 
 answer_question_chain = ConversationalRetrievalChain(
