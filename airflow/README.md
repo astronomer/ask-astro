@@ -89,7 +89,7 @@ For the basic functionality of ingest and embedding a [vectorizer](https://weavi
 
 5.  (Optional) Use pre-embedded baseline:  The `ask_astro_load_bulk` DAG has been configured to optionally use a seeded baseline of pre-embedded data.  This is useful for RAG evaluation purposes.  To ingest from the seeded baseline:
 - Open the file `include/dags/ask_astro_load.py`
-- Set the `seed_baseline` variable to 'https://astronomer-demos-public-readonly.s3.us-west-2.amazonaws.com/ask-astro/baseline_data_v1.parquet'
+- Set the `seed_baseline` variable to 'https://astronomer-demos-public-readonly.s3.us-west-2.amazonaws.com/ask-astro/baseline_data_v2.parquet'
 - Save the file
 
 6.  Start Apache Airflow and Weaviate
