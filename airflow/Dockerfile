@@ -1,3 +1,5 @@
-FROM quay.io/astronomer/astro-runtime:9.1.0-base
+# syntax=quay.io/astronomer/airflow-extensions:latest
 
-COPY include/airflow_provider_weaviate-1.0.0-py3-none-any.whl /tmp
+FROM quay.io/astronomer/astro-runtime:9.3.0-base
+
+COPY include/airflow_provider_weaviate-0.0.1-py3-none-any.whl /tmp
