@@ -61,20 +61,20 @@ cd ask-astro
 ```
 
 3. Create a file called `airflow/.env` with the following connection strings and environment variables.
-- `ASK_ASTRO_ENV`: This is an environment variable that allows us to switch easily between local development and hosted test/prod instances.  
+- `ASK_ASTRO_ENV`: This is an environment variable that allows us to switch easily between local development and hosted test/prod instances.
 Example:
 ```
 ASK_ASTRO_ENV='local'
 ```
-- `AIRFLOW_CONN_GITHUB_RO`: Add a github [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).  The token needs NO PRIVILEGES for the example DAGs since it is reading from public repos.  If adding another private repo use a token with read privileges for that repo.  
+- `AIRFLOW_CONN_GITHUB_RO`: Add a github [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).  The token needs NO PRIVILEGES for the example DAGs since it is reading from public repos.  If adding another private repo use a token with read privileges for that repo.
 Example:
 ```
 AIRFLOW_CONN_GITHUB_RO='{"conn_type": "github", "password": "ghp_xxxxxxxxxxxxxx"}'
 ```
-- `AIRFLOW_CONN_WEAVIATE_LOCAL`: Add OpenAI keys to be used during embedding ingest and for data query.  
-  -- `X-Azure-Api-Key`: Specify for OpenAI endpoints with Microsoft Azure.  
-  -- `X-OpenAI-Api-Key`: Specify for public OpenAI endpoints.  
-Example: 
+- `AIRFLOW_CONN_WEAVIATE_LOCAL`: Add OpenAI keys to be used during embedding ingest and for data query.
+  -- `X-Azure-Api-Key`: Specify for OpenAI endpoints with Microsoft Azure.
+  -- `X-OpenAI-Api-Key`: Specify for public OpenAI endpoints.
+Example:
 ```
 AIRFLOW_CONN_WEAVIATE_LOCAL='{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "sk-xxxxxxx"}}'
 ```
@@ -189,12 +189,12 @@ astro deployment variable update -n 'ask astro dev' ASK_ASTRO_ENV=dev
 astro deploy -fn 'ask astro dev'
 ```
 
-13. Query the Data: A simple Streamlit application is provided to query the data.  For this application you will have needed to provide an OpenAI key with the Weaviate connection string in step 3.  
+13. Query the Data: A simple Streamlit application is provided to query the data.  For this application you will have needed to provide an OpenAI key with the Weaviate connection string in step 3.
 
 - Connect to the webserver container with the Astro CLI
 ```bash
 astro dev bash -w
-``` 
+```
 
 - Start Streamlit
 ```bash
