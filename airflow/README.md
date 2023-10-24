@@ -60,19 +60,28 @@ git clone https://github.com/astronomer/ask-astro
 cd ask-astro
 ```
 
-3. Open the `airflow/.env` file in an editor and update the following connection strings.  These can also be added through the Airflow UI later.
-- `AIRFLOW_CONN_GITHUB_RO`: Add a github [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) with read privileges for _public_ repos github.  If creating a new PAT you do not need to give any permissions or authorizations to ingest github documents.
-- `AIRFLOW_CONN_WEAVIATE_LOCAL`: Add OpenAI keys to be used during embedding ingest.
-  -- `X-Azure-Api-Key`: Specify for OpenAI endpoints with Microsoft Azure.
-  -- `X-OpenAI-Api-Key`: Specify for public OpenAI endpoints.
+3. Create a file called `airflow/.env` with the following connection strings and environment variables.
+- `ASK_ASTRO_ENV`: This is an environment variable that allows us to switch easily between local development and hosted test/prod instances.  
+Example:
+```
+ASK_ASTRO_ENV='local'
+```
+- `AIRFLOW_CONN_GITHUB_RO`: Add a github [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).  The token needs NO PRIVILEGES for the example DAGs since it is reading from public repos.  If adding another private repo use a token with read privileges for that repo.  
+Example:
+```
+AIRFLOW_CONN_GITHUB_RO='{"conn_type": "github", "password": "ghp_xxxxxxxxxxxxxx"}'
+```
+- `AIRFLOW_CONN_WEAVIATE_LOCAL`: Add OpenAI keys to be used during embedding ingest and for data query.  
+  -- `X-Azure-Api-Key`: Specify for OpenAI endpoints with Microsoft Azure.  
+  -- `X-OpenAI-Api-Key`: Specify for public OpenAI endpoints.  
+Example: 
+```
+AIRFLOW_CONN_WEAVIATE_LOCAL='{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "sk-xxxxxxx"}}'
+```
 
-  The OpenAI token is not needed if ingesting from the seeded baseline.  See step 5 below.
+- `AIRFLOW_CONN_SLACK_API_RO`: Optionally add a Slack token for reading slack messages from the desired slack channel.  This is not needed for the bulk ingest of Airflow `troubleshooting` channel as a baseline from slack archives is used.
 
-- `AIRFLOW_CONN_SLACK_API_RO`: Optionally add a Slack token for reading slack messages from the desired slack channel.  This is not needed for the bulk ingest of Airflow troubleshooting channel as a baseline parquet file is provided in the repo.
-
-The `AIRFLOW_CONN_WEAVIATE_DEV`, `AIRFLOW_CONN_WEAVIATE_TEST` and `AIRFLOW_CONN_WEAVIATE_PROD` point to hosted [Weaviate Cloud Services](https://console.weaviate.cloud/) instances.  If you have created Weaviate account(s) add the host, token and OpenAI key (same as above) for each.
-
-4.  Update the schema: The baseline template includes a single document class called `Docs`.  This is for simplicity of the reference architecture and, even with a simple schema, Ask Astro performs very well.  When building from the reference architecture it will likely be necessary to optimize the schema for the specific document types and use-case.
+4.  Update the schema: The template includes a single document class called `Docs`.  This is for simplicity of the reference architecture and, even with a simple schema, Ask Astro performs very well.  When building a new usecase from the reference architecture it will likely be necessary to optimize the schema for the specific document types and use-case.
 
 The Weaviate schema specifies LLM models to use for [embedding](https://weaviate.io/developers/weaviate/modules/retriever-vectorizer-modules/text2vec-openai).  This repo provides a sample schema in the `airflow/include/data/schema.json` file based on OpenAI endpoints.
 
@@ -85,7 +94,7 @@ For Microsoft Azure OpenAI endpoints edit the schema file and change the `text2v
 },
 ```
 
-For the basic functionality of ingest and embedding a [vectorizer](https://weaviate.io/developers/weaviate/modules/retriever-vectorizer-modules#vectorization-with-text2vec--modules) for embedding documents is the only requirement.  Optionally update LLM model parameters for [reranking](https://weaviate.io/developers/weaviate/modules/retriever-vectorizer-modules/reranker-cohere), [generative search](https://weaviate.io/developers/weaviate/modules/reader-generator-modules/generative-openai) and [Q&A](https://weaviate.io/developers/weaviate/modules/reader-generator-modules/qna-openai).
+For the basic functionality of ingest and embedding a [vectorizer module](https://weaviate.io/developers/weaviate/modules/retriever-vectorizer-modules#vectorization-with-text2vec--modules) is the only requirement.  The Streamlit application will use the OpenAI key for [generative search](https://weaviate.io/developers/weaviate/modules/reader-generator-modules/generative-openai) and [Q&A](https://weaviate.io/developers/weaviate/modules/reader-generator-modules/qna-openai).
 
 5.  (Optional) Use pre-embedded baseline:  The `ask_astro_load_bulk` DAG has been configured to optionally use a seeded baseline of pre-embedded data.  This is useful for RAG evaluation purposes.  To ingest from the seeded baseline:
 - Open the file `include/dags/ask_astro_load.py`
@@ -178,6 +187,19 @@ astro deployment create -n 'ask astro dev'
 astro deployment variable update -lsn 'ask astro dev'
 astro deployment variable update -n 'ask astro dev' ASK_ASTRO_ENV=dev
 astro deploy -fn 'ask astro dev'
+```
+
+13. Query the Data: A simple Streamlit application is provided to query the data.  For this application you will have needed to provide an OpenAI key with the Weaviate connection string in step 3.  
+
+- Connect to the webserver container with the Astro CLI
+```bash
+astro dev bash -w
+``` 
+
+- Start Streamlit
+```bash
+cd include/streamlit
+python -m streamlit run ./streamlit_app.py
 ```
 
 ## Feedback
