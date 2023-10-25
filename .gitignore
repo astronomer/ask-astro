@@ -231,7 +231,6 @@ poetry.toml
 pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
->>>>>>> 6106711 (build(git): add common python ignored files to gitignore)
 
 # Serialized baseline docs
 airflow/include/data/OpenLineage/OpenLineage/.parquet
