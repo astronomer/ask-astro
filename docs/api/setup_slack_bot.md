@@ -31,7 +31,7 @@
     * files:read
 11. Go to "Event Subscriptions" page (`https://api.slack.com/apps/<API_ID>/event-subscriptions?`)
 12. Set "Request URL" as `https://<ask-astro api backend host>/slack/events` ![8-event-subscription](static/8-event-subscription.png)
-13. 12. Go to "Interactivity & Shortcuts" page.
+13. Go to "Interactivity & Shortcuts" page.
 14. Set "Request URL" as `https://<ask-astro api backend host>/slack/events`.
 15. Go to `https://<ask-astro api backend host>/slack/install` and you'll see ![9-slack-install](static/9-slack-install.png)
 16. The ask-astro bot should be ready to go in you Slack work space
