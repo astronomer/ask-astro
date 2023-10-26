@@ -48,7 +48,7 @@ stackoverflow_tags = [
     "airflow",
 ]
 
-schedule_interval = '@daily' if ask_astro_env == "prod" else None
+schedule_interval = "@daily" if ask_astro_env == "prod" else None
 
 
 @dag(schedule_interval=schedule_interval, start_date=datetime(2023, 9, 27), catchup=False, is_paused_upon_creation=True)
