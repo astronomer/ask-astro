@@ -4,7 +4,7 @@ from textwrap import dedent
 
 import pandas as pd
 from include.tasks import ingest, split
-from include.tasks.extract import blogs, github, registry, slack, stack_overflow
+from include.tasks.extract import blogs, github, registry, stack_overflow
 from weaviate_provider.operators.weaviate import WeaviateCheckSchemaBranchOperator, WeaviateCreateSchemaOperator
 
 from airflow.decorators import dag, task
@@ -48,8 +48,10 @@ stackoverflow_tags = [
     "airflow",
 ]
 
+schedule_interval = "@daily" if ask_astro_env == "prod" else None
 
-@dag(schedule_interval=None, start_date=datetime(2023, 9, 27), catchup=False, is_paused_upon_creation=True)
+
+@dag(schedule_interval=schedule_interval, start_date=datetime(2023, 9, 27), catchup=False, is_paused_upon_creation=True)
 def ask_astro_load_bulk():
     """
     This DAG performs the initial load of data from sources.
@@ -97,7 +99,7 @@ def ask_astro_load_bulk():
                 "extract_github_markdown",
                 "extract_github_rst",
                 "extract_stack_overflow",
-                "extract_slack_archive",
+                # "extract_slack_archive",
                 "extract_astro_registry_cell_types",
                 "extract_github_issues",
                 "extract_astro_blogs",
@@ -147,15 +149,15 @@ def ask_astro_load_bulk():
 
         return df
 
-    @task(trigger_rule="none_failed")
-    def extract_slack_archive(source: dict):
-        try:
-            df = pd.read_parquet("include/data/slack/troubleshooting.parquet")
-        except Exception:
-            df = slack.extract_slack_archive(source)
-            df.to_parquet("include/data/slack/troubleshooting.parquet")
-
-        return df
+    # @task(trigger_rule="none_failed")
+    # def extract_slack_archive(source: dict):
+    #     try:
+    #         df = pd.read_parquet("include/data/slack/troubleshooting.parquet")
+    #     except Exception:
+    #         df = slack.extract_slack_archive(source)
+    #         df.to_parquet("include/data/slack/troubleshooting.parquet")
+    #
+    #     return df
 
     @task(trigger_rule="none_failed")
     def extract_github_issues(repo_base: str):
@@ -209,7 +211,7 @@ def ask_astro_load_bulk():
         tag=stackoverflow_tags
     )
 
-    slack_docs = extract_slack_archive.expand(source=slack_channel_sources)
+    # slack_docs = extract_slack_archive.expand(source=slack_channel_sources)
 
     registry_cells_docs = extract_astro_registry_cell_types()
 
@@ -224,7 +226,7 @@ def ask_astro_load_bulk():
         rst_docs,
         issues_docs,
         stackoverflow_docs,
-        slack_docs,
+        # slack_docs,
         blogs_docs,
         registry_cells_docs,
     ]
@@ -248,9 +250,14 @@ def ask_astro_load_bulk():
     _create_schema >> markdown_tasks + python_code_tasks + [_check_seed_baseline]
 
     _check_seed_baseline >> issues_docs >> rst_docs >> md_docs
+    # (
+    #     _check_seed_baseline
+    #     >> [stackoverflow_docs, slack_docs, blogs_docs, registry_cells_docs, _import_baseline] + python_code_tasks
+    # )
+
     (
         _check_seed_baseline
-        >> [stackoverflow_docs, slack_docs, blogs_docs, registry_cells_docs, _import_baseline] + python_code_tasks
+        >> [stackoverflow_docs, blogs_docs, registry_cells_docs, _import_baseline] + python_code_tasks
     )
 
 
