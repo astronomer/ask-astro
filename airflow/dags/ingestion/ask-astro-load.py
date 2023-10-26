@@ -4,7 +4,7 @@ from textwrap import dedent
 
 import pandas as pd
 from include.tasks import ingest, split
-from include.tasks.extract import blogs, github, registry, slack, stack_overflow
+from include.tasks.extract import blogs, github, registry, stack_overflow
 from weaviate_provider.operators.weaviate import WeaviateCheckSchemaBranchOperator, WeaviateCreateSchemaOperator
 
 from airflow.decorators import dag, task
@@ -256,8 +256,8 @@ def ask_astro_load_bulk():
     # )
 
     (
-            _check_seed_baseline
-            >> [stackoverflow_docs, blogs_docs, registry_cells_docs, _import_baseline] + python_code_tasks
+        _check_seed_baseline
+        >> [stackoverflow_docs, blogs_docs, registry_cells_docs, _import_baseline] + python_code_tasks
     )
 
 
