@@ -48,8 +48,10 @@ stackoverflow_tags = [
     "airflow",
 ]
 
+schedule_interval = '@daily' if ask_astro_env == "prod" else None
 
-@dag(schedule_interval=None, start_date=datetime(2023, 9, 27), catchup=False, is_paused_upon_creation=True)
+
+@dag(schedule_interval=schedule_interval, start_date=datetime(2023, 9, 27), catchup=False, is_paused_upon_creation=True)
 def ask_astro_load_bulk():
     """
     This DAG performs the initial load of data from sources.
