@@ -13,3 +13,4 @@ openai==0.28.1
 bs4==0.0.1
 lxml==4.9.3
 tiktoken==0.5.1
+firebase-admin
