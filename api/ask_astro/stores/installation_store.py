@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import logging
 from logging import Logger
-from typing import Optional
 
 import google.cloud.firestore
 from slack_sdk.oauth.installation_store.async_installation_store import (
@@ -11,14 +12,24 @@ from slack_sdk.oauth.installation_store.models.installation import Installation
 
 
 class AsyncFirestoreInstallationStore(AsyncInstallationStore):
+    """Asynchronous Firestore-backed installation store for Slack."""
+
     def __init__(
         self,
         *,
         collection: str,
         historical_data_enabled: bool = True,
-        client_id: Optional[str] = None,
+        client_id: str | None = None,
         logger: Logger = logging.getLogger(__name__),
     ):
+        """
+        Initialize the AsyncFirestoreInstallationStore.
+
+        :param collection: The Firestore collection name.
+        :param historical_data_enabled: Store historical data if True. Default is True.
+        :param client_id: Optional Slack client ID.
+        :param logger: Logger instance.
+        """
         firestore_client = google.cloud.firestore.AsyncClient()
         self.fp = firestore_client.field_path
         self.collection = firestore_client.collection(collection)
@@ -28,11 +39,17 @@ class AsyncFirestoreInstallationStore(AsyncInstallationStore):
 
     @property
     def logger(self) -> Logger:
+        """Lazy-loaded logger property."""
         if self._logger is None:
             self._logger = logging.getLogger(__name__)
         return self._logger
 
-    async def async_save(self, installation: Installation):
+    async def async_save(self, installation: Installation) -> None:
+        """
+        Save installation data to Firestore.
+
+        :param installation: The installation data to save.
+        """
         none = "none"
         e_id = installation.enterprise_id or none
         t_id = installation.team_id or none
@@ -74,7 +91,12 @@ class AsyncFirestoreInstallationStore(AsyncInstallationStore):
                 {self.fp("installer", u_id, "latest"): entity},
             )
 
-    async def async_save_bot(self, bot: Bot):
+    async def async_save_bot(self, bot: Bot) -> None:
+        """
+        Save bot data to Firestore.
+
+        :param bot: The bot data to save.
+        """
         none = "none"
         e_id = bot.enterprise_id or none
         t_id = bot.team_id or none
@@ -99,10 +121,17 @@ class AsyncFirestoreInstallationStore(AsyncInstallationStore):
     async def async_find_bot(
         self,
         *,
-        enterprise_id: Optional[str],
-        team_id: Optional[str],
-        is_enterprise_install: Optional[bool] = False,
-    ) -> Optional[Bot]:
+        enterprise_id: str | None,
+        team_id: str | None,
+        is_enterprise_install: bool | None = False,
+    ) -> Bot | None:
+        """
+        Find bot data from Firestore.
+
+        :param enterprise_id: The enterprise ID.
+        :param team_id: The team ID.
+        :param is_enterprise_install: Whether the installation is an enterprise installation.
+        """
         none = "none"
         e_id = enterprise_id or none
         t_id = team_id or none
@@ -121,11 +150,19 @@ class AsyncFirestoreInstallationStore(AsyncInstallationStore):
     async def async_find_installation(
         self,
         *,
-        enterprise_id: Optional[str],
-        team_id: Optional[str],
-        user_id: Optional[str] = None,
-        is_enterprise_install: Optional[bool] = False,
-    ) -> Optional[Installation]:
+        enterprise_id: str | None,
+        team_id: str | None,
+        user_id: str | None = None,
+        is_enterprise_install: bool | None = False,
+    ) -> Installation | None:
+        """
+        Find installation data from Firestore.
+
+        :param enterprise_id: The enterprise ID.
+        :param team_id: The team ID.
+        :param user_id: The user ID.
+        :param is_enterprise_install: Whether the installation is an enterprise installation.
+        """
         none = "none"
         e_id = enterprise_id or none
         t_id = team_id or none
@@ -173,7 +210,13 @@ class AsyncFirestoreInstallationStore(AsyncInstallationStore):
             self.logger.debug(message)
             return None
 
-    async def async_delete_bot(self, *, enterprise_id: Optional[str], team_id: Optional[str]) -> None:
+    async def async_delete_bot(self, *, enterprise_id: str | None, team_id: str | None) -> None:
+        """
+        Delete bot data from Firestore.
+
+        :param enterprise_id: The enterprise ID.
+        :param team_id: The team ID.
+        """
         none = "none"
         e_id = enterprise_id or none
         t_id = team_id or none
@@ -183,10 +226,17 @@ class AsyncFirestoreInstallationStore(AsyncInstallationStore):
     async def async_delete_installation(
         self,
         *,
-        enterprise_id: Optional[str],
-        team_id: Optional[str],
-        user_id: Optional[str] = None,
+        enterprise_id: str | None,
+        team_id: str | None,
+        user_id: str | None = None,
     ) -> None:
+        """
+        Delete installation data from Firestore.
+
+        :param enterprise_id: The enterprise ID.
+        :param team_id: The team ID.
+        :param user_id: The user ID.
+        """
         none = "none"
         e_id = enterprise_id or none
         t_id = team_id or none
