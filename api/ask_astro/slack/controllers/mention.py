@@ -1,4 +1,5 @@
-"Handles app mention events from Slack"
+"""Handles app mention events from Slack"""
+from __future__ import annotations
 
 import uuid
 from asyncio import TaskGroup
@@ -15,16 +16,76 @@ from slack_sdk.web.async_client import AsyncWebClient
 
 logger = getLogger(__name__)
 
+THOUGHT_BALLOON_REACTION = "thought_balloon"
+FAILURE_REACTION = "x"
+FAILURE_MESSAGE = "Sorry, I couldn't answer your question. Please try again later."
 
-async def on_mention(
-    body: dict[str, Any],
-    ack: AsyncAck,
-    say: AsyncSay,
-    client: AsyncWebClient,
-):
+
+async def try_add_reaction(client: AsyncWebClient, name: str, channel_id: str, timestamp: str) -> None:
+    """
+    Try to add a reaction to a given Slack message.
+
+    :param client: Slack API client.
+    :param name: Name of the reaction emoji.
+    :param channel_id: ID of the channel where the message is located.
+    :param timestamp: Timestamp of the message.
+    """
+    try:
+        await client.reactions_add(
+            name=name,
+            channel=channel_id,
+            timestamp=timestamp,
+        )
+    except SlackApiError as exc:
+        logger.warning(f"Failed to add {name} reaction", exc_info=exc)
+
+
+async def send_answer(request: AskAstroRequest, say: AsyncSay, ts: str):
+    """
+    Send an answer to a Slack thread using the provided request information.
+
+    :param request: The AskAstro request object containing the response and other related data.
+    :param say: Say object from slack_bolt to send messages.
+    :param ts: Timestamp of the original message to which we're replying.
+    """
+    response = markdown_to_slack(request.response)
+
+    source_links = ", ".join(
+        f"<{link}|[{n_}]>"
+        for n_, link in enumerate(
+            {*[s.name for s in request.sources if s.name]},
+            start=1,
+        )
+    )
+
+    resp = get_blocks(
+        "message.jinja2",
+        message=f"{response[:2999]}…" if len(response) > 3000 else response,
+        sources=f"📚 Related: {source_links}" if source_links else None,
+        feedback_value=f"{request.uuid}:{request.langchain_run_id}",
+    )
+
+    await say(
+        text=response,
+        blocks=resp,
+        thread_ts=ts,
+        unfurl_links=False,
+        unfurl_media=False,
+    )
+
+
+async def on_mention(body: dict[str, Any], ack: AsyncAck, say: AsyncSay, client: AsyncWebClient) -> None:
+    """
+    Handles Slack app mentions. When the app is mentioned, this function processes the mention,
+    performs relevant operations and sends a response back.
+
+    :param body: The Slack event body.
+    :param ack: Acknowledgement object from slack_bolt.
+    :param say: Say object from slack_bolt to send messages.
+    :param client: Slack API client.
+    """
     await ack()
 
-    # pull out the relevant fields from the body
     try:
         text = body["event"]["text"]
         bot_id = body["authorizations"][0]["user_id"]
@@ -34,50 +95,20 @@ async def on_mention(
         logger.error(f"Missing key: {e}")
         return
 
-    logger.info("Received question (%s): %s", ts, text)
+    logger.info(f"Received question ({ts}): {text}")
     thread_ts = body["event"].get("thread_ts")
-    logger.info("In thread %s", thread_ts)
 
-    # Preprocess text to remove leading bot mentions
     text = text.strip().removeprefix(f"<@{bot_id}>").strip()
 
-    # create the request state object and add it to the database
-    request = AskAstroRequest(
-        uuid=uuid.uuid1(),
-        prompt=text,
-        status="in_progress",
-    )
+    request = AskAstroRequest(uuid=uuid.uuid1(), prompt=text, status="in_progress")
 
     async with TaskGroup() as tg:
-        # add a thinking reaction for immediate feedback
-        async def try_add_thinking_reaction():
-            try:
-                await client.reactions_add(
-                    name="thought_balloon",
-                    channel=channel_id,
-                    timestamp=ts,
-                )
-            except SlackApiError as exc:
-                # this is a non-fatal error, so we can just log it and move on
-                logger.warning("Failed to add thought_balloon reaction", exc_info=exc)
-
-        tg.create_task(try_add_thinking_reaction())
-
-    logger.info("Acknowledged question")
+        tg.create_task(try_add_reaction(client, THOUGHT_BALLOON_REACTION, channel_id, ts))
 
     try:
-        # get messages from the thread, if there is a thread
         if thread_ts:
-            # TODO: what happens if there are more than 100 messages?
-            slack_messages = await client.conversations_replies(
-                channel=channel_id,
-                ts=thread_ts,
-                limit=100,
-            )
+            slack_messages = await client.conversations_replies(channel=channel_id, ts=thread_ts, limit=100)
 
-            logger.debug("Messages in thread: %s", slack_messages)
-
-            # turn the slack messages into a list of langchain messages
             request.messages = [
                 (AIMessage if msg.get("bot_id") == bot_id else HumanMessage)(content=msg["text"], additional_kwargs=msg)
                 for msg in slack_messages["messages"]
@@ -85,65 +116,14 @@ async def on_mention(
             ]
 
         await answer_question(request)
-        response = markdown_to_slack(request.response)
-
-        source_links = ", ".join(
-            (
-                f"<{link}|[{n_}]>"
-                for n_, link in enumerate(
-                    [*{s.name for s in request.sources if s.name}],
-                    start=1,
-                )
-            )
-        )
-
-        resp = get_blocks(
-            "message.jinja2",
-            message=f"{response[:2999]}…" if len(response) > 3000 else response,
-            sources=f"📚 Related: {source_links}" if source_links else None,
-            feedback_value=f"{request.uuid}:{request.langchain_run_id}",
-        )
 
         async with TaskGroup() as tg:
-            # remove the reaction from the message
-            tg.create_task(
-                client.reactions_remove(
-                    name="thought_balloon",
-                    channel=channel_id,
-                    timestamp=ts,
-                )
-            )
-
-            # write the response
-            tg.create_task(
-                say(
-                    text=response,
-                    blocks=resp,
-                    thread_ts=ts,
-                    unfurl_links=False,
-                    unfurl_media=False,
-                )
-            )
+            tg.create_task(client.reactions_remove(name=THOUGHT_BALLOON_REACTION, channel=channel_id, timestamp=ts))
+            tg.create_task(send_answer(request, say, ts))
 
     except Exception as e:
-        # remove the thinking reaction from the message
-        await client.reactions_remove(
-            name="thought_balloon",
-            channel=channel_id,
-            timestamp=ts,
-        )
-
-        # add a failure reaction
-        await client.reactions_add(
-            name="x",
-            channel=channel_id,
-            timestamp=ts,
-        )
-
-        # write the failure message
-        await say(
-            text="Sorry, I couldn't answer your question. Please try again later.",
-            thread_ts=ts,
-        )
+        await client.reactions_remove(name=THOUGHT_BALLOON_REACTION, channel=channel_id, timestamp=ts)
+        await try_add_reaction(client, FAILURE_REACTION, channel_id, ts)
+        await say(text=FAILURE_MESSAGE, thread_ts=ts)
 
         raise e

@@ -39,4 +39,4 @@ def register_routes(api: Sanic):
             methods=route_config.methods,
             name=route_config.name,
         )
-        logger.info(f"Registered {route_config.methods[0]} {route_config.uri} controller")
+        logger.info("Registered %s %s controller", route_config.methods[0], route_config.uri)

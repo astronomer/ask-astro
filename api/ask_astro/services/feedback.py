@@ -31,11 +31,11 @@ async def submit_feedback(request_id: str, correct: bool, source_info: dict[str,
         request = await firestore_client.collection(FirestoreCollections.requests).document(request_id).get()
 
         if not request.exists:
-            raise ValueError(f"Request {request_id} does not exist")
+            raise ValueError("Request %s does not exist", request_id)
 
         langchain_run_id = request.to_dict().get("langchain_run_id")
         if not langchain_run_id:
-            raise ValueError(f"Request {request_id} does not have a langchain run id")
+            raise ValueError("Request %s does not have a langchain run id", request_id)
 
         # update the db and langsmith
         async with asyncio.TaskGroup() as tg:
@@ -57,5 +57,5 @@ async def submit_feedback(request_id: str, correct: bool, source_info: dict[str,
                 )
             )
     except Exception as e:
-        logger.error(f"Error occurred while processing feedback for request {request_id}: {str(e)}")
-        raise FeedbackSubmissionError(f"Failed to submit feedback for request {request_id}.") from e
+        logger.error("Error occurred while processing feedback for request %s: %s", request_id, str(e))
+        raise FeedbackSubmissionError("Failed to submit feedback for request %s.", request_id) from e
