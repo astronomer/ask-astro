@@ -17,9 +17,6 @@ logger = getLogger(__name__)
 
 api = Sanic(name="ask_astro")
 
-# Load environment variables
-api.update_config(dict(os.environ))
-
 
 # route slack requests to the slack app
 @api.get("/slack/oauth_redirect", name="oauth_redirect")
