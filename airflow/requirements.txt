@@ -4,7 +4,7 @@ apache-airflow-providers-slack==7.3.2
 streamlit==1.25.0
 html2text==2020.1.16
 pypandoc==1.11
-langchain==0.0.240
+langchain==0.0.317
 markdownify==0.11.6
 stackapi==0.2.0
 protobuf==3.20.2
