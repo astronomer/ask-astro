@@ -1,4 +1,6 @@
+import json
 import os
+import tempfile
 from datetime import datetime
 
 import firebase_admin
@@ -18,7 +20,9 @@ firestore_app_name = os.environ.get("FIRESTORE_APP_NAME", "[DEFAULT]")
 
 slack_channel = os.environ.get("SLACK_CHANNEL", "")
 slack_webhook_conn = os.environ.get("SLACK_WEBHOOK_CONN")
-slack_username = os.getenv("SLACK_USERNAME", "airflow_app")
+slack_username = os.environ.get("SLACK_USERNAME", "airflow_app")
+
+google_service_account_json_value = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_VALUE", None)
 
 
 @task(trigger_rule=TriggerRule.ALL_DONE)
@@ -86,11 +90,16 @@ def check_weaviate_status():
 
 @task(trigger_rule=TriggerRule.ALL_DONE)
 def check_firestore_status():
-    firebase_admin.initialize_app()
+    with tempfile.NamedTemporaryFile(mode="w+") as tf:
+        if google_service_account_json_value:
+            json.dump(google_service_account_json_value, tf)
+            tf.flush()
+            os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", tf.name)
 
-    app = firebase_admin.get_app(name=firestore_app_name)
+        firebase_admin.initialize_app()
+        app = firebase_admin.get_app(name=firestore_app_name)
 
-    print(f"{app.name} found!")
+        print(f"{app.name} found!")
 
 
 @dag(
