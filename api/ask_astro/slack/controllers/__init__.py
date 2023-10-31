@@ -1,4 +1,5 @@
-"Contains a function to register all controllers with the app."
+"""Contains a function to register all controllers with the app."""
+from __future__ import annotations
 
 from logging import getLogger
 
@@ -13,13 +14,22 @@ logger = getLogger(__name__)
 def register_controllers(app: AsyncApp):
     """
     Registers all controllers with the app.
+
+    :param app: The Slack AsyncApp instance where controllers need to be registered.
     """
 
-    app.event("app_mention")(on_mention)
-    logger.info("Registered event:app_mention controller")
+    handlers = {
+        "event:app_mention": on_mention,
+        "action:feedback_good": handle_feedback_good,
+        "action:feedback_bad": handle_feedback_bad,
+    }
 
-    app.action("feedback_good")(handle_feedback_good)
-    logger.info("Registered action:feedback_good controller")
+    for event_action, handler in handlers.items():
+        event_type, identifier = event_action.split(":")
 
-    app.action("feedback_bad")(handle_feedback_bad)
-    logger.info("Registered action:feedback_bad controller")
+        if event_type == "event":
+            app.event(identifier)(handler)
+        elif event_type == "action":
+            app.action(identifier)(handler)
+
+        logger.info("Registered %s:%s controller", event_type, identifier)

@@ -1,1 +1,1 @@
-"Re-exports stores for easier importing."
+"""Re-exports stores for easier importing."""

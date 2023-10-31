@@ -40,7 +40,7 @@ repos:
         exclude: ^mk/|^docs/Makefile|^Makefile$
 
   - repo: https://github.com/psf/black
-    rev: 23.9.1
+    rev: 23.10.1
     hooks:
       - id: black
         args: ["--config", "pyproject.toml"]
@@ -55,7 +55,7 @@ repos:
         types: [python]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.292'
+    rev: 'v0.1.3'
     hooks:
       - id: ruff
         args:

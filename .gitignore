@@ -245,3 +245,8 @@ airflow/include/data/astronomer/registry/registry_cells.parquet
 airflow/include/data/astronomer/registry/registry_dags.parquet
 airflow/include/data/baseline_data_*.parquet
 airflow/include/data/slack/troubleshooting.parquet
+<<<<<<< Updated upstream
+/api/gcp.json
+=======
+api/gcp.json
+>>>>>>> Stashed changes
