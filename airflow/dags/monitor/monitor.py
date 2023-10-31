@@ -43,23 +43,25 @@ def slack_status(**context):
             task = f":black_circle: {ti.task_id}"
         task_status.append(task)
 
+    # If some task fail then always publish result otherwise publish if trigger externally
+    publish_result = False
+    service_status = None
     if task_status:
         service_status = "\n@here\n"
         service_status += "\n".join(task_status)
-    else:
+        publish_result = True
+    elif context["dag_run"].external_trigger:
         service_status = "All service are up!"
+        publish_result = True
 
-    print("********************")
-    print(service_status)
-    print("********************")
-
-    SlackWebhookOperator(
-        task_id="slack_alert",
-        slack_webhook_conn_id=slack_webhook_conn,
-        message=service_status,
-        channel=slack_channel,
-        username=slack_username,
-    ).execute(context=context)
+    if publish_result and service_status:
+        SlackWebhookOperator(
+            task_id="slack_alert",
+            slack_webhook_conn_id=slack_webhook_conn,
+            message=service_status,
+            channel=slack_channel,
+            username=slack_username,
+        ).execute(context=context)
 
 
 @task(trigger_rule=TriggerRule.ALL_DONE)
