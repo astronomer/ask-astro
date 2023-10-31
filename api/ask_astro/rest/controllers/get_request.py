@@ -34,5 +34,5 @@ async def on_get_request(request: Request, request_id: UUID) -> json:
 
         return json(request.to_dict(), status=200)
     except Exception as e:
-        logger.error("Error fetching data for request %s: %s", request_id, str(e))
+        logger.error("Error fetching data for request %s: %s", request_id, e)
         return json({"error": "Internal Server Error"}, status=500)

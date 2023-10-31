@@ -37,5 +37,5 @@ async def on_submit_feedback(request: Request, request_id: UUID) -> HTTPResponse
 
         return HTTPResponse(status=200)
     except Exception as e:
-        logger.error("Error occurred while processing feedback for request %s: %s", request_id, str(e))
+        logger.error("Error occurred while processing feedback for request %s: %s", request_id, e)
         return HTTPResponse(text="An internal error occurred.", status=500)

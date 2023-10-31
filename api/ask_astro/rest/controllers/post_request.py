@@ -102,5 +102,5 @@ async def on_post_request(request: Request) -> json:
             status=200,
         )
     except Exception as e:
-        logger.error("An error occurred while processing the POST request: %s", str(e))
+        logger.error("An error occurred while processing the POST request: %s", e)
         return json({"error": "An internal error occurred."}, status=500)

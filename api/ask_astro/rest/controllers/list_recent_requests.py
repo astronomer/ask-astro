@@ -49,5 +49,5 @@ async def on_list_recent_requests(_: Request) -> json:
 
         return json(RecentRequestsResponse(requests=recent_requests).to_dict(), status=200)
     except Exception as e:
-        logger.error("Error while fetching recent requests: %s", str(e))
+        logger.error("Error while fetching recent requests: %s", e)
         return json({"error": "An error occurred while processing your request."}, status=500)

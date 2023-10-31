@@ -57,5 +57,5 @@ async def submit_feedback(request_id: str, correct: bool, source_info: dict[str,
                 )
             )
     except Exception as e:
-        logger.error("Error occurred while processing feedback for request %s: %s", request_id, str(e))
+        logger.error("Error occurred while processing feedback for request %s: %s", request_id, e)
         raise FeedbackSubmissionError("Failed to submit feedback for request %s.", request_id) from e

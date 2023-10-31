@@ -64,7 +64,7 @@ async def _send_response(details: dict[str, str], respond: AsyncRespond) -> None
     :param respond: Response object from slack_bolt.
     """
     await respond(
-        "😥 Thank you for your feedback, <@%s>!" % details["user"],
+        f"😥 Thank you for your feedback, <@{details['user']}>!",
         thread_ts=details["thread_ts"],
         replace_original=False,
         response_type="ephemeral",
@@ -89,4 +89,3 @@ async def _update_reaction(details: dict[str, str], client: AsyncWebClient) -> N
         await client.reactions_remove(name="thumbsup", channel=details["channel"], timestamp=details["message_ts"])
     except Exception as e:
         logger.debug("Failed to remove thumbsup reaction: %s", e)
-        pass

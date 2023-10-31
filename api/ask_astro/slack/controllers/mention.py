@@ -37,7 +37,7 @@ async def try_add_reaction(client: AsyncWebClient, name: str, channel_id: str, t
             timestamp=timestamp,
         )
     except SlackApiError as exc:
-        logger.warning(f"Failed to add {name} reaction", exc_info=exc)
+        logger.warning("Failed to add %s reaction", name, exc_info=exc)
 
 
 async def send_answer(request: AskAstroRequest, say: AsyncSay, ts: str):
@@ -95,7 +95,7 @@ async def on_mention(body: dict[str, Any], ack: AsyncAck, say: AsyncSay, client:
         logger.error(f"Missing key: {e}")
         return
 
-    logger.info(f"Received question ({ts}): {text}")
+    logger.info("Received question (%s): %s", ts, text)
     thread_ts = body["event"].get("thread_ts")
 
     text = text.strip().removeprefix(f"<@{bot_id}>").strip()
