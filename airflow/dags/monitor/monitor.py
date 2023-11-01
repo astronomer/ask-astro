@@ -18,9 +18,7 @@ weaviate_class = os.environ.get("WEAVIATE_CLASS", "DocsProd")
 
 firestore_app_name = os.environ.get("FIRESTORE_APP_NAME", "[DEFAULT]")
 
-slack_channel = os.environ.get("SLACK_CHANNEL", "")
-slack_webhook_conn = os.environ.get("SLACK_WEBHOOK_CONN")
-slack_username = os.environ.get("SLACK_USERNAME", "airflow_app")
+slack_webhook_conn = os.environ.get("SLACK_WEBHOOK_CONN", "slack_webhook_default")
 
 google_service_account_json_value = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_VALUE", None)
 
@@ -47,11 +45,11 @@ def slack_status(**context):
     publish_result = False
     service_status = None
     if task_status:
-        service_status = "\n@here\n"
+        service_status = "\n<!here>\n"
         service_status += "\n".join(task_status)
         publish_result = True
     elif context["dag_run"].external_trigger:
-        service_status = "All service are up!"
+        service_status = "\n:large_green_circle: All service are up!\n"
         publish_result = True
 
     if publish_result and service_status:
@@ -59,8 +57,6 @@ def slack_status(**context):
             task_id="slack_alert",
             slack_webhook_conn_id=slack_webhook_conn,
             message=service_status,
-            channel=slack_channel,
-            username=slack_username,
         ).execute(context=context)
 
 
@@ -77,7 +73,7 @@ def check_weaviate_status():
     weaviate_hook = WeaviateHook(weaviate_conn_id)
     client = weaviate_hook.get_conn()
     schemas = client.query.aggregate(weaviate_class).with_meta_count().do()
-    schema = schemas["data"]["Aggregate"]["DocsProd"]
+    schema = schemas["data"]["Aggregate"][weaviate_class]
     count = 0
     for v in schema:
         metadata = v.get("meta")
