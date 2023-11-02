@@ -46,6 +46,9 @@ class LangSmithConfig:
     """Contains the config variables for the Langsmith API."""
 
     project_name = os.environ.get("LANGCHAIN_PROJECT")
+    tracing_v2 = os.environ.get("LANGCHAIN_TRACING_V2")
+    endpoint = os.environ.get("LANGCHAIN_ENDPOINT")
+    api_key = os.environ.get("LANGCHAIN_API_KEY")
 
 
 class WeaviateConfig:
