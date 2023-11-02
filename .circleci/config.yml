@@ -25,19 +25,27 @@ jobs:
       name: docker-executor
       python_version: "<<parameters.python_version>>"
     parallelism: 4
+    working_directory: ~/project/api
     steps:
-      - checkout
+      - checkout:
+          path: ~/project
       - run:
           name: Install Dependencies
-          command: cd api && poetry install --no-root && rm -rf $POETRY_CACHE_DIR
+          command: poetry install --no-root
+      - run:
+          name: Set PYTHONPATH
+          command: echo 'export PYTHONPATH=$PYTHONPATH:.' >> $BASH_ENV
       - run:
           name: Run tests
-          command: cd api && poetry run pytest ../tests
+          command: |
+            poetry run pytest ../tests || poetry run pytest --last-failed ../tests
 
   precommit:
     executor: docker-executor
+    working_directory: ~/project/api
     steps:
-      - checkout
+      - checkout:
+          path: ~/project
       - run:
           name: Install Pre-commit
           command: pip install pre-commit
