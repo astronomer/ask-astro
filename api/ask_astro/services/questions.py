@@ -5,11 +5,12 @@ import asyncio
 import time
 from logging import getLogger
 
+from langchain import callbacks
+
 from ask_astro.chains.answer_question import answer_question_chain
 from ask_astro.clients.firestore import firestore_client
 from ask_astro.config import FirestoreCollections
 from ask_astro.models.request import AskAstroRequest, Source
-from langchain import callbacks
 
 logger = getLogger(__name__)
 

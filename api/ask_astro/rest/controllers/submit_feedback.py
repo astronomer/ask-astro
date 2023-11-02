@@ -6,10 +6,11 @@ from __future__ import annotations
 from logging import getLogger
 from uuid import UUID
 
-from ask_astro.services.feedback import submit_feedback
 from pydantic.v1 import BaseModel, Field
 from sanic import HTTPResponse, Request
 from sanic_ext import openapi
+
+from ask_astro.services.feedback import submit_feedback
 
 logger = getLogger(__name__)
 

@@ -6,14 +6,15 @@ from __future__ import annotations
 import uuid
 from logging import getLogger
 
-from ask_astro.clients.firestore import firestore_client
-from ask_astro.config import FirestoreCollections
-from ask_astro.models.request import AskAstroRequest
-from ask_astro.services.questions import answer_question
 from langchain.schema import AIMessage, HumanMessage
 from pydantic.v1 import BaseModel, Field
 from sanic import Request, json
 from sanic_ext import openapi
+
+from ask_astro.clients.firestore import firestore_client
+from ask_astro.config import FirestoreCollections
+from ask_astro.models.request import AskAstroRequest
+from ask_astro.services.questions import answer_question
 
 logger = getLogger(__name__)
 

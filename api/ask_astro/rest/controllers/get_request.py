@@ -6,11 +6,12 @@ from __future__ import annotations
 from logging import getLogger
 from uuid import UUID
 
+from sanic import Request, json
+from sanic_ext import openapi
+
 from ask_astro.clients.firestore import firestore_client
 from ask_astro.config import FirestoreCollections
 from ask_astro.models.request import AskAstroRequest
-from sanic import Request, json
-from sanic_ext import openapi
 
 logger = getLogger(__name__)
 

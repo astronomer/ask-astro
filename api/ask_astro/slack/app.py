@@ -24,12 +24,13 @@ of the Slack app and its handler.
    - `files:read`: View files shared in channels and conversations the app has access to.
 """
 
-from ask_astro.config import FirestoreCollections, SlackAppConfig
-from ask_astro.stores.installation_store import AsyncFirestoreInstallationStore
-from ask_astro.stores.oauth_state_store import AsyncFirestoreOAuthStateStore
 from slack_bolt.adapter.sanic import AsyncSlackRequestHandler
 from slack_bolt.app.async_app import AsyncApp
 from slack_bolt.oauth.async_oauth_settings import AsyncOAuthSettings
+
+from ask_astro.config import FirestoreCollections, SlackAppConfig
+from ask_astro.stores.installation_store import AsyncFirestoreInstallationStore
+from ask_astro.stores.oauth_state_store import AsyncFirestoreOAuthStateStore
 
 oauth_settings = AsyncOAuthSettings(
     client_id=SlackAppConfig.client_id,
