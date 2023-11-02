@@ -14,7 +14,6 @@ from sanic_ext import openapi
 from ask_astro.clients.firestore import firestore_client
 from ask_astro.config import FirestoreCollections
 from ask_astro.models.request import AskAstroRequest
-from ask_astro.services.questions import answer_question
 
 logger = getLogger(__name__)
 
@@ -46,6 +45,8 @@ async def on_post_request(request: Request) -> json:
     :param request: The Sanic request object.
     """
     try:
+        from ask_astro.services.questions import answer_question
+
         if "prompt" not in request.json:
             return json({"error": "prompt is required"}, status=400)
 
