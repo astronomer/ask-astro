@@ -78,6 +78,15 @@
         <div class="rendered-md">
           <SvelteMarkdown source={translatedContent} />
         </div>
+
+        {#if type === "ai"}
+          <div class="float-right pt-2">
+            Not the answer you were looking for or need more help? <a
+              href="https://www.astronomer.io/contact?utm_source=askastro&utm_medium=chat&utm_campaign=askastro"
+              target="_blank">Contact us!</a
+            >
+          </div>
+        {/if}
       {/if}
     </div>
 
