@@ -51,8 +51,6 @@ unittests.cfg
 package-lock.json
 
 ./api/.env
-./api/gcp.json
-
 ./ui/.env
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
@@ -244,4 +242,8 @@ airflow/include/data/astronomer/registry/registry_cells.parquet
 airflow/include/data/astronomer/registry/registry_dags.parquet
 airflow/include/data/baseline_data_*.parquet
 airflow/include/data/slack/troubleshooting.parquet
+
+
+# GCP
 api/gcp.json
+api/application_default_credentials.json
