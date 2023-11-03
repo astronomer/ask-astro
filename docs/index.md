@@ -1,7 +1,7 @@
 <br />
 
 <p align="center">
-  <img src="static/logo.svg" />
+  <img src="_static/logo.svg" />
 </p>
 
 <br />
@@ -20,7 +20,7 @@ If you have any questions, feedback, or want to share similar use cases, reach o
 
 ## Data Retrieval & Embedding
 <p align="center">
-  <img src="static/ingestion.png" />
+  <img src="_static/ingestion.png" />
 </p>
 
 In order to make the responses as factual and accurate as possible, it's generally best practice to use [Retrieval Augmented Generation (RAG)](https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html). However, in order for RAG to be effective, a vector database needs to be populated with the most up-to-date and relevant information.
@@ -45,7 +45,7 @@ See the [Ingest README](https://github.com/astronomer/ask-astro/tree/main/airflo
 
 ## Prompt Orchestration
 <p align="center">
-  <img src="static/prompt-orchestration.png" />
+  <img src="_static/prompt-orchestration.png" />
 </p>
 
 Ask Astro uses LangChain's `ConversationalRetrievalChain` to generate a response. This chain does the following:
@@ -60,7 +60,7 @@ This generally works well. For prompt rewording, we use `gpt-3.5-turbo`, which r
 
 ## Feedback Loops
 <p align="center">
-  <img src="static/feedback-loops.png" />
+  <img src="_static/feedback-loops.png" />
 </p>
 
 Airflow is critical in improving model performance over time. Feedback on answers come from two places:
