@@ -5,6 +5,7 @@ from invoke.context import Context
 
 project_root = Path(__file__).parent.absolute()
 api_root = project_root / Path("api")
+docs_root = project_root / Path("docs")
 
 api_version = "1.0.0-dev"
 api_image_name = "ask-astro-api"
@@ -58,7 +59,9 @@ def run_api_server_with_docker(
 @task(
     help={"container_name": "ask-astro API server container name", "remove_container": "remove container after stopped"}
 )
-def stop_api_server_container(ctx: Context, container_name: str = api_container_name, remove_container: bool = True):
+def stop_api_server_container(
+    ctx: Context, container_name: str = api_container_name, remove_container: bool = True
+) -> None:
     """Stop ask-astro API server container"""
     with ctx.cd("api"):
         print(f"stop container {container_name}")
@@ -66,3 +69,17 @@ def stop_api_server_container(ctx: Context, container_name: str = api_container_
         if remove_container:
             print(f"remove container {container_name}")
             ctx.run(f"docker remove {container_name}")
+
+
+@task(help={"clean": "clean the docs before building"})
+def build_docs(ctx: Context, clean: bool = False) -> None:
+    with ctx.cd(docs_root):
+        if clean:
+            ctx.run("make clean")
+        ctx.run("make html")
+
+
+@task()
+def serve_docs(ctx: Context) -> None:
+    with ctx.cd(docs_root / Path("_build/html")):
+        ctx.run("python -m http.server")
