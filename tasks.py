@@ -1,5 +1,10 @@
+from pathlib import Path
+
 from invoke import task
 from invoke.context import Context
+
+project_root = Path(__file__).parent.absolute()
+api_root = project_root / Path("api")
 
 api_version = "1.0.0-dev"
 api_image_name = "ask-astro-api"
@@ -9,7 +14,7 @@ api_container_name = "ask-astro-api"
 @task
 def init_api_server_poetry_env(ctx: Context) -> None:
     """Initialize the ask-astro API local poetry environment"""
-    with ctx.cd("api"):
+    with ctx.cd(api_root):
         print("Initialize ask-astro API local poetry environment")
         ctx.run("poetry install")
 
@@ -17,9 +22,10 @@ def init_api_server_poetry_env(ctx: Context) -> None:
 @task(help={"init": "initialize poetry environment before running server"})
 def run_api_server_with_poetry(ctx: Context, init: bool = False) -> None:
     """Run ask-astro API server with poetry"""
-    with ctx.cd("api"):
+    with ctx.cd(api_root):
         if init:
             init_api_server_poetry_env(ctx)
+        print("Starting ask-astro API local poetry environment")
         ctx.run("poetry run python -m ask_astro.app")
 
 
