@@ -25,6 +25,11 @@ google_service_account_json_value = os.environ.get("GOOGLE_APPLICATION_CREDENTIA
 
 @task(trigger_rule=TriggerRule.ALL_DONE)
 def slack_status(**context):
+    """
+    Post service status on slack.
+
+    If any upstream task fail or DAG is trigger manually send immediate notification to slack.
+    """
     tis_dagrun = context["ti"].get_dagrun().get_task_instances()
 
     task_status = []
@@ -62,6 +67,7 @@ def slack_status(**context):
 
 @task(trigger_rule=TriggerRule.ALL_DONE)
 def check_ui_status():
+    """Check UI respond with 200 status code."""
     endpoint = "https://ask.astronomer.io"
     response = requests.get(endpoint)
     if response.status_code != 200:
@@ -70,6 +76,7 @@ def check_ui_status():
 
 @task(trigger_rule=TriggerRule.ALL_DONE)
 def check_weaviate_status():
+    """Check weaviate class exist."""
     weaviate_hook = WeaviateHook(weaviate_conn_id)
     client = weaviate_hook.get_conn()
     schemas = client.query.aggregate(weaviate_class).with_meta_count().do()
@@ -88,6 +95,7 @@ def check_weaviate_status():
 
 @task(trigger_rule=TriggerRule.ALL_DONE)
 def check_firestore_status():
+    """Check firestore app exist."""
     with tempfile.NamedTemporaryFile(mode="w+") as tf:
         if google_service_account_json_value:
             json.dump(google_service_account_json_value, tf)
