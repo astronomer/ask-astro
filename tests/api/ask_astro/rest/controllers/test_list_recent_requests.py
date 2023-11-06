@@ -33,7 +33,6 @@ def generate_mock_document(data):
 async def test_on_list_recent_requests(app, mock_data, expected_status, expected_response):
     with patch("ask_astro.config.FirestoreCollections.requests", new_callable=PropertyMock) as mock_collection:
         mock_collection.return_value = "mock_collection_name"
-        print("Setting up mock")
         with patch("google.cloud.firestore_v1.Client", new=AsyncMock()) as MockFirestoreClient:
             # Here, MockFirestoreClient will replace the actual Firestore Client everywhere in the code.
             mock_client_instance = MockFirestoreClient.return_value
