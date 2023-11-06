@@ -3,7 +3,14 @@
 
 ```{toctree}
 :hidden:
-:caption: 💻 Backend Server Develop
+:caption: 💻 Develop UI
+
+ui/README.md
+```
+
+```{toctree}
+:hidden:
+:caption: 💻 Develop Backend Server
 
 api/cloudbuild_and_run.md
 api/google_firestore.md
@@ -12,7 +19,7 @@ api/setup_slack_bot.md
 
 ```{toctree}
 :hidden:
-:caption: 💻 Airflow DAGs Develop
+:caption: 💻 Develop Airflow DAGs
 
 airflow/README.md
 ```
