@@ -73,13 +73,17 @@ def stop_api_server_container(
 
 @task(help={"clean": "clean the docs before building"})
 def build_docs(ctx: Context, clean: bool = False) -> None:
+    """Build sphinx docs"""
     with ctx.cd(docs_root):
         if clean:
             ctx.run("make clean")
         ctx.run("make html")
 
 
-@task()
-def serve_docs(ctx: Context) -> None:
+@task(help={"rebuild": "clean and build the doc before serving"})
+def serve_docs(ctx: Context, rebuild: bool = False) -> None:
+    """Serve the docs locally (http://127.0.0.1:8000)"""
     with ctx.cd(docs_root / Path("_build/html")):
+        if rebuild:
+            build_docs(ctx, clean=True)
         ctx.run("python -m http.server")
