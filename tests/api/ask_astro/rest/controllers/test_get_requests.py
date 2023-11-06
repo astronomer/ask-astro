@@ -1,4 +1,3 @@
-import os
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
@@ -13,8 +12,6 @@ sanitized_name = __name__.replace(".", "_")
 def app():
     """Fixture that creates and configures a new Sanic application for testing."""
     app_instance = Sanic(sanitized_name)
-    os.environ["WEAVIATE_URL"] = "http://localhost:8080"
-    os.environ["OPENAI_API_KEY"] = "OPENAI_API_KEY"
     TestManager(app_instance)
 
     from ask_astro.rest.controllers.get_request import on_get_request
