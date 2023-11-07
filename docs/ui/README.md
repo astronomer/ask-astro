@@ -1,12 +1,13 @@
-# ask-astro-ui
+# ask-astro UI
 
 ## Developing
 
-Install dependencies:
+### Initialize UI server dependencies
 
-```bash
-npm install
+```{include} ../task_help_text/ui_init.md
 ```
+
+### Run UI server
 
 Add backend API sever url in `ui/.env` file
 
@@ -16,11 +17,7 @@ ASK_ASTRO_API_URL=http://0.0.0.0:8080
 
 Run the development server:
 
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+```{include} ../task_help_text/ui_run.md
 ```
 
 ## Building

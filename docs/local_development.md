@@ -22,49 +22,25 @@ Python 3.11.x
 # install poetry (https://python-poetry.org/docs/#installation)
 $ python -m pip install poetry
 $ poetry install
+```
 
-# shows all the commands we have for local development
-$ poetry run inv -l
-
-Available tasks:
-
-  build-docs                   Build sphinx docs
-  init-api-server-poetry-env   Initialize the ask-astro API local poetry environment
-  run-api-server-with-docker   Run ask-astro API server with docker
-  run-api-server-with-poetry   Run ask-astro API server with poetry
-  serve-docs                   Serve the docs locally (http://127.0.0.1:8000)
-  stop-api-server-container    Stop ask-astro API server container
+```{include} task_help_text/list_tasks.md
 ```
 
 ### Documentation Tasks
 
 * Build sphinx docs
 
-```sh
-$ poetry run inv build-docs -h
-Usage: inv[oke] [--core-opts] build-docs [--options] [other tasks here ...]
-
-Docstring:
-  Build sphinx docs
-
-Options:
-  -c, --clean   clean the docs before building
+```{include} task_help_text/docs_build.md
 ```
 
 
 * Serve the docs locally (http://127.0.0.1:8000)
 
-```sh
-$ poetry run inv serve-docs -h
-Usage: inv[oke] [--core-opts] serve-docs [--options] [other tasks here ...]
-
-Docstring:
-  Serve the docs locally (http://127.0.0.1:8000)
-
-Options:
-  -r, --rebuild   clean and build the doc before serving
+```{include} task_help_text/docs_serve.md
 ```
+
 
 ### Backend API Tasks
 
-- Go to [Ask Astro Backend API](docs/api/README.md)
+- Go to [Ask Astro Backend API](./api/README.md)
