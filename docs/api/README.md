@@ -5,46 +5,9 @@
 - Install [Docker](https://docs.docker.com/engine/install/)
 - Access to Firestore
 - Access to Langchain
-- Python 3.11
-- [Install poetry](https://python-poetry.org/docs/#installation)
-
-## Local development
-
-<!-- TODO: Add steps to setup Firestore-->
-
-### Setup project root poetry envinroment for development tools
-
-```sh
-$ pwd
-
-/.../ask-astro
-
-$ python --version
-
-Python 3.11.x
-
-# install poetry (https://python-poetry.org/docs/#installation)
-$ python -m pip install poetry
-$ poetry install
-
-# shows all the commands we have for local development
-$ poetry run inv -l
-
-Available tasks:
-
-  init-api-server-poetry-env   Initialize the ask-astro API local poetry environment
-  run-api-server-with-docker   Run ask-astro API server with docker
-  run-api-server-with-poetry   Run ask-astro API server with poetry
-  stop-api-server-container    Stop ask-astro API server container
-```
+- [Setup Local Development Tools](docs/local_development.md)
 
 ### Setup local development environment
-
-Build the API server
-
-```bash
-docker build . --tag <IMAGE>
-```
 
 Generate Env Variable template and add appropriate values
 
@@ -52,8 +15,58 @@ Generate Env Variable template and add appropriate values
 python3 scripts/local_dev.py api-env-template
 ```
 
-Run the API server
+#### Run with poetry
+* Initialize the ask-astro API local poetry environment
 
-```bash
-docker run --env-file ./.env -p 8080:8080 <IMAGE>
+```sh
+poetry run inv init-api-server-poetry-env
+```
+
+* Run ask-astro API server with poetry
+
+```sh
+$ poetry run inv run-api-server-with-poetry -h
+
+Usage: inv[oke] [--core-opts] run-api-server-with-poetry [--options] [other tasks here ...]
+
+Docstring:
+  Run ask-astro API server with poetry
+
+Options:
+  -i, --init   initialize poetry environment before running server
+```
+
+### Run with Docker
+
+* Run ask-astro API server with docker
+
+```sh
+$ poetry run inv run-api-server-with-docker -h
+
+Usage: inv[oke] [--core-opts] run-api-server-with-docker [--options] [other tasks here ...]
+
+Docstring:
+  Run ask-astro API server with docker
+
+Options:
+  -b, --build-image                    build image before run API server
+  -c STRING, --container-name=STRING   ask-astro API server container name
+  -f, --[no-]follow-logs               follow logs after running container
+  -i STRING, --image-name=STRING       ask-astro API server image name
+
+```
+
+* Stop ask-astro API server container
+
+```sh
+$ poetry run inv stop-api-server-container -h
+
+Usage: inv[oke] [--core-opts] stop-api-server-container [--options] [other tasks here ...]
+
+Docstring:
+  Stop ask-astro API server container
+
+Options:
+  -c STRING, --container-name=STRING   ask-astro API server container name
+  -r, --[no-]remove-container          remove container after stopped
 ```

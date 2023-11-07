@@ -3,6 +3,14 @@
 
 ```{toctree}
 :hidden:
+:caption:
+
+local_development.md
+```
+
+
+```{toctree}
+:hidden:
 :caption: 💻 Develop UI
 
 ui/README.md
