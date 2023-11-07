@@ -1,20 +1,6 @@
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
-from sanic import Sanic
-from sanic_testing import TestManager
-
-sanitized_name = __name__.replace(".", "_")
-
-
-@pytest.fixture
-def app() -> Sanic:
-    app_instance = Sanic(sanitized_name)
-    TestManager(app_instance)
-    from ask_astro.rest.controllers import register_routes
-
-    register_routes(app_instance)
-    return app_instance
 
 
 def generate_mock_document(data):

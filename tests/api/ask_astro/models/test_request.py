@@ -1,12 +1,15 @@
 from uuid import uuid4
 
+import pytest
 from ask_astro.models.request import AskAstroRequest, HumanMessage, Source
 
 
-def test_ask_astro_request_creation():
+# Define a fixture for AskAstroRequest
+@pytest.fixture
+def ask_astro_request_fixture():
     """
-    Test the creation of an instance of AskAstroRequest using valid inputs.
-    Ensure that required attributes are correctly set after initialization.
+    Provides a fresh instance of AskAstroRequest with preset data
+    for each test that needs it.
     """
     request = AskAstroRequest(
         uuid=uuid4(),
@@ -15,23 +18,19 @@ def test_ask_astro_request_creation():
         sources=[Source(name="Test Source", snippet="Test Snippet")],
         status="Test Status",
     )
+    return request
+
+
+# Now use the fixture in your test functions
+def test_ask_astro_request_creation(ask_astro_request_fixture):
+    request = ask_astro_request_fixture
     assert request is not None
     assert request.prompt == "Test prompt"
     assert request.status == "Test Status"
 
 
-def test_to_firestore():
-    """
-    Test the conversion of an instance of AskAstroRequest to its Firestore dictionary representation.
-    Ensure that the converted dictionary contains expected keys and values.
-    """
-    request = AskAstroRequest(
-        uuid=uuid4(),
-        prompt="Test prompt",
-        messages=[HumanMessage(content="Test message")],
-        sources=[Source(name="Test Source", snippet="Test Snippet")],
-        status="Test Status",
-    )
+def test_to_firestore(ask_astro_request_fixture):
+    request = ask_astro_request_fixture
     firestore_dict = request.to_firestore()
 
     assert firestore_dict["prompt"] == "Test prompt"
@@ -41,10 +40,6 @@ def test_to_firestore():
 
 
 def test_from_dict():
-    """
-    Test the creation of an instance of AskAstroRequest from a dictionary representation.
-    Ensure that the object is correctly initialized from the provided dictionary.
-    """
     data = {
         "uuid": str(uuid4()),
         "prompt": "Test prompt",

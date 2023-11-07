@@ -25,7 +25,7 @@ def create_sanic_app(name: str) -> Sanic:
 async def test_on_submit_feedback(request_data, expected_status, expected_response_text):
     """
     Test the behavior of the on_submit_feedback route. This test validates the responses of the feedback submission
-     route for various inputs.
+    route for various inputs.
     """
     from ask_astro.rest.controllers.submit_feedback import on_submit_feedback
 

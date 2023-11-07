@@ -2,23 +2,6 @@ from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 import pytest
-from sanic import Sanic
-from sanic_testing import TestManager
-
-sanitized_name = __name__.replace(".", "_")
-
-
-@pytest.fixture
-def app():
-    """Fixture that creates and configures a new Sanic application for testing."""
-    app_instance = Sanic(sanitized_name)
-    TestManager(app_instance)
-
-    from ask_astro.rest.controllers.get_request import on_get_request
-
-    app_instance.add_route(on_get_request, "/requests/<request_id:uuid>")
-
-    return app_instance
 
 
 @pytest.mark.asyncio
