@@ -3,9 +3,9 @@ from pathlib import Path
 from invoke import task
 from invoke.context import Context
 
-project_root = Path(__file__).parent.absolute()
+from tasks.common import project_root
+
 api_root = project_root / Path("api")
-docs_root = project_root / Path("docs")
 
 api_version = "1.0.0-dev"
 api_image_name = "ask-astro-api"
@@ -13,19 +13,19 @@ api_container_name = "ask-astro-api"
 
 
 @task
-def init_api_server_poetry_env(ctx: Context) -> None:
-    """Initialize the ask-astro API local poetry environment"""
+def init_poetry_env(ctx: Context) -> None:
+    """Initialize the ask-astro API server local poetry environment"""
     with ctx.cd(api_root):
         print("Initialize ask-astro API local poetry environment")
         ctx.run("poetry install")
 
 
 @task(help={"init": "initialize poetry environment before running server"})
-def run_api_server_with_poetry(ctx: Context, init: bool = False) -> None:
+def run_with_poetry(ctx: Context, init: bool = False) -> None:
     """Run ask-astro API server with poetry"""
     with ctx.cd(api_root):
         if init:
-            init_api_server_poetry_env(ctx)
+            init_poetry_env(ctx)
         print("Starting ask-astro API local poetry environment")
         ctx.run("poetry run python -m ask_astro.app")
 
@@ -38,7 +38,7 @@ def run_api_server_with_poetry(ctx: Context, init: bool = False) -> None:
         "follow_logs": "follow logs after running container",
     }
 )
-def run_api_server_with_docker(
+def run_with_docker(
     ctx: Context,
     build_image: bool = False,
     image_name: str = f"{api_image_name}:{api_version}",
@@ -59,9 +59,7 @@ def run_api_server_with_docker(
 @task(
     help={"container_name": "ask-astro API server container name", "remove_container": "remove container after stopped"}
 )
-def stop_api_server_container(
-    ctx: Context, container_name: str = api_container_name, remove_container: bool = True
-) -> None:
+def stop_container(ctx: Context, container_name: str = api_container_name, remove_container: bool = True) -> None:
     """Stop ask-astro API server container"""
     with ctx.cd("api"):
         print(f"stop container {container_name}")
@@ -69,21 +67,3 @@ def stop_api_server_container(
         if remove_container:
             print(f"remove container {container_name}")
             ctx.run(f"docker remove {container_name}")
-
-
-@task(help={"clean": "clean the docs before building"})
-def build_docs(ctx: Context, clean: bool = False) -> None:
-    """Build sphinx docs"""
-    with ctx.cd(docs_root):
-        if clean:
-            ctx.run("make clean")
-        ctx.run("make html")
-
-
-@task(help={"rebuild": "clean and build the doc before serving"})
-def serve_docs(ctx: Context, rebuild: bool = False) -> None:
-    """Serve the docs locally (http://127.0.0.1:8000)"""
-    with ctx.cd(docs_root / Path("_build/html")):
-        if rebuild:
-            build_docs(ctx, clean=True)
-        ctx.run("python -m http.server")
