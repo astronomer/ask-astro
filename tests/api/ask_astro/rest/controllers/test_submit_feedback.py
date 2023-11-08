@@ -15,7 +15,7 @@ def create_sanic_app(name: str) -> Sanic:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "request_data,expected_status,expected_response_text",
+    "request_data, expected_status, expected_response_text",
     [
         ({"positive": True}, 200, None),
         ({"positive": False}, 200, None),

@@ -11,7 +11,7 @@ def generate_mock_document(data):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "mock_data,expected_status,expected_response",
+    "mock_data, expected_status, expected_response",
     [
         ([], 500, {"error": "An error occurred while processing your request."}),
     ],
@@ -38,7 +38,6 @@ async def test_on_list_recent_requests(app, mock_data, expected_status, expected
             mock_client_instance.collection.return_value = mock_query
 
             _, response = await app.asgi_client.get("/requests")
-            print(response.content)
 
             assert response.status == expected_status
             assert response.json == expected_response
