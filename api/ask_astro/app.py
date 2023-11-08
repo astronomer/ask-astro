@@ -5,10 +5,11 @@ import logging
 import os
 from logging import getLogger
 
+from sanic import Request, Sanic
+
 from ask_astro.rest.controllers import register_routes
 from ask_astro.slack.app import app_handler, slack_app
 from ask_astro.slack.controllers import register_controllers
-from sanic import Request, Sanic
 
 # set the logging level based on an env var
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))

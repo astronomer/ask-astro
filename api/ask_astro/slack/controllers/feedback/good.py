@@ -4,10 +4,11 @@ from asyncio import TaskGroup
 from logging import getLogger
 from typing import Any
 
-from ask_astro.services.feedback import submit_feedback
 from slack_bolt.async_app import AsyncAck, AsyncRespond
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
+
+from ask_astro.services.feedback import submit_feedback
 
 logger = getLogger(__name__)
 

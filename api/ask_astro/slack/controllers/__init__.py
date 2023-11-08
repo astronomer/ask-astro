@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from logging import getLogger
 
+from slack_bolt.async_app import AsyncApp
+
 from ask_astro.slack.controllers.feedback.bad import handle_feedback_bad
 from ask_astro.slack.controllers.feedback.good import handle_feedback_good
 from ask_astro.slack.controllers.mention import on_mention
-from slack_bolt.async_app import AsyncApp
 
 logger = getLogger(__name__)
 

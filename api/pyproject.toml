@@ -29,6 +29,9 @@ uvicorn = "^0.23.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
+pytest-asyncio = "^0.21.1"
+pytest-sanic = "^1.0.0"
+sanic-testing = "^23.5.0"
 
 [build-system]
 requires = ["poetry-core"]

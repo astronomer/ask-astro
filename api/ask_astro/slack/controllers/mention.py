@@ -6,13 +6,14 @@ from asyncio import TaskGroup
 from logging import getLogger
 from typing import Any
 
-from ask_astro.models.request import AskAstroRequest
-from ask_astro.services.questions import answer_question
-from ask_astro.slack.utils import get_blocks, markdown_to_slack
 from langchain.schema import AIMessage, HumanMessage
 from slack_bolt.async_app import AsyncAck, AsyncSay
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
+
+from ask_astro.models.request import AskAstroRequest
+from ask_astro.services.questions import answer_question
+from ask_astro.slack.utils import get_blocks, markdown_to_slack
 
 logger = getLogger(__name__)
 

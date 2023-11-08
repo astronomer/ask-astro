@@ -5,11 +5,12 @@ from dataclasses import dataclass
 from logging import getLogger
 from typing import Callable
 
+from sanic import Sanic, response
+
 from ask_astro.rest.controllers.get_request import on_get_request
 from ask_astro.rest.controllers.list_recent_requests import on_list_recent_requests
 from ask_astro.rest.controllers.post_request import on_post_request
 from ask_astro.rest.controllers.submit_feedback import on_submit_feedback
-from sanic import Sanic, response
 
 logger = getLogger(__name__)
 

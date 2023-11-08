@@ -5,11 +5,9 @@ import asyncio
 import time
 from logging import getLogger
 
-from ask_astro.chains.answer_question import answer_question_chain
 from ask_astro.clients.firestore import firestore_client
 from ask_astro.config import FirestoreCollections
 from ask_astro.models.request import AskAstroRequest, Source
-from langchain import callbacks
 
 logger = getLogger(__name__)
 
@@ -32,6 +30,10 @@ async def answer_question(request: AskAstroRequest) -> None:
     :param request: The request to answer the question.
     """
     try:
+        from langchain import callbacks
+
+        from ask_astro.chains.answer_question import answer_question_chain
+
         # First, mark the request as in_progress and add it to the database
         request.status = "in_progress"
         await _update_firestore_request(request)

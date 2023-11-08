@@ -1,15 +1,5 @@
 from __future__ import annotations
 
-from ask_astro.clients.weaviate_ import docsearch
-from ask_astro.config import AzureOpenAIParams
-from ask_astro.settings import (
-    CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_DEPLOYMENT_NAME,
-    CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_TEMPERATURE,
-    CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_DEPLOYMENT_NAME,
-    CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_TEMPERATURE,
-    MULTI_QUERY_RETRIEVER_DEPLOYMENT_NAME,
-    MULTI_QUERY_RETRIEVER_TEMPERATURE,
-)
 from langchain import LLMChain
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.conversational_retrieval.prompts import CONDENSE_QUESTION_PROMPT
@@ -22,6 +12,17 @@ from langchain.prompts import (
     SystemMessagePromptTemplate,
 )
 from langchain.retrievers import MultiQueryRetriever
+
+from ask_astro.clients.weaviate_ import docsearch
+from ask_astro.config import AzureOpenAIParams
+from ask_astro.settings import (
+    CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_DEPLOYMENT_NAME,
+    CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_TEMPERATURE,
+    CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_DEPLOYMENT_NAME,
+    CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_TEMPERATURE,
+    MULTI_QUERY_RETRIEVER_DEPLOYMENT_NAME,
+    MULTI_QUERY_RETRIEVER_TEMPERATURE,
+)
 
 with open("ask_astro/templates/combine_docs_chat_prompt.txt") as system_prompt_fd:
     """Load system prompt template from a file and structure it."""
