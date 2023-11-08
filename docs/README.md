@@ -84,7 +84,7 @@ A project like Ask Astro is never "complete", and there are always more methods 
 
 ## Local dev env
 
-You can use local dev [script](./scripts/local_dev.py) to start UI, API server and API
+You can use local dev [script](../scripts/local_dev.py) to start UI, API server and API
 
 ````bash
 python3 scripts/local_dev.py run-api-server # To run backend

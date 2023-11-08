@@ -20,6 +20,7 @@ ui/README.md
 :hidden:
 :caption: 💻 Develop Backend Server
 
+api/README.md
 api/cloudbuild_and_run.md
 api/google_firestore.md
 api/setup_slack_bot.md
