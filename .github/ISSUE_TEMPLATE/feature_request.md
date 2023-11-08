@@ -8,17 +8,19 @@ assignees: ''
 ---
 
 **Please describe the feature you'd like to see**
+<!--
 A clear and concise description of what problem feature solves or what use-case it would enable.
 e.g. "I really wish I could ...", "I'm sad that I can't..."
+-->
 
 **Describe the solution you'd like**
-A clear and concise description of what you want to happen, if possible with code examples.
+<!--A clear and concise description of what you want to happen, if possible with code examples.-->
 
 **Are there any alternatives to this feature?**
-Is there another way we could solve this problem or enable this use-case?
+<!--Is there another way we could solve this problem or enable this use-case?-->
 
 **Additional context**
-Add any other context about the feature request here.
+<!--Add any other context about the feature request here.-->
 
 **Acceptance Criteria**
 
