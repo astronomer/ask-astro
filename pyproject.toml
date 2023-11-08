@@ -14,6 +14,7 @@ invoke = "^2.2.0"
 [tool.poetry.group.docs.dependencies]
 sphinx-book-theme = "^1.0.1"
 rich = "^13.6.0"
+myst-parser = "^2.0.0"
 
 [build-system]
 requires = ["poetry-core"]
