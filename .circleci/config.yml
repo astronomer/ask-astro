@@ -53,6 +53,22 @@ jobs:
           name: Run pre-commit hooks
           command: pre-commit run --all-files
 
+  build-docs:
+    description: "Build docs check (the actual publishing is handled by .readthedocs.yaml)"
+    executor:
+      name: docker-executor
+    steps:
+      - checkout
+      - run:
+          name: Install poetry
+          command: python -m pip install poetry
+      - run:
+          name: Install build docs dependency
+          command: python -m poetry install --only=docs,dev
+      - run:
+          name: Run Sphinx
+          command: poetry run inv docs.build
+
 workflows:
   tests:
     jobs:
@@ -63,4 +79,6 @@ workflows:
               python_version: [ "3.11" ]
           <<: *all_branches_and_version_tag
       - precommit:
+          <<: *all_branches_and_version_tag
+      - build-docs:
           <<: *all_branches_and_version_tag

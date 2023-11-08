@@ -11,7 +11,6 @@ python = "^3.11"
 [tool.poetry.group.dev.dependencies]
 invoke = "^2.2.0"
 
-
 [tool.poetry.group.docs.dependencies]
 sphinx-book-theme = "^1.0.1"
 rich = "^13.6.0"
