@@ -68,7 +68,7 @@ async def _send_response(details: dict[str, str], respond: AsyncRespond) -> None
         f"☺️ Thank you for your feedback, <@{details['user']}>!",
         thread_ts=details["thread_ts"],
         replace_original=False,
-        response_type="ephemeral",
+        response_type="in_channel",
     )
 
 
