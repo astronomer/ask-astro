@@ -2,6 +2,7 @@ from pathlib import Path
 
 from invoke import task
 from invoke.context import Context
+from rich.console import Console
 
 from tasks.common import project_root
 
