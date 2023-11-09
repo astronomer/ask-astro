@@ -10,8 +10,6 @@ class APIMonitoring:
 
     def __init__(self, base_url: str) -> None:
         self.base_url = base_url
-        if not self.base_url:
-            raise ValueError("ASK_ASTRO_API_BASE_URL cannot be empty.")
 
     def test_endpoint(
         self, endpoint: str, method: str = "GET", data: dict | None = None, headers: dict | None = None

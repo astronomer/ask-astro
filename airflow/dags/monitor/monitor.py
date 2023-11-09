@@ -128,6 +128,8 @@ def monitor_apis():
     If any endpoint does not return a 200 status, an exception will be raised.
     """
     headers = {"accept": "*/*", "Content-Type": "application/json"}
+    if not ASK_ASTRO_API_BASE_URL:
+        raise ValueError("base_url cannot be empty.")
     api_monitor = APIMonitoring(base_url=ASK_ASTRO_API_BASE_URL)
 
     request_body = {"prompt": "Example prompt"}
