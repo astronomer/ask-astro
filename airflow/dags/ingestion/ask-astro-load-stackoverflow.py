@@ -9,7 +9,7 @@ from airflow.decorators import dag, task
 ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "")
 
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
-
+WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsProd")
 stackoverflow_cutoff_date = "2021-09-01"
 
 stackoverflow_tags = [
@@ -38,7 +38,7 @@ def ask_astro_load_stackoverflow():
         weaviate_conn_id=_WEAVIATE_CONN_ID,
         retries=10,
         retry_delay=30,
-    ).partial(class_name="Docs", primary_key="docLink").expand(dfs=[split_md_docs])
+    ).partial(class_name=WEAVIATE_CLASS, primary_key="docLink").expand(dfs=[split_md_docs])
 
 
 ask_astro_load_stackoverflow()

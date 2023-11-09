@@ -15,6 +15,7 @@ ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "")
 
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 _GITHUB_CONN_ID = "github_ro"
+WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsProd")
 
 markdown_docs_sources = [
     {"doc_dir": "learn", "repo_base": "astronomer/docs"},
@@ -83,7 +84,7 @@ def ask_astro_load_bulk():
         task_id="create_schema",
         weaviate_conn_id=_WEAVIATE_CONN_ID,
         class_object_data="file://include/data/schema.json",
-        existing="fail",
+        existing="ignore",
     )
 
     @task.branch(trigger_rule="none_failed")
@@ -238,12 +239,12 @@ def ask_astro_load_bulk():
     split_code_docs = task(split.split_python).expand(dfs=python_code_tasks)
 
     task.weaviate_import(ingest.import_data, weaviate_conn_id=_WEAVIATE_CONN_ID, retries=10, retry_delay=30).partial(
-        class_name="Docs"
+        class_name=WEAVIATE_CLASS
     ).expand(dfs=[split_md_docs, split_code_docs])
 
     _import_baseline = task.weaviate_import(
         ingest.import_baseline, trigger_rule="none_failed", weaviate_conn_id=_WEAVIATE_CONN_ID
-    )(class_name="Docs", seed_baseline_url=seed_baseline_url)
+    )(class_name=WEAVIATE_CLASS, seed_baseline_url=seed_baseline_url)
 
     _check_schema >> [_check_seed_baseline, _create_schema]
 
