@@ -121,19 +121,32 @@ def construct_service_status_message(
     :param error_messages: A list of error messages from failed task executions.
     :param external_trigger: A boolean indicating if the DAG was triggered externally.
     """
-    # Start with reporting failed tasks and errors if there are any
-    service_status_lines = [f":red_circle: {task}" for task in failed_tasks]
-    service_status_lines.extend(error_messages)
+    service_status_lines = []
 
-    # If the DAG was externally triggered and there are no failures, report all services are up
+    if failed_tasks:
+        failed_tasks_formatted = "\n".join(failed_tasks)
+        service_status_lines.append(f"*Failed Tasks:*\n{failed_tasks_formatted}")
+
+    # Format error messages as a code block for better readability
+    if error_messages:
+        # Slack code block formatting with triple backticks
+        error_messages_formatted = "\n".join([f"```{error}```" for error in error_messages])
+        service_status_lines.append(f"*Error Details:*\n{error_messages_formatted}")
+
+    # If the DAG was externally triggered and there are no failures, show all services are up
     if external_trigger and not failed_tasks:
-        service_status = "\n:large_green_circle: All services are up!\n"
-    else:
-        # Otherwise, combine the statuses and include successful tasks
-        service_status_lines.extend(
+        service_status_lines.append(":large_green_circle: *All services are up!*")
+
+    # If not all services are up, list the successful tasks
+    if not external_trigger or failed_tasks:
+        successful_tasks_formatted = "\n".join(
             [f":large_green_circle: {task}" for task in task_status if task not in failed_tasks]
         )
-        service_status = "\n".join(service_status_lines)
+        if successful_tasks_formatted:
+            service_status_lines.append(f"*Successful Tasks:*\n{successful_tasks_formatted}")
+
+    # Join all parts into the final service status message
+    service_status = "\n\n".join(service_status_lines)
 
     return service_status
 
@@ -161,7 +174,6 @@ def slack_status(**context: Any) -> None:
             task_id="slack_alert",
             slack_webhook_conn_id=slack_webhook_conn,
             message=service_status,
-            trigger_rule=TriggerRule.ALL_DONE,
         ).execute(context=context)
 
 
