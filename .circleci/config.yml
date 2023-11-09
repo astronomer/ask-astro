@@ -25,33 +25,34 @@ jobs:
       name: docker-executor
       python_version: "<<parameters.python_version>>"
     parallelism: 4
-    working_directory: ~/project/api
     steps:
-      - checkout:
-          path: ~/project
+      - checkout
       - run:
-          name: Install Dependencies
-          command: poetry install --no-root
+          name: Install poetry
+          command: python -m pip install poetry
       - run:
-          name: Set PYTHONPATH
-          command: echo 'export PYTHONPATH=$PYTHONPATH:.' >> $BASH_ENV
+          name: Install dev tool dependency
+          command: python -m poetry install
+      - run:
+          name: Install backend API dependency
+          command: python -m poetry run inv api.init-poetry-env
       - run:
           name: Run tests
-          command: |
-            poetry run pytest ../tests || poetry run pytest --last-failed ../tests
+          command: python -m poetry run inv api.test
 
   precommit:
     executor: docker-executor
-    working_directory: ~/project/api
     steps:
-      - checkout:
-          path: ~/project
+      - checkout
       - run:
-          name: Install Pre-commit
-          command: pip install pre-commit
+          name: Install poetry
+          command: python -m pip install poetry
       - run:
-          name: Run pre-commit hooks
-          command: pre-commit run --all-files
+          name: Install dev tool dependency
+          command: python -m poetry install --with pre-commit
+      - run:
+          name: Run tests
+          command: python -m poetry run inv run-pre-commit
 
   build-docs:
     description: "Build docs"

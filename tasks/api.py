@@ -46,7 +46,7 @@ def run_with_docker(
     follow_logs: bool = True,
 ) -> None:
     """Run ask-astro API server with docker"""
-    with ctx.cd("api"):
+    with ctx.cd(api_root):
         if build_image:
             print(f"Building image {image_name}")
             ctx.run(f"docker build . --tag {image_name}")
@@ -61,9 +61,17 @@ def run_with_docker(
 )
 def stop_container(ctx: Context, container_name: str = api_container_name, remove_container: bool = True) -> None:
     """Stop ask-astro API server container"""
-    with ctx.cd("api"):
+    with ctx.cd(api_root):
         print(f"stop container {container_name}")
         ctx.run(f"docker stop {container_name}")
         if remove_container:
             print(f"remove container {container_name}")
             ctx.run(f"docker remove {container_name}")
+
+
+@task
+def test(ctx: Context) -> None:
+    """Run ask-astro API tests"""
+    with ctx.cd(api_root):
+        print("Run ask-astro API tests")
+        ctx.run("poetry run ../tests || poetry run pytest --last-failed ../tests")
