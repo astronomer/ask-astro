@@ -29,6 +29,7 @@ google_service_account_json_value = os.environ.get("GOOGLE_APPLICATION_CREDENTIA
 
 ASK_ASTRO_API_BASE_URL = os.environ.get("ASK_ASTRO_API_BASE_URL", None)
 
+# request ids to monitor from Ask-Astro database.
 ASK_ASTRO_REQUEST_ID_1 = os.environ.get("ASK_ASTRO_REQUEST_ID_1", "05d8882e-56ac-11ee-a818-4200a9fe0102")
 ASK_ASTRO_REQUEST_ID_2 = os.environ.get("ASK_ASTRO_REQUEST_ID_2", "f2d6524c-56ab-11ee-a818-4200a9fe0102")
 
