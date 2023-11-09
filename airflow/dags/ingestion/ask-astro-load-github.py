@@ -10,7 +10,7 @@ ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "")
 
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 _GITHUB_CONN_ID = "github_ro"
-
+WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsProd")
 markdown_docs_sources = [
     {"doc_dir": "learn", "repo_base": "astronomer/docs"},
     {"doc_dir": "astro", "repo_base": "astronomer/docs"},
@@ -71,7 +71,7 @@ def ask_astro_load_github():
         weaviate_conn_id=_WEAVIATE_CONN_ID,
         retries=10,
         retry_delay=30,
-    ).partial(class_name="Docs", primary_key="docLink").expand(dfs=[split_md_docs, split_code_docs])
+    ).partial(class_name=WEAVIATE_CLASS, primary_key="docLink").expand(dfs=[split_md_docs, split_code_docs])
 
     issues_docs >> md_docs >> rst_docs >> code_samples
 
