@@ -33,7 +33,7 @@ def check_ingestion_dags(**context: Any):
         message = f":red_circle: Import Error in DAG"
 
     ingestion_dag_exist = False
-    if set(dagbag.dag_ids).issubset(set(ingestion_dags)):
+    if set(ingestion_dags).issubset(set(dagbag.dag_ids)):
         ingestion_dag_exist = True
         message = f":red_circle: Some Ingestion DAG's are missing"
 
