@@ -11,8 +11,18 @@ ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "")
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsProd")
 
+default_args = {"retries": 3, "retry_delay": 30}
 
-@dag(schedule_interval="0 5 * * *", start_date=datetime(2023, 9, 27), catchup=False, is_paused_upon_creation=True)
+schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
+
+
+@dag(
+    schedule_interval=schedule_interval,
+    start_date=datetime(2023, 9, 27),
+    catchup=False,
+    is_paused_upon_creation=True,
+    default_args=default_args,
+)
 def ask_astro_load_registry():
     """
     This DAG performs incremental load for any new docs.  Initial load via ask_astro_load_bulk imported
@@ -20,9 +30,9 @@ def ask_astro_load_registry():
     any existing documents that have been updated will be removed and re-added.
     """
 
-    registry_cells_docs = task(registry.extract_astro_registry_cell_types, retries=3)()
+    registry_cells_docs = task(registry.extract_astro_registry_cell_types)()
 
-    registry_dags_docs = task(registry.extract_astro_registry_dags, retries=3)()
+    registry_dags_docs = task(registry.extract_astro_registry_dags)()
 
     split_md_docs = task(split.split_markdown).expand(dfs=[registry_cells_docs])
 
@@ -31,9 +41,9 @@ def ask_astro_load_registry():
     task.weaviate_import(
         ingest.import_upsert_data,
         weaviate_conn_id=_WEAVIATE_CONN_ID,
-        retries=10,
-        retry_delay=30,
-    ).partial(class_name=WEAVIATE_CLASS, primary_key="docLink").expand(dfs=[split_md_docs, split_code_docs])
+    ).partial(
+        class_name=WEAVIATE_CLASS, primary_key="docLink"
+    ).expand(dfs=[split_md_docs, split_code_docs])
 
 
 ask_astro_load_registry()
