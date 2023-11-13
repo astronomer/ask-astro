@@ -54,6 +54,7 @@
                     "name": "content",
                     "description": "Document content",
                     "dataType": ["text"],
+                    "tokenization": "whitespace",
                     "moduleConfig": {
                         "text2vec-openai": {
                             "skip": "False",
