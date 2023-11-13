@@ -1,7 +1,7 @@
 <br />
 
 <p align="center">
-  <img src="../docs/static/ingestion.png" />
+  <img src="../docs/_static/ingestion.png" />
 </p>
 
 <br />
@@ -30,7 +30,7 @@ In addition to the individual DAGs per source, we have one DAG to do full-databa
 Additionally, a baseline of pre-embedded data provides the ability to ingest a stable baseline for upstream evaluation.  See step 5 below.
 
 <p align="center">
-  <img src="../docs/static/DAG.png" />
+  <img src="../docs/_static/DAG.png" />
 </p>
 
 ## Prerequisites
