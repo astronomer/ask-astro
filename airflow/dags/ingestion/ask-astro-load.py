@@ -1,10 +1,12 @@
+import json
 import os
 from datetime import datetime
+from pathlib import Path
 from textwrap import dedent
 
 import pandas as pd
 from include.tasks import ingest, split
-from include.tasks.extract import blogs, github, registry, stack_overflow
+from include.tasks.extract import airflow_docs, blogs, github, registry, stack_overflow
 from weaviate_provider.operators.weaviate import WeaviateCheckSchemaBranchOperator, WeaviateCreateSchemaOperator
 
 from airflow.decorators import dag, task
@@ -22,9 +24,6 @@ markdown_docs_sources = [
     {"doc_dir": "astro", "repo_base": "astronomer/docs"},
     {"doc_dir": "", "repo_base": "OpenLineage/docs"},
     {"doc_dir": "", "repo_base": "OpenLineage/OpenLineage"},
-]
-rst_docs_sources = [
-    {"doc_dir": "docs", "repo_base": "apache/airflow", "exclude_docs": ["changelog.rst", "commits.rst"]},
 ]
 code_samples_sources = [
     {"doc_dir": "code-samples", "repo_base": "astronomer/docs"},
@@ -49,10 +48,20 @@ stackoverflow_tags = [
     "airflow",
 ]
 
-schedule_interval = "@daily" if ask_astro_env == "prod" else None
+airflow_docs_base_url = "https://airflow.apache.org/docs/"
+
+default_args = {"retries": 3, "retry_delay": 30}
+
+schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 
 
-@dag(schedule_interval=schedule_interval, start_date=datetime(2023, 9, 27), catchup=False, is_paused_upon_creation=True)
+@dag(
+    schedule_interval=schedule_interval,
+    start_date=datetime(2023, 9, 27),
+    catchup=False,
+    is_paused_upon_creation=True,
+    default_args=default_args,
+)
 def ask_astro_load_bulk():
     """
     This DAG performs the initial load of data from sources.
@@ -67,10 +76,14 @@ def ask_astro_load_bulk():
 
     """
 
+    class_object_data = json.loads(Path("include/data/schema.json").read_text())
+    class_object_data["classes"][0].update({"class": WEAVIATE_CLASS})
+    class_object_data = json.dumps(class_object_data)
+
     _check_schema = WeaviateCheckSchemaBranchOperator(
         task_id="check_schema",
         weaviate_conn_id=_WEAVIATE_CONN_ID,
-        class_object_data="file://include/data/schema.json",
+        class_object_data=class_object_data,
         follow_task_ids_if_true=["check_seed_baseline"],
         follow_task_ids_if_false=["create_schema"],
         doc_md=dedent(
@@ -83,7 +96,7 @@ def ask_astro_load_bulk():
     _create_schema = WeaviateCreateSchemaOperator(
         task_id="create_schema",
         weaviate_conn_id=_WEAVIATE_CONN_ID,
-        class_object_data="file://include/data/schema.json",
+        class_object_data=class_object_data,
         existing="ignore",
     )
 
@@ -98,7 +111,7 @@ def ask_astro_load_bulk():
         else:
             return [
                 "extract_github_markdown",
-                "extract_github_rst",
+                "extract_airflow_docs",
                 "extract_stack_overflow",
                 # "extract_slack_archive",
                 "extract_astro_registry_cell_types",
@@ -108,22 +121,12 @@ def ask_astro_load_bulk():
                 "extract_astro_registry_dags",
             ]
 
-    @task(trigger_rule="none_skipped")
+    @task(trigger_rule="none_failed")
     def extract_github_markdown(source: dict):
         try:
             df = pd.read_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
         except Exception:
             df = github.extract_github_markdown(source, github_conn_id=_GITHUB_CONN_ID)
-            df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
-
-        return df
-
-    @task(trigger_rule="none_skipped")
-    def extract_github_rst(source: dict):
-        try:
-            df = pd.read_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
-        except Exception:
-            df = github.extract_github_rst(source=source, github_conn_id=_GITHUB_CONN_ID)
             df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
 
         return df
@@ -137,6 +140,16 @@ def ask_astro_load_bulk():
             df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
 
         return df
+
+    @task(trigger_rule="none_failed")
+    def extract_airflow_docs():
+        try:
+            df = pd.read_parquet("include/data/apache/airflow/docs.parquet")
+        except Exception:
+            df = airflow_docs.extract_airflow_docs(docs_base_url=airflow_docs_base_url)[0]
+            df.to_parquet("include/data/apache/airflow/docs.parquet")
+
+        return [df]
 
     @task(trigger_rule="none_failed")
     def extract_stack_overflow(tag: str, stackoverflow_cutoff_date: str):
@@ -204,8 +217,6 @@ def ask_astro_load_bulk():
 
     md_docs = extract_github_markdown.expand(source=markdown_docs_sources)
 
-    rst_docs = extract_github_rst.expand(source=rst_docs_sources)
-
     issues_docs = extract_github_issues.expand(repo_base=issues_docs_sources)
 
     stackoverflow_docs = extract_stack_overflow.partial(stackoverflow_cutoff_date=stackoverflow_cutoff_date).expand(
@@ -224,7 +235,6 @@ def ask_astro_load_bulk():
 
     markdown_tasks = [
         md_docs,
-        rst_docs,
         issues_docs,
         stackoverflow_docs,
         # slack_docs,
@@ -232,15 +242,21 @@ def ask_astro_load_bulk():
         registry_cells_docs,
     ]
 
+    extracted_airflow_docs = extract_airflow_docs()
+
+    html_tasks = [extracted_airflow_docs]
+
     python_code_tasks = [registry_dags_docs, code_samples]
 
     split_md_docs = task(split.split_markdown).expand(dfs=markdown_tasks)
 
     split_code_docs = task(split.split_python).expand(dfs=python_code_tasks)
 
-    task.weaviate_import(ingest.import_data, weaviate_conn_id=_WEAVIATE_CONN_ID, retries=10, retry_delay=30).partial(
+    split_html_docs = task(split.split_html).expand(dfs=html_tasks)
+
+    task.weaviate_import(ingest.import_data, weaviate_conn_id=_WEAVIATE_CONN_ID, retries=10).partial(
         class_name=WEAVIATE_CLASS
-    ).expand(dfs=[split_md_docs, split_code_docs])
+    ).expand(dfs=[split_md_docs, split_code_docs, split_html_docs])
 
     _import_baseline = task.weaviate_import(
         ingest.import_baseline, trigger_rule="none_failed", weaviate_conn_id=_WEAVIATE_CONN_ID
@@ -248,9 +264,9 @@ def ask_astro_load_bulk():
 
     _check_schema >> [_check_seed_baseline, _create_schema]
 
-    _create_schema >> markdown_tasks + python_code_tasks + [_check_seed_baseline]
+    _create_schema >> markdown_tasks + python_code_tasks + html_tasks + [_check_seed_baseline]
 
-    _check_seed_baseline >> issues_docs >> rst_docs >> md_docs
+    _check_seed_baseline >> issues_docs >> md_docs
     # (
     #     _check_seed_baseline
     #     >> [stackoverflow_docs, slack_docs, blogs_docs, registry_cells_docs, _import_baseline] + python_code_tasks
@@ -258,7 +274,7 @@ def ask_astro_load_bulk():
 
     (
         _check_seed_baseline
-        >> [stackoverflow_docs, blogs_docs, registry_cells_docs, _import_baseline] + python_code_tasks
+        >> [stackoverflow_docs, blogs_docs, registry_cells_docs, _import_baseline] + python_code_tasks + html_tasks
     )
 
 

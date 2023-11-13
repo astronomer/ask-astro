@@ -16,8 +16,18 @@ stackoverflow_tags = [
     "airflow",
 ]
 
+default_args = {"retries": 3, "retry_delay": 30}
 
-@dag(schedule_interval=None, start_date=datetime(2023, 9, 27), catchup=False, is_paused_upon_creation=True)
+schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
+
+
+@dag(
+    schedule_interval=schedule_interval,
+    start_date=datetime(2023, 9, 27),
+    catchup=False,
+    is_paused_upon_creation=True,
+    default_args=default_args,
+)
 def ask_astro_load_stackoverflow():
     """
     This DAG performs incremental load for any new docs.  Initial load via ask_astro_load_bulk imported
@@ -26,7 +36,7 @@ def ask_astro_load_stackoverflow():
     """
 
     stack_overflow_docs = (
-        task(stack_overflow.extract_stack_overflow_archive, retries=3)
+        task(stack_overflow.extract_stack_overflow_archive)
         .partial(stackoverflow_cutoff_date=stackoverflow_cutoff_date)
         .expand(tag=stackoverflow_tags)
     )
@@ -36,9 +46,9 @@ def ask_astro_load_stackoverflow():
     task.weaviate_import(
         ingest.import_upsert_data,
         weaviate_conn_id=_WEAVIATE_CONN_ID,
-        retries=10,
-        retry_delay=30,
-    ).partial(class_name=WEAVIATE_CLASS, primary_key="docLink").expand(dfs=[split_md_docs])
+    ).partial(
+        class_name=WEAVIATE_CLASS, primary_key="docLink"
+    ).expand(dfs=[split_md_docs])
 
 
 ask_astro_load_stackoverflow()
