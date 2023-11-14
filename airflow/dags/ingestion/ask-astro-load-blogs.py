@@ -1,5 +1,5 @@
+import datetime
 import os
-from datetime import datetime
 
 from include.tasks import ingest, split
 from include.tasks.extract import blogs
@@ -11,7 +11,7 @@ ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "")
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsProd")
 
-blog_cutoff_date = datetime.strptime("2023-01-19", "%Y-%m-%d")
+blog_cutoff_date = datetime.date(2023, 1, 19)
 
 default_args = {"retries": 3, "retry_delay": 30}
 
@@ -20,7 +20,7 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 
 @dag(
     schedule_interval=schedule_interval,
-    start_date=datetime(2023, 9, 27),
+    start_date=datetime.datetime(2023, 9, 27),
     catchup=False,
     is_paused_upon_creation=True,
     default_args=default_args,
