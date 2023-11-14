@@ -77,7 +77,7 @@ jobs:
           version: 20.10.11
       - checkout
       - run:
-          name: "Deploy to Astro"
+          name: "Deploy to Astro Dev"
           command: |
             curl -sSL install.astronomer.io | sudo bash -s
             astro deploy ${ASTRO_DEPLOYMENT_ID_DEV} -f
