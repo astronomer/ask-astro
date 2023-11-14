@@ -17,7 +17,7 @@
       <RequestCard
         uuid={req.uuid}
         prompt={req.prompt}
-        <!-- sources={req.sources} -->
+        sources={req.sources}
         messages={req.messages}
       />
     {/each}
