@@ -1,5 +1,3 @@
-local_development.md<br />
-
 <p align="center">
   <img src="_static/logo.svg" />
 </p>
