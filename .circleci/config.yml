@@ -69,6 +69,19 @@ jobs:
           name: Run Sphinx
           command: poetry run inv docs.build
 
+  build_image_and_deploy:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - setup_remote_docker:
+          version: 20.10.11
+      - checkout
+      - run:
+          name: "Deploy to Astro"
+          command: |
+            curl -sSL install.astronomer.io | sudo bash -s
+            astro deploy ${ASTRO_DEPLOYMENT_ID_DEV} -f
+
 workflows:
   tests:
     jobs:
@@ -81,4 +94,8 @@ workflows:
       - precommit:
           <<: *all_branches_and_version_tag
       - build-docs:
+          <<: *all_branches_and_version_tag
+      - build_image_and_deploy:
+          context:
+            - ask-astro
           <<: *all_branches_and_version_tag
