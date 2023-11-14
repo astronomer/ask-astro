@@ -36,7 +36,7 @@ def ask_astro_load_stackoverflow():
     """
 
     stack_overflow_docs = (
-        task(stack_overflow.extract_stack_overflow_archive)
+        task(stack_overflow.extract_stack_overflow)
         .partial(stackoverflow_cutoff_date=stackoverflow_cutoff_date)
         .expand(tag=stackoverflow_tags)
     )
