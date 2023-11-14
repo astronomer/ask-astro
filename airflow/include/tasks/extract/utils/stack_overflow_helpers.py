@@ -1,3 +1,4 @@
+import datetime
 from textwrap import dedent
 
 import pandas as pd
@@ -193,10 +194,7 @@ def process_stack_answers(posts_df: pd.DataFrame, comments_df: pd.DataFrame) -> 
     return answers_df
 
 
-def combine_stack_dfs(*, posts_df: pd.DataFrame, comments_df: pd.DataFrame, tag: str) -> pd.DataFrame:
-    questions_df = process_stack_questions(posts_df=posts_df, comments_df=comments_df, tag=tag)
-    answers_df = process_stack_answers(posts_df=posts_df, comments_df=comments_df)
-
+def combine_stack_dfs(*, questions_df: pd.DataFrame, answers_df: pd.DataFrame, tag: str) -> pd.DataFrame:
     # Join questions with answers
     df = questions_df.join(answers_df)
     df = df.apply(
@@ -209,5 +207,74 @@ def combine_stack_dfs(*, posts_df: pd.DataFrame, comments_df: pd.DataFrame, tag:
 
     # column order matters for uuid generation
     df = df[["docSource", "sha", "content", "docLink"]]
-
     return df
+
+
+def process_stack_comments_api(comments: list) -> str:
+    """
+    This helper function processes a list of slack comments for a question or answer
+
+    param comments: a list of stack overflow comments from the api
+    type comments: list
+
+    """
+    return "".join(
+        [
+            comment_template.format(
+                user=comment["owner"]["user_id"],
+                date=datetime.datetime.fromtimestamp(comment["creation_date"]).strftime("%Y-%m-%d"),
+                score=comment["score"],
+                body=comment["body_markdown"],
+            )
+            for comment in comments
+        ]
+    )
+
+
+def process_stack_questions_api(questions_df: pd.DataFrame, tag: str) -> pd.DataFrame:
+    """
+    This helper function formats a questions dataframe pulled from slack api.
+
+    The column question_text is created in markdown format based on question_template.
+
+    """
+
+    # format question content
+    questions_df["question_text"] = questions_df.apply(
+        lambda x: question_template.format(
+            title=x.title,
+            user=x.owner["user_id"],
+            date=datetime.datetime.fromtimestamp(x.creation_date).strftime("%Y-%m-%d"),
+            score=x.score,
+            body=x.body_markdown,
+            question_comments=x.question_comments,
+        ),
+        axis=1,
+    )
+    questions_df = questions_df[["link", "question_id", "question_text"]].set_index("question_id")
+
+    questions_df["docSource"] = f"stackoverflow {tag}"
+
+    questions_df.rename({"link": "docLink", "question_text": "content"}, axis=1, inplace=True)
+
+    return questions_df
+
+
+def process_stack_answers_api(answers_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    This helper function formats answers into markdownd documents and returns
+    a dataframe with question_id as index.
+    """
+    answers_df["answer_text"] = answers_df[["answers", "answer_comments"]].apply(
+        lambda x: answer_template.format(
+            score=x.answers["score"],
+            date=datetime.datetime.fromtimestamp(x.answers["creation_date"]).strftime("%Y-%m-%d"),
+            user=x.answers["owner"]["user_id"],
+            body=x.answers["body_markdown"],
+            answer_comments=x.answer_comments,
+        ),
+        axis=1,
+    )
+    answers_df = answers_df.groupby("question_id")["answer_text"].apply(lambda x: "".join(x))
+
+    return answers_df
