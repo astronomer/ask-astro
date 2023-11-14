@@ -1,6 +1,6 @@
+import datetime
 import json
 import os
-from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 
@@ -29,7 +29,7 @@ code_samples_sources = [
     {"doc_dir": "code-samples", "repo_base": "astronomer/docs"},
 ]
 issues_docs_sources = [
-    "apache/airflow",
+    {"repo_base": "apache/airflow", "cutoff_date": datetime.date(2020, 1, 1), "cutoff_issue_number": 30000}
 ]
 slack_channel_sources = [
     {
@@ -41,7 +41,7 @@ slack_channel_sources = [
     }
 ]
 
-blog_cutoff_date = datetime.strptime("2023-01-19", "%Y-%m-%d")
+blog_cutoff_date = datetime.date(2023, 1, 19)
 
 stackoverflow_cutoff_date = "2021-09-01"
 stackoverflow_tags = [
@@ -52,12 +52,10 @@ airflow_docs_base_url = "https://airflow.apache.org/docs/"
 
 default_args = {"retries": 3, "retry_delay": 30}
 
-schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
-
 
 @dag(
-    schedule_interval=schedule_interval,
-    start_date=datetime(2023, 9, 27),
+    schedule_interval=None,
+    start_date=datetime.datetime(2023, 9, 27),
     catchup=False,
     is_paused_upon_creation=True,
     default_args=default_args,
@@ -69,7 +67,7 @@ def ask_astro_load_bulk():
     If seed_baseline_url (set above) points to a parquet file with pre-embedded data it will be
     ingested.  Otherwise new data is extracted, split, embedded and ingested.
 
-    The first time this DAG runs (without seeded baseline) it will take at lease 20 minutes to
+    The first time this DAG runs (without seeded baseline) it will take at lease 90 minutes to
     extract data from all sources. Extracted data is then serialized to disk in the project
     directory in order to simplify later iterations of ingest with different chunking strategies,
     vector databases or embedding models.
@@ -174,12 +172,12 @@ def ask_astro_load_bulk():
     #     return df
 
     @task(trigger_rule="none_failed")
-    def extract_github_issues(repo_base: str):
+    def extract_github_issues(source: dict):
         try:
-            df = pd.read_parquet(f"include/data/{repo_base}/issues.parquet")
+            df = pd.read_parquet(f"include/data/{source['repo_base']}/issues.parquet")
         except Exception:
-            df = github.extract_github_issues(repo_base, _GITHUB_CONN_ID)
-            df.to_parquet(f"include/data/{repo_base}/issues.parquet")
+            df = github.extract_github_issues(source, _GITHUB_CONN_ID)
+            df.to_parquet(f"include/data/{source['repo_base']}/issues.parquet")
 
         return df
 
@@ -217,7 +215,7 @@ def ask_astro_load_bulk():
 
     md_docs = extract_github_markdown.expand(source=markdown_docs_sources)
 
-    issues_docs = extract_github_issues.expand(repo_base=issues_docs_sources)
+    issues_docs = extract_github_issues.expand(source=issues_docs_sources)
 
     stackoverflow_docs = extract_stack_overflow.partial(stackoverflow_cutoff_date=stackoverflow_cutoff_date).expand(
         tag=stackoverflow_tags
@@ -266,16 +264,7 @@ def ask_astro_load_bulk():
 
     _create_schema >> markdown_tasks + python_code_tasks + html_tasks + [_check_seed_baseline]
 
-    _check_seed_baseline >> issues_docs >> md_docs
-    # (
-    #     _check_seed_baseline
-    #     >> [stackoverflow_docs, slack_docs, blogs_docs, registry_cells_docs, _import_baseline] + python_code_tasks
-    # )
-
-    (
-        _check_seed_baseline
-        >> [stackoverflow_docs, blogs_docs, registry_cells_docs, _import_baseline] + python_code_tasks + html_tasks
-    )
+    _check_seed_baseline >> markdown_tasks + python_code_tasks + html_tasks + [_import_baseline]
 
 
 ask_astro_load_bulk()
