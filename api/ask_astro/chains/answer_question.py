@@ -45,7 +45,8 @@ retriever = MultiQueryRetriever.from_llm(
 # Set up a ConversationalRetrievalChain to generate answers using the retriever.
 answer_question_chain = ConversationalRetrievalChain(
     retriever=retriever,
-    return_source_documents=True,
+    # TODO: Enable this once correctness of reference improve
+    # return_source_documents=True,
     question_generator=LLMChain(
         llm=AzureChatOpenAI(
             **AzureOpenAIParams.us_east,

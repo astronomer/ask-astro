@@ -91,6 +91,7 @@
     <MessageCard {...message} />
   {/each}
 
+  <!--
   <div class="sources mt-8">
     <h2 class="sources-heading">Sources</h2>
     {#if loading}
@@ -105,6 +106,7 @@
       {/each}
     {/if}
   </div>
+  -->
 </div>
 
 <style>
