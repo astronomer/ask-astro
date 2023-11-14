@@ -45,7 +45,6 @@ def check_ingestion_dags(**context: Any):
         message = ":red_circle: Some Ingestion DAG's are missing"
 
     if not ingestion_dag_exist or data:
-        print("hello hello")
         SlackWebhookOperator(
             task_id="slack_alert",
             slack_webhook_conn_id=slack_webhook_conn,
