@@ -4,8 +4,7 @@
 
 ### Initialize UI server dependencies
 
-```{include} ../task_help_text/ui_init.md
-```
+![ui.init](../_static/images/task_help_message/ui-init.svg)
 
 ### Run UI server
 
@@ -17,8 +16,8 @@ ASK_ASTRO_API_URL=http://0.0.0.0:8080
 
 Run the development server:
 
-```{include} ../task_help_text/ui_run.md
-```
+
+![ui.run](../_static/images/task_help_message/ui-run.svg)
 
 ## Building
 

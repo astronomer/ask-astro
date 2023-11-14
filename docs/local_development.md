@@ -23,23 +23,22 @@ Python 3.11.x
 $ python -m pip install poetry
 $ poetry install
 ```
-
-```{include} task_help_text/list_tasks.md
-```
+![list_tasks](_static/images/task_help_message/list-tasks.svg)
 
 ### Documentation Tasks
 
 * Build sphinx docs
 
-```{include} task_help_text/docs_build.md
-```
+![docs.build](_static/images/task_help_message/docs-build.svg)
 
 
 * Serve the docs locally (http://127.0.0.1:8000)
 
-```{include} task_help_text/docs_serve.md
-```
+![docs.serve](_static/images/task_help_message/docs-serve.svg)
 
+* Generate the screenshot for help message on each tasks
+
+![docs.generate-tasks-help-screenshot](_static/images/task_help_message/docs-generate-tasks-help-screenshot.svg)
 
 ### Backend API Tasks
 
