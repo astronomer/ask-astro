@@ -90,7 +90,7 @@
       {/if}
     </div>
 
-    {#if showFeedback && requestUuid && hasReacted !== undefined}
+    {#if showFeedback && requestUuid && hasReacted !== undefined && additional_kwargs.status != 'error'}
       <Card.Footer>
         {#if hasReacted === false}
           <div class="flex gap-2 items-center w-full mt-4">

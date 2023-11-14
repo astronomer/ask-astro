@@ -18,22 +18,18 @@ python3 scripts/local_dev.py api-env-template
 #### Run with poetry
 * Initialize the ask-astro API local poetry environment
 
-```{include} ../task_help_text/api_init_poetry_env.md
-```
+![api.init-poetry-env](../_static/images/task_help_message/api-init-poetry-env.svg)
 
 * Run ask-astro API server with poetry
 
-```{include} ../task_help_text/api_run_with_poetry.md
-```
+![api.run-with-poetry](../_static/images/task_help_message/api-run-with-poetry.svg)
 
 ### Run with Docker
 
 * Run ask-astro API server with docker
 
-```{include} ../task_help_text/api_run_with_docker.md
-```
+![api.run-with-docker](../_static/images/task_help_message/api-run-with-docker.svg)
 
 * Stop ask-astro API server container
 
-```{include} ../task_help_text/api_stop_container.md
-```
+![api.stop-container](../_static/images/task_help_message/api-stop-container.svg)

@@ -74,6 +74,7 @@
       requestUuid={$page.params.request_id}
       additional_kwargs={{
         ts: $page.data.response_received_at,
+        status: $page.data.status,
       }}
       showFeedback
     />
