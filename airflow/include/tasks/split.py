@@ -99,14 +99,6 @@ def split_html(dfs: list[pd.DataFrame]) -> pd.DataFrame:
     df = df.explode("doc_chunks", ignore_index=True)
     df["content"] = df["doc_chunks"].apply(lambda x: x.page_content)
 
-    # import tiktoken
-    # encoding = tiktoken.get_encoding("cl100k_base")
-    # df["num_tokens"] = df["content"].apply(lambda x: len(encoding.encode(x)))
-    # df.num_tokens.sort_values()
-    # df.iloc[2165]['docLink']
-    # df.drop(2165, inplace=True)
-    # df.reset_index(drop=True, inplace=True)
-
     df.drop(["doc_chunks"], inplace=True, axis=1)
     df.reset_index(inplace=True, drop=True)
 
