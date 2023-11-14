@@ -101,3 +101,19 @@ python3 scripts/local_dev.py run-airflow    # To run Airflow
 **Apache Airflow**
 
 - [Run airflow](./airflow/README.md)
+
+## Deployment
+The following sections describe how to deploy the various components of Ask Astro.
+
+### Backend API
+- [Backend API](./api/cloudbuild_and_run.md)
+- [Google Firestore](./api/google_firestore.md)
+
+### User Interface
+- [UI](./ui/README.md)
+
+### Apache Airflow
+- [Airflow](./airflow/README.md)
+
+## Slackbot
+- [Slackbot](./api/setup_slack_bot.md)
