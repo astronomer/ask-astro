@@ -1,21 +1,23 @@
+from __future__ import annotations
+
 from datetime import datetime
-
-from uuid import UUID
 from typing import Any
+from uuid import UUID
 
+from langchain.schema import AIMessage, BaseMessage, HumanMessage
 from pydantic.v1 import BaseModel, Field
-
-from langchain.schema import BaseMessage, AIMessage, HumanMessage
 
 
 class Source(BaseModel):
-    "Represents a source for a request."
+    """Represents a source for a request."""
+
     name: str = Field(..., description="The name of the source")
     snippet: str = Field(..., description="The snippet of the source")
 
 
 class AskAstroRequest(BaseModel):
-    "Represents a request to ask-astro."
+    """Represents a request to ask-astro."""
+
     uuid: UUID = Field(..., description="The UUID of the request")
     prompt: str = Field(..., description="The prompt for the request")
     messages: list[BaseMessage] = Field(
@@ -82,27 +84,25 @@ class AskAstroRequest(BaseModel):
         }
 
     @classmethod
-    def from_dict(cls, dict: dict[str, Any]) -> "AskAstroRequest":
-        """
-        Returns the Request from a dict.
-        """
+    def from_dict(cls, response_dict: dict[str, Any]) -> AskAstroRequest:
+        """Returns the Request from a dict."""
         return cls(
-            uuid=UUID(dict["uuid"]),
-            prompt=dict["prompt"],
+            uuid=UUID(response_dict["uuid"]),
+            prompt=response_dict["prompt"],
             messages=[
                 (HumanMessage if msg.get("type") == "human" else AIMessage)(
                     content=msg["content"],
                     additional_kwargs=msg.get("additional_kwargs", {}),
                 )
-                for msg in dict["messages"]
+                for msg in response_dict["messages"]
             ],
-            sources=[Source(**source) for source in dict["sources"]],
-            response=dict["response"],
-            status=dict["status"],
-            langchain_run_id=UUID(dict["langchain_run_id"]),
-            score=dict["score"],
-            sent_at=dict["sent_at"],
-            response_received_at=dict.get("response_received_at"),
-            is_processed=dict.get("is_processed", False),
-            is_example=dict.get("is_example", False),
+            sources=[Source(**source) for source in response_dict["sources"]],
+            response=response_dict["response"],
+            status=response_dict["status"],
+            langchain_run_id=UUID(response_dict["langchain_run_id"]),
+            score=response_dict["score"],
+            sent_at=response_dict["sent_at"],
+            response_received_at=response_dict.get("response_received_at"),
+            is_processed=response_dict.get("is_processed", False),
+            is_example=response_dict.get("is_example", False),
         )

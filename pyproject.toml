@@ -1,0 +1,62 @@
+[tool.poetry]
+name = "ask-astro"
+version = "0.1.0"
+description = ""
+authors = ["Wei Lee <weilee.rx@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.group.dev.dependencies]
+invoke = "^2.2.0"
+
+[tool.poetry.group.docs.dependencies]
+sphinx-book-theme = "^1.0.1"
+rich = "^13.6.0"
+myst-parser = "^2.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.black]
+line-length = 120
+target-version = ['py39']
+
+
+[tool.ruff]
+line-length = 120
+
+# Enable Pyflakes `E` and `F` codes by default.
+extend-select = [
+    "W",    # pycodestyle warnings
+    "I",    # isort
+#    "C90",  # Complexity  # TODO: enable this and the score below
+#    "B",    # flake8-bugbear
+    "C",    # flake8-comprehensions
+#    "ANN",  # flake8-comprehensions
+    "ISC",  # flake8-implicit-str-concat
+    "T10",  # flake8-debugger
+    "A",    # flake8-builtins
+    "UP",   # pyupgrade
+]
+extend-ignore = ["A002", "C901"]
+
+# Exclude a variety of commonly ignored directories.
+extend-exclude = [
+    "__pycache__",
+    "docs/source/conf.py",
+]
+target-version = "py39"
+fix = true
+
+[tool.ruff.per-file-ignores]
+
+# TODO: Decrease the complexity and fix the errors.
+# [mccabe]
+# max-complexity = 6
+
+[tool.ruff.isort]
+combine-as-imports = true

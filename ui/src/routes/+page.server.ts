@@ -21,8 +21,6 @@ export const actions = {
     const prompt = formData.get("prompt")?.toString();
     const from_request_uuid = formData.get("from_request_uuid");
 
-    if (!prompt) throw new Error("Prompt is required");
-
     const body: { prompt: string; from_request_uuid?: string } = {
       prompt,
     };

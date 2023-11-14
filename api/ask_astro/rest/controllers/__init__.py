@@ -1,50 +1,43 @@
-"Contains a function to register all controllers with the app."
+"""Contains a function to register all controllers with the app."""
+from __future__ import annotations
 
-from sanic import Sanic
+from dataclasses import dataclass
+from logging import getLogger
+from typing import Callable
 
-from ask_astro.rest.controllers.list_recent_requests import on_list_recent_requests
+from sanic import Sanic, response
+
 from ask_astro.rest.controllers.get_request import on_get_request
+from ask_astro.rest.controllers.list_recent_requests import on_list_recent_requests
 from ask_astro.rest.controllers.post_request import on_post_request
 from ask_astro.rest.controllers.submit_feedback import on_submit_feedback
-
-from logging import getLogger
 
 logger = getLogger(__name__)
 
 
+@dataclass
+class RouteConfig:
+    handler: Callable[..., response.BaseHTTPResponse]
+    uri: str
+    methods: list[str]
+    name: str
+
+
 def register_routes(api: Sanic):
-    """
-    Registers all controllers with the app.
-    """
+    """Registers all controllers with the app."""
 
-    api.add_route(
-        on_list_recent_requests,
-        "/requests",
-        methods=["GET"],
-        name="list_recent_requests",
-    )
-    logger.info("Registered GET /requests controller")
+    routes: list[RouteConfig] = [
+        RouteConfig(on_list_recent_requests, "/requests", ["GET"], "list_recent_requests"),
+        RouteConfig(on_get_request, "/requests/<request_id:uuid>", ["GET"], "get_request"),
+        RouteConfig(on_post_request, "/requests", ["POST"], "post_request"),
+        RouteConfig(on_submit_feedback, "/requests/<request_id:uuid>/feedback", ["POST"], "submit_feedback"),
+    ]
 
-    api.add_route(
-        on_get_request,
-        "/requests/<request_id:uuid>",
-        methods=["GET"],
-        name="get_request",
-    )
-    logger.info("Registered GET /requests/<request_id> controller")
-
-    api.add_route(
-        on_post_request,
-        "/requests",
-        methods=["POST"],
-        name="post_request",
-    )
-    logger.info("Registered POST /requests controller")
-
-    api.add_route(
-        on_submit_feedback,
-        "/requests/<request_id:uuid>/feedback",
-        methods=["POST"],
-        name="submit_feedback",
-    )
-    logger.info("Registered POST /requests/<request_id>/feedback controller")
+    for route_config in routes:
+        api.add_route(
+            handler=route_config.handler,
+            uri=route_config.uri,
+            methods=route_config.methods,
+            name=route_config.name,
+        )
+        logger.info("Registered %s %s controller", route_config.methods[0], route_config.uri)
