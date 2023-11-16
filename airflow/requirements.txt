@@ -15,3 +15,4 @@ bs4==0.0.1
 lxml==4.9.3
 tiktoken==0.5.1
 firebase-admin==6.2.0
+apache-airflow-providers-weaviate
