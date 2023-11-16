@@ -111,3 +111,6 @@ workflows:
       - deploy-docs:
           requires:
             - build-docs
+          filters:
+            branches:
+              only: main
