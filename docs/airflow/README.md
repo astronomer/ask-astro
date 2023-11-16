@@ -135,19 +135,19 @@ Unpause these DAGs to see how they ingest and upsert any documents that have cha
 - The Airflow ingest DAGs use [dynamic tasks](https://docs.astronomer.io/learn/dynamic-tasks) to iterate over multiple document sources. For instance, the bulk ingest DAG (`airflow/include/dags/ingest/ask-astro-load.py`) specifies markdown sources in github repositories.
 ```python
 markdown_docs_sources = [
-    {'doc_dir': 'learn', 'repo_base': 'astronomer/docs'},
-    {'doc_dir': 'astro', 'repo_base': 'astronomer/docs'},
-  ]
+    {"doc_dir": "learn", "repo_base": "astronomer/docs"},
+    {"doc_dir": "astro", "repo_base": "astronomer/docs"},
+]
 ```
 
 To ingest markdown documents from additional repositories simply add the source and re-run the DAG.
 ```python
 markdown_docs_sources = [
-    {'doc_dir': 'learn', 'repo_base': 'astronomer/docs'},
-    {'doc_dir': 'astro', 'repo_base': 'astronomer/docs'},
-    {'doc_dir': 'base', 'repo_base': 'OpenLineage/docs'},
-    {'doc_dir': 'base', 'repo_base': 'OpenLineage/OpenLineage'}
-  ]
+    {"doc_dir": "learn", "repo_base": "astronomer/docs"},
+    {"doc_dir": "astro", "repo_base": "astronomer/docs"},
+    {"doc_dir": "base", "repo_base": "OpenLineage/docs"},
+    {"doc_dir": "base", "repo_base": "OpenLineage/OpenLineage"},
+]
 ```
 
 - The 'extract' logic for each data source is specified in `airflow/include/tasks/extract.py`.  These functions can be copied/pasted to select new sources.
