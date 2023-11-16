@@ -53,7 +53,7 @@ repos:
       - id: blacken-docs
         alias: black
         additional_dependencies: [black>=22.10.0]
-        types: [python]
+        types: [markdown]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: 'v0.1.3'
