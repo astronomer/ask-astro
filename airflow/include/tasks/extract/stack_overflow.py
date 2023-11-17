@@ -3,6 +3,9 @@ from __future__ import annotations
 import datetime
 
 import pandas as pd
+from stackapi import StackAPI
+from weaviate.util import generate_uuid5
+
 from include.tasks.extract.utils.stack_overflow_helpers import (
     process_stack_answers,
     process_stack_answers_api,
@@ -12,8 +15,6 @@ from include.tasks.extract.utils.stack_overflow_helpers import (
     process_stack_questions,
     process_stack_questions_api,
 )
-from stackapi import StackAPI
-from weaviate.util import generate_uuid5
 
 
 def extract_stack_overflow_archive(tag: str, stackoverflow_cutoff_date: str) -> pd.DataFrame:

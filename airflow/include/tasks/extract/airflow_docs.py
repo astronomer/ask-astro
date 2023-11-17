@@ -6,8 +6,9 @@ import urllib.parse
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from include.tasks.extract.utils.html_helpers import get_all_links
 from weaviate.util import generate_uuid5
+
+from include.tasks.extract.utils.html_helpers import get_all_links
 
 
 def extract_airflow_docs(docs_base_url: str) -> list[pd.DataFrame]:
