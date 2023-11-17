@@ -1,0 +1,430 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Create an ask-astro Slack bot &#8212; ask-astro 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=365ca57ee442770a23c6" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=365ca57ee442770a23c6" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=365ca57ee442770a23c6" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=365ca57ee442770a23c6" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=365ca57ee442770a23c6" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=365ca57ee442770a23c6" />
+  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=365ca57ee442770a23c6"></script>
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/setup_slack_bot';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ask-astro Airflow" href="../airflow/README.html" />
+    <link rel="prev" title="Setting Up Firestore for the Ask Astro Application on Google Cloud Run" href="google_firestore.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">ask-astro 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../local_development.html">Setup Local Development Tool</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">💻 Develop UI</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../ui/README.html">ask-astro UI</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">💻 Develop Backend Server</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="README.html">Ask Astro Backend API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cloudbuild_and_run.html">Backend API CI/CD</a></li>
+<li class="toctree-l1"><a class="reference internal" href="google_firestore.html">Setting Up Firestore for the Ask Astro Application on Google Cloud Run</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Create an ask-astro Slack bot</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">💻 Develop Airflow DAGs</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../airflow/README.html">ask-astro Airflow</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/api/setup_slack_bot.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Create an ask-astro Slack bot</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="create-an-ask-astro-slack-bot">
+<h1>Create an ask-astro Slack bot<a class="headerlink" href="#create-an-ask-astro-slack-bot" title="Permalink to this heading">#</a></h1>
+<ol class="arabic simple">
+<li><p>Go to <a class="reference external" href="https://api.slack.com/apps">https://api.slack.com/apps</a></p></li>
+<li><p>Click “Create New Apps” <img alt="1-create-new-app" src="../_images/1-create-new-app.png" /></p></li>
+<li><p>Click “From scratch” in the “Create an app” page</p></li>
+<li><p>Name the app and pick a Slack workspace <img alt="3-name-app" src="../_images/3-name-app.png" /></p></li>
+<li><p>After creating the Slack app, we’ll be redirected to the home page of this app <img alt="4-app-home-page" src="../_images/4-app-home-page.png" /></p></li>
+<li><p>Scroll down, and we’ll find the credentials for the ask-astro API backend <img alt="5-credentials" src="../_images/5-credentials.png" /></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SLACK_CLIENT_ID</span></code>: Client ID</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SLACK_CLIENT_SECRET</span></code>: Client Secret</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SLACK_SIGNING_SECRET</span></code>: Singing Secret</p></li>
+</ul>
+</li>
+<li><p>Start the ask-astro API backend with a reachable host (e.g., with ngrok)</p></li>
+<li><p>Go to “OAuth &amp; Permissions” page (<code class="docutils literal notranslate"><span class="pre">https://api.slack.com/apps/&lt;API_ID&gt;/oauth?)</span></code></p></li>
+<li><p>Add  <code class="docutils literal notranslate"><span class="pre">https://&lt;ask-astro</span> <span class="pre">api</span> <span class="pre">backend</span> <span class="pre">host&gt;/slack/oauth_redirect</span></code> to “Redirect URLs” <img alt="6-redirect-url" src="../_images/6-redirect-url.png" /></p></li>
+<li><p>Scroll down and add the following scopes <img alt="7-scope" src="../_images/7-scope.png" /></p>
+<ul class="simple">
+<li><p>commands</p></li>
+<li><p>app_mentions:read</p></li>
+<li><p>channels:read</p></li>
+<li><p>channels:history</p></li>
+<li><p>groups:read</p></li>
+<li><p>groups:history</p></li>
+<li><p>chat:write</p></li>
+<li><p>reactions:read</p></li>
+<li><p>reactions:write</p></li>
+<li><p>users:read</p></li>
+<li><p>users:read.email</p></li>
+<li><p>team:read</p></li>
+<li><p>im:history</p></li>
+<li><p>mpim:history</p></li>
+<li><p>files:read</p></li>
+</ul>
+</li>
+<li><p>Go to “Event Subscriptions” page (<code class="docutils literal notranslate"><span class="pre">https://api.slack.com/apps/&lt;API_ID&gt;/event-subscriptions?</span></code>)</p></li>
+<li><p>Set “Request URL” as <code class="docutils literal notranslate"><span class="pre">https://&lt;ask-astro</span> <span class="pre">api</span> <span class="pre">backend</span> <span class="pre">host&gt;/slack/events</span></code> <img alt="8-event-subscription" src="../_images/8-event-subscription.png" /></p></li>
+<li><p>Go to “Interactivity &amp; Shortcuts” page.</p></li>
+<li><p>Set “Request URL” as <code class="docutils literal notranslate"><span class="pre">https://&lt;ask-astro</span> <span class="pre">api</span> <span class="pre">backend</span> <span class="pre">host&gt;/slack/events</span></code>.</p></li>
+<li><p>Go to <code class="docutils literal notranslate"><span class="pre">https://&lt;ask-astro</span> <span class="pre">api</span> <span class="pre">backend</span> <span class="pre">host&gt;/slack/install</span></code> and you’ll see <img alt="9-slack-install" src="../_images/9-slack-install.png" /></p></li>
+<li><p>The ask-astro bot should be ready to go in you Slack work space</p></li>
+</ol>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="google_firestore.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Setting Up Firestore for the Ask Astro Application on Google Cloud Run</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../airflow/README.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">ask-astro Airflow</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By astronomer.io
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2023, astronomer.io.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=365ca57ee442770a23c6"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=365ca57ee442770a23c6"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

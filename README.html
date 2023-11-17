@@ -1,0 +1,537 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Data Retrieval &amp; Embedding &#8212; ask-astro 0.0.1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=365ca57ee442770a23c6" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=365ca57ee442770a23c6" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=365ca57ee442770a23c6" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=365ca57ee442770a23c6" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=365ca57ee442770a23c6" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=365ca57ee442770a23c6" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=365ca57ee442770a23c6"></script>
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'README';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">ask-astro 0.0.1 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="local_development.html">Setup Local Development Tool</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">💻 Develop UI</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="ui/README.html">ask-astro UI</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">💻 Develop Backend Server</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="api/README.html">Ask Astro Backend API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/cloudbuild_and_run.html">Backend API CI/CD</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/google_firestore.html">Setting Up Firestore for the Ask Astro Application on Google Cloud Run</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/setup_slack_bot.html">Create an ask-astro Slack bot</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">💻 Develop Airflow DAGs</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="airflow/README.html">ask-astro Airflow</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/README.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Data Retrieval & Embedding</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Data Retrieval &amp; Embedding</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#prompt-orchestration">Prompt Orchestration</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#feedback-loops">Feedback Loops</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#future-exploration">Future Exploration</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#local-dev-env">Local dev env</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment">Deployment</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backend-api">Backend API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#user-interface">User Interface</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apache-airflow">Apache Airflow</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#slackbot">Slackbot</a></li>
+</ul>
+
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <p align="center">
+  <img src="_static/logo.svg" />
+</p>
+<br />
+<p>Ask Astro is an open-source reference implementation of <a class="reference external" href="https://a16z.com/emerging-architectures-for-llm-applications/">Andreessen Horowitz’s LLM Application Architecture</a> built by <a class="reference external" href="https://astronomer.io">Astronomer</a>. It provides an end-to-end example of a Q&amp;A LLM application used to answer questions about Apache Airflow and Astronomer, including:</p>
+<ul class="simple">
+<li><p>Airflow DAGs for data ingestion from various sources to a vector database</p></li>
+<li><p>An API containing the business logic of taking a user’s prompt and ultimately generating a response</p></li>
+<li><p>A Slack bot that exposes Ask Astro in Slack workspaces</p></li>
+<li><p>A UI that exposes Ask Astro to the public</p></li>
+<li><p>Airflow DAGs that process user feedback and generate AI feedback on questions and answers</p></li>
+</ul>
+<p>These are generally divided into three categories: data retrieval &amp; embedding, prompt orchestration, and feedback loops. The rest of this README contains more in-depth detail on each of the categories in advance of a series of blog posts that will be written about the topics.</p>
+<p>If you have any questions, feedback, or want to share similar use cases, reach out to ai&#64;astronomer.io.</p>
+<section id="data-retrieval-embedding">
+<h1>Data Retrieval &amp; Embedding<a class="headerlink" href="#data-retrieval-embedding" title="Permalink to this heading">#</a></h1>
+<p align="center">
+  <img src="_static/ingestion.png" />
+</p>
+<p>In order to make the responses as factual and accurate as possible, it’s generally best practice to use <a class="reference external" href="https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html">Retrieval Augmented Generation (RAG)</a>. However, in order for RAG to be effective, a vector database needs to be populated with the most up-to-date and relevant information.</p>
+<p>Ask Astro uses a set of Airflow DAGs that: ingest data from a source via an API or Python library, preprocesses and splits the data into smaller chunks, embeds those chunks, and writes the embeddings to Weaviate. As of today, Ask Astro retrieves data from the following sources:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://airflow.apache.org/docs/">Apache Airflow docs</a></p></li>
+<li><p><a class="reference external" href="https://docs.astronomer.io">Astronomer docs</a></p></li>
+<li><p><a class="reference external" href="https://www.astronomer.io/blog/">Astronomer blog</a></p></li>
+<li><p><a class="reference external" href="https://registry.astronomer.io">Astronomer Registry</a></p></li>
+<li><p><a class="reference external" href="https://github.com/apache/airflow">Apache Airflow GitHub</a> issues and pull requests</p></li>
+<li><p><a class="reference external" href="https://github.com/OpenLineage/OpenLineage">OpenLineage GitHub</a></p></li>
+<li><p><a class="reference external" href="https://github.com/OpenLineage/docs">OpenLineage GitHub docs</a></p></li>
+<li><p>Apache Airflow Slack’s <a class="reference external" href="https://app.slack.com/client/TCQ18L22Z/CCQ7EGB1P">#troubleshooting channel</a></p></li>
+<li><p><a class="reference external" href="https://archive.org/details/stackexchange">StackOverflow’s Stack Exchange Data Dump</a></p></li>
+</ul>
+<p>Generally, each of these sources has a DAG that handles the ingestion flow. We use LangChain’s built-in text splitters for processing Markdown, RST, and Python code into smaller chunks to ensure each document is small enough to give accurate results when doing embeddings. We then use a Weaviate provider that we’ve built (and plan to publish) to both embed and store each document as a vector in Weaviate using OpenAI’s embedding model.</p>
+<p>In addition to the individual DAGs per source, we have one DAG to do full-database refreshes based on a baseline of all data. The first time the <code class="docutils literal notranslate"><span class="pre">ask-astro-load-bulk</span></code> DAG runs it saves extracted documents in parquet files for a point-in-time baseline.  This baseline allows us to experiment with new vector databases, embedding models, chunking strategies, etc. much more quickly.</p>
+<p>See the <a class="reference external" href="https://github.com/astronomer/ask-astro/tree/main/airflow/README.md">Ingest README</a> for details on configuring ingest with sources and connection details.</p>
+</section>
+<section id="prompt-orchestration">
+<h1>Prompt Orchestration<a class="headerlink" href="#prompt-orchestration" title="Permalink to this heading">#</a></h1>
+<p align="center">
+  <img src="_static/prompt-orchestration.png" />
+</p>
+<p>Ask Astro uses LangChain’s <code class="docutils literal notranslate"><span class="pre">ConversationalRetrievalChain</span></code> to generate a response. This chain does the following:</p>
+<ol class="arabic simple">
+<li><p>Use an LLM to generate 3 variations of the original user prompt with different wording. This is to ensure we retrieve as much helpful context as possible from our vector database</p></li>
+<li><p>Embed each of the prompts with OpenAI’s embeddings model</p></li>
+<li><p>Retrieve documents from Weaviate using the embedded vectors from each prompt</p></li>
+<li><p>Combine the original user prompt with relevant sources found from the vector database, and make an LLM call to generate an answer</p></li>
+</ol>
+<p>This generally works well. For prompt rewording, we use <code class="docutils literal notranslate"><span class="pre">gpt-3.5-turbo</span></code>, which runs very quickly and inexpensively. For the actual user-facing answer generation, we use <code class="docutils literal notranslate"><span class="pre">gpt-4</span></code> to ensure high quality answers.</p>
+</section>
+<section id="feedback-loops">
+<h1>Feedback Loops<a class="headerlink" href="#feedback-loops" title="Permalink to this heading">#</a></h1>
+<p align="center">
+  <img src="_static/feedback-loops.png" />
+</p>
+<p>Airflow is critical in improving model performance over time. Feedback on answers come from two places:</p>
+<ul class="simple">
+<li><p>End users can explicitly supply feedback by rating an answer as correct or incorrect</p></li>
+<li><p>LLMs rate each question and answer according to it’s “helpfulness”, “publicness”, and “on-topicness”</p></li>
+</ul>
+<p>If a user provides feedback that the answer is correct, and the LLM rates the answer as helpful, public, and on-topic, Ask Astro (1) marks the answer as a good example to be displayed on the Ask Astro homepage for users to derive inspiration from, and (2) writes the question and answer back to Weaviate as a potential source to be used in future prompts. This way, there’s a continuous feedback loop to constantly improve the model over time.</p>
+</section>
+<section id="future-exploration">
+<h1>Future Exploration<a class="headerlink" href="#future-exploration" title="Permalink to this heading">#</a></h1>
+<p>A project like Ask Astro is never “complete”, and there are always more methods and use cases to explore. Further exploration in Ask Astro (and more generally, in using Airflow for LLM operations) may come from the following areas:</p>
+<ul class="simple">
+<li><p><strong>Data Privacy &amp; Private Context</strong>: can the model be supplemented with customer-specific data to provide more accurate, contextual answers?</p></li>
+<li><p><strong>Fine Tuning</strong>: are there any performance or accuracy improvements that come from fine tuning a model?</p></li>
+<li><p><strong>Semantic Caching</strong>: if there are two similar questions asked to Ask Astro, can we avoid expensive gpt-4 calls?</p></li>
+<li><p><strong>Feedback Loops</strong>: what else can we do with information about the accuracy of answers? For example, can we infer source usefulness based on how frequently (or infrequently) a source is used in accurate answers?</p></li>
+<li><p><strong>Experimentation</strong>: how do we effectively experiment and measure accuracy or performance improvements as a result of experiments?</p></li>
+<li><p><strong>LLM Operations and Observability</strong>: how do we ensure we have good visibility into what the model’s doing, particularly given that it’s making multiple API &amp; LLM calls?</p></li>
+</ul>
+</section>
+<section id="local-dev-env">
+<h1>Local dev env<a class="headerlink" href="#local-dev-env" title="Permalink to this heading">#</a></h1>
+<p>You can use local dev <a class="reference download internal" download="" href="_downloads/07d96f357e0c6dcb76177e2d4252655f/local_dev.py"><span class="xref download myst">script</span></a> to start UI, API server and API</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>scripts/local_dev.py<span class="w"> </span>run-api-server<span class="w"> </span><span class="c1"># To run backend</span>
+python3<span class="w"> </span>scripts/local_dev.py<span class="w"> </span>run-ui<span class="w">         </span><span class="c1"># To run UI</span>
+python3<span class="w"> </span>scripts/local_dev.py<span class="w"> </span>run-airflow<span class="w">    </span><span class="c1"># To run Airflow</span>
+</pre></div>
+</div>
+<p><strong>Backend API sever</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="api/README.html"><span class="std std-doc">Run ask-astro API server</span></a></p></li>
+</ul>
+<p><strong>User Interface</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="ui/README.html"><span class="std std-doc">Run ask-astro UI</span></a></p></li>
+</ul>
+<p><strong>Apache Airflow</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="airflow/README.html"><span class="std std-doc">Run airflow</span></a></p></li>
+</ul>
+</section>
+<section id="deployment">
+<h1>Deployment<a class="headerlink" href="#deployment" title="Permalink to this heading">#</a></h1>
+<p>The following sections describe how to deploy the various components of Ask Astro.</p>
+<section id="backend-api">
+<h2>Backend API<a class="headerlink" href="#backend-api" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="api/cloudbuild_and_run.html"><span class="std std-doc">Backend API</span></a></p></li>
+<li><p><a class="reference internal" href="api/google_firestore.html"><span class="std std-doc">Google Firestore</span></a></p></li>
+</ul>
+</section>
+<section id="user-interface">
+<h2>User Interface<a class="headerlink" href="#user-interface" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="ui/README.html"><span class="std std-doc">UI</span></a></p></li>
+</ul>
+</section>
+<section id="apache-airflow">
+<h2>Apache Airflow<a class="headerlink" href="#apache-airflow" title="Permalink to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="airflow/README.html"><span class="std std-doc">Airflow</span></a></p></li>
+</ul>
+</section>
+</section>
+<section id="slackbot">
+<h1>Slackbot<a class="headerlink" href="#slackbot" title="Permalink to this heading">#</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="api/setup_slack_bot.html"><span class="std std-doc">Slackbot</span></a></p></li>
+</ul>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Data Retrieval &amp; Embedding</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#prompt-orchestration">Prompt Orchestration</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#feedback-loops">Feedback Loops</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#future-exploration">Future Exploration</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#local-dev-env">Local dev env</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment">Deployment</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backend-api">Backend API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#user-interface">User Interface</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apache-airflow">Apache Airflow</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#slackbot">Slackbot</a></li>
+</ul>
+
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By astronomer.io
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2023, astronomer.io.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=365ca57ee442770a23c6"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=365ca57ee442770a23c6"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
