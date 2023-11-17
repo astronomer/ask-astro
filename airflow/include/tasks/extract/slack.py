@@ -5,10 +5,10 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 import requests
-from include.tasks.extract.utils.slack_helpers import get_slack_replies
 from weaviate.util import generate_uuid5
 
 from airflow.providers.slack.hooks.slack import SlackHook
+from include.tasks.extract.utils.slack_helpers import get_slack_replies
 
 slack_archive_host = "apache-airflow.slack-archives.org"
 slack_base_url = "https://{slack_archive_host}/v1/messages?size={size}&team={team}&channel={channel}"
