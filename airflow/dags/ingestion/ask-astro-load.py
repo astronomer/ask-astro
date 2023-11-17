@@ -8,7 +8,6 @@ import pandas as pd
 from include.tasks import split
 from include.tasks.extract import airflow_docs, blogs, github, registry, stack_overflow
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
-from include.tasks.ingest import ingest
 
 from airflow.decorators import dag, task
 
@@ -157,7 +156,7 @@ def ask_astro_load_bulk():
         return [df]
 
     @task(trigger_rule="none_failed")
-    def extract_stack_overflow(tag: str, stackoverflow_cutoff_date: str):
+    def extract_stack_overflow(tag: str, stackoverflow_cutoff_date: str = stackoverflow_cutoff_date):
         try:
             df = pd.read_parquet("include/data/stack_overflow/base.parquet")
         except Exception:
@@ -252,13 +251,28 @@ def ask_astro_load_bulk():
 
     split_html_docs = task(split.split_html).expand(dfs=html_tasks)
 
-    task.weaviate_import(ingest.import_data, weaviate_conn_id=_WEAVIATE_CONN_ID, retries=10).partial(
-        class_name=WEAVIATE_CLASS
-    ).expand(dfs=[split_md_docs, split_code_docs, split_html_docs])
+    _import_data = (
+        task(ask_astro_weaviate_hook.ingest_data, retries=10)
+        .partial(
+            class_name=WEAVIATE_CLASS,
+            existing="upsert",
+            doc_key="docLink",
+            batch_params={"batch_size": 1000},
+            verbose=True,
+        )
+        .expand(dfs=[split_md_docs, split_code_docs, split_html_docs])
+    )
 
-    _import_baseline = task.weaviate_import(
-        ingest.import_baseline, trigger_rule="none_failed", weaviate_conn_id=_WEAVIATE_CONN_ID
-    )(class_name=WEAVIATE_CLASS, seed_baseline_url=seed_baseline_url)
+    _import_baseline = task(ask_astro_weaviate_hook.import_baseline, trigger_rule="none_failed")(
+        seed_baseline_url=seed_baseline_url,
+        class_name=WEAVIATE_CLASS,
+        existing="upsert",
+        doc_key="docLink",
+        uuid_column="id",
+        vector_column="vector",
+        batch_params={"batch_size": 1000},
+        verbose=True,
+    )
 
     _check_schema >> [_check_seed_baseline, _create_schema]
 
