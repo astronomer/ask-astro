@@ -11,6 +11,7 @@ from langchain.prompts import (
     MessagesPlaceholder,
     SystemMessagePromptTemplate,
 )
+from langchain.retrievers import MultiQueryRetriever
 from langchain.retrievers.weaviate_hybrid_search import WeaviateHybridSearchRetriever
 
 from ask_astro.clients.weaviate_ import client
@@ -20,6 +21,8 @@ from ask_astro.settings import (
     CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_TEMPERATURE,
     CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_DEPLOYMENT_NAME,
     CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_TEMPERATURE,
+    MULTI_QUERY_RETRIEVER_DEPLOYMENT_NAME,
+    MULTI_QUERY_RETRIEVER_TEMPERATURE,
 )
 
 with open("ask_astro/templates/combine_docs_chat_prompt.txt") as system_prompt_fd:
@@ -31,12 +34,19 @@ with open("ask_astro/templates/combine_docs_chat_prompt.txt") as system_prompt_f
     ]
 
 # Initialize a MultiQueryRetriever using AzureChatOpenAI and Weaviate.
-retriever = WeaviateHybridSearchRetriever(
-    client=client,
-    index_name=WeaviateConfig.index_name,
-    text_key=WeaviateConfig.text_key,
-    attributes=WeaviateConfig.attributes,
-    create_schema_if_missing=True,
+retriever = MultiQueryRetriever.from_llm(
+    llm=AzureChatOpenAI(
+        **AzureOpenAIParams.us_east,
+        deployment_name=MULTI_QUERY_RETRIEVER_DEPLOYMENT_NAME,
+        temperature=MULTI_QUERY_RETRIEVER_TEMPERATURE,
+    ),
+    retriever=WeaviateHybridSearchRetriever(
+        client=client,
+        index_name=WeaviateConfig.index_name,
+        text_key=WeaviateConfig.text_key,
+        attributes=WeaviateConfig.attributes,
+        create_schema_if_missing=True,
+    ),
 )
 
 # Set up a ConversationalRetrievalChain to generate answers using the retriever.
