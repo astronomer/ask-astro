@@ -65,7 +65,7 @@ def ask_astro_load_bulk():
     This DAG performs the initial load of data from sources.
 
     If seed_baseline_url (set above) points to a parquet file with pre-embedded data it will be
-    ingested.  Otherwise new data is extracted, split, embedded and ingested.
+    ingested.  Otherwise, new data is extracted, split, embedded and ingested.
 
     The first time this DAG runs (without seeded baseline) it will take at lease 90 minutes to
     extract data from all sources. Extracted data is then serialized to disk in the project
