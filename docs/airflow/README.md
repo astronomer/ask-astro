@@ -28,7 +28,7 @@ Ask Astro uses a set of Airflow DAGs that ingests data from a source via an API 
 
 Generally, each of these sources has a DAG that handles the ingestion flow. Ask Astro uses LangChain's built-in text splitters for processing Markdown, RST, and Python code into smaller chunks to ensure each document is small enough to give accurate results when embedding. Ask Astro then uses a custom-built a Weaviate provider, that will be published later, to both embed and store each document as a vector in Weaviate using OpenAI's embedding model.
 
-In addition to the individual DAGs per source, Ask Astro uses one DAG to do full-database refresh based on a baseline of all extracted datea sources. The first time the `ask-astro-load-bulk` DAG runs, it saves extracted documents in parquet files for a point-in-time baseline. This baseline allows us to experiment with new vector databases, embedding models, chunking strategies, much more quickly than without a baseline to compare new versions against.
+In addition to the individual DAGs per source, Ask Astro uses one DAG to do full-database refresh based on a baseline of all extracted data sources. The first time the `ask-astro-load-bulk` DAG runs, it saves extracted documents in parquet files for a point-in-time baseline. This baseline allows us to experiment with new vector databases, embedding models, chunking strategies, much more quickly than without a baseline to compare new versions against.
 
 Additionally, a baseline of pre-embedded data provides the ability to ingest a stable baseline for upstream evaluation, which is described in Step 5 of the following procedure.
 
