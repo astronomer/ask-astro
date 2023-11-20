@@ -2,16 +2,20 @@ import datetime
 import os
 
 from dateutil.relativedelta import relativedelta
-from include.tasks import ingest, split
+from include.tasks import split
 from include.tasks.extract import github
+from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
 
-ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "")
+ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 _GITHUB_CONN_ID = "github_ro"
-WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsProd")
+WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
+
+ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
+
 markdown_docs_sources = [
     {"doc_dir": "learn", "repo_base": "astronomer/docs"},
     {"doc_dir": "astro", "repo_base": "astronomer/docs"},
@@ -66,12 +70,17 @@ def ask_astro_load_github():
 
     split_code_docs = task(split.split_python).expand(dfs=[code_samples])
 
-    task.weaviate_import(
-        ingest.import_upsert_data,
-        weaviate_conn_id=_WEAVIATE_CONN_ID,
-    ).partial(
-        class_name=WEAVIATE_CLASS, primary_key="docLink"
-    ).expand(dfs=[split_md_docs, split_code_docs])
+    _import_data = (
+        task(ask_astro_weaviate_hook.ingest_data, retries=10)
+        .partial(
+            class_name=WEAVIATE_CLASS,
+            existing="upsert",
+            doc_key="docLink",
+            batch_params={"batch_size": 1000},
+            verbose=True,
+        )
+        .expand(dfs=[split_md_docs, split_code_docs])
+    )
 
 
 ask_astro_load_github()
