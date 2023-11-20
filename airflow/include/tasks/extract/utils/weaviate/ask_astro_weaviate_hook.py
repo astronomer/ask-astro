@@ -226,34 +226,35 @@ class AskAstroWeaviateHook(WeaviateHook):
         :param verbose: Whether to print verbose output.
         :return: List of any objects that failed to be added to the batch.
         """
-        batch = self.client.batch.configure(**batch_params)
+        self.client.batch.configure(**batch_params)
         batch_errors = []
 
-        for row_id, row in df.iterrows():
-            data_object = row.to_dict()
-            uuid = data_object[uuid_column]
+        with self.client.batch as batch:
+            for row_id, row in df.iterrows():
+                data_object = row.to_dict()
+                uuid = data_object[uuid_column]
 
-            # Check if the uuid exists and handle accordingly
-            if self.client.data_object.exists(uuid=uuid, class_name=class_name):
-                if existing == "skip":
+                # Check if the uuid exists and handle accordingly
+                if self.client.data_object.exists(uuid=uuid, class_name=class_name):
+                    if existing == "skip":
+                        if verbose:
+                            self.logger.warning(f"UUID {uuid} exists. Skipping.")
+                        continue
+                    elif existing == "replace":
+                        if verbose:
+                            self.logger.warning(f"UUID {uuid} exists. Overwriting.")
+
+                vector = data_object.pop(vector_column, None)
+                uuid = data_object.pop(uuid_column)
+
+                try:
+                    batch.add_data_object(class_name=class_name, uuid=uuid, data_object=data_object, vector=vector)
                     if verbose:
-                        self.logger.warning(f"UUID {uuid} exists. Skipping.")
-                    continue
-                elif existing == "replace":
+                        self.logger.info(f"Added row {row_id} with UUID {uuid} for batch import.")
+                except Exception as e:
                     if verbose:
-                        self.logger.warning(f"UUID {uuid} exists. Overwriting.")
-
-            vector = data_object.pop(vector_column, None)
-            uuid = data_object.pop(uuid_column)
-
-            try:
-                batch.add_data_object(class_name=class_name, uuid=uuid, data_object=data_object, vector=vector)
-                if verbose:
-                    self.logger.info(f"Added row {row_id} with UUID {uuid} for batch import.")
-            except Exception as e:
-                if verbose:
-                    self.logger.error(f"Failed to add row {row_id} with UUID {uuid}. Error: {e}")
-                batch_errors.append({"row_id": row_id, "uuid": uuid, "error": str(e)})
+                        self.logger.error(f"Failed to add row {row_id} with UUID {uuid}. Error: {e}")
+                    batch_errors.append({"row_id": row_id, "uuid": uuid, "error": str(e)})
 
         results = batch.create_objects()
         return batch_errors + [item for result in results for item in result.get("errors", [])], results
