@@ -1,7 +1,7 @@
 <br />
 
 <p align="center">
-  <img src=".../_static/images/ingestion.png" />
+  <img src="../_static/ingestion.png" />
 </p>
 
 <br />
@@ -24,6 +24,7 @@ Ask Astro uses a set of Airflow DAGs that: ingest data from a source via an API 
 - [OpenLineage GitHub docs](https://github.com/OpenLineage/docs)
 - Apache Airflow Slack's [#troubleshooting channel](https://app.slack.com/client/TCQ18L22Z/CCQ7EGB1P)
 - [StackOverflow's Stack Exchange Data Dump](https://archive.org/details/stackexchange)
+- [astro-cli](https://docs.astronomer.io/astro/cli/overview)
 
 Generally, each of these sources has a DAG that handles the ingestion flow. We use LangChain's built-in text splitters for processing Markdown, RST, and Python code into smaller chunks to ensure each document is small enough to give accurate results when doing embeddings. We then use a Weaviate provider that we've built (and plan to publish) to both embed and store each document as a vector in Weaviate using OpenAI's embedding model.
 
