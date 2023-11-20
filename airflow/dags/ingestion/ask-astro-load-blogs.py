@@ -27,8 +27,8 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 )
 def ask_astro_load_blogs():
     """
-    This DAG performs incremental load for any new docs.  Initial load via ask_astro_load_bulk imported
-    data from a point-in-time data capture.  By using the upsert logic of the weaviate_import decorator
+    This DAG performs incremental load for any new docs. Initial load via ask_astro_load_bulk imported
+    data from a point-in-time data capture. By using the upsert logic of the weaviate_import decorator
     any existing documents that have been updated will be removed and re-added.
     """
 

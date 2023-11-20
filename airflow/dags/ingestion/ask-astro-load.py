@@ -13,7 +13,7 @@ from airflow.decorators import dag, task
 
 seed_baseline_url = None
 stackoverflow_cutoff_date = "2021-09-01"
-ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "")
+ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 _GITHUB_CONN_ID = "github_ro"

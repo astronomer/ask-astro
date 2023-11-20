@@ -34,8 +34,8 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 )
 def ask_astro_load_slack():
     """
-    This DAG performs incremental load for any new slack threads.  The slack archive is a point-in-time capture.  This
-    DAG should run nightly to capture threads between archive periods.  By using the upsert logic of the
+    This DAG performs incremental load for any new slack threads. The slack archive is a point-in-time capture.  This
+    DAG should run nightly to capture threads between archive periods. By using the upsert logic of the
     weaviate_import decorator any existing documents that have been updated will be removed and re-added.
     """
 
