@@ -180,19 +180,14 @@ def extract_github_python(source: dict, github_conn_id: str) -> pd.DataFrame:
     return df
 
 
-def extract_github_issues(source: dict, github_conn_id: str) -> pd.DataFrame:
+def extract_github_issues(repo_base: str, github_conn_id: str) -> pd.DataFrame:
     """
     This task downloads github issues as markdown documents in a pandas dataframe.  Text from templated
-    auto responses for issues are removed while building a markdown document for each issue. Extraction will
-    only pull issues after a provided "cutoff_date" AND "cutoff_issue_number".
+    auto responses for issues are removed while building a markdown document for each issue.
 
-    param source: A dictionary specifying what to ingest.
-    example:
-        {"repo_base": "apache/airflow",
-         "cutoff_date": datetime.date.today() - relativedelta(months=1),
-         "cutoff_issue_number": 30000
-        }
-    type repo_base: dict
+    param repo_base: The name of of organization/repository (ie. "apache/airflow") from which to extract
+    issues.
+    type repo_base: str
 
     param github_conn_id: The connection ID to use with the GithubHook
     param github_conn_id: str
@@ -207,8 +202,8 @@ def extract_github_issues(source: dict, github_conn_id: str) -> pd.DataFrame:
 
     gh_hook = GithubHook(github_conn_id)
 
-    repo = gh_hook.client.get_repo(source["repo_base"])
-    issues = repo.get_issues(state="all")
+    repo = gh_hook.client.get_repo(repo_base)
+    issues = repo.get_issues()
 
     issue_autoresponse_text = "Thanks for opening your first issue here!"
     pr_autoresponse_text = "Congratulations on your first Pull Request and welcome to the Apache Airflow community!"
@@ -248,31 +243,30 @@ def extract_github_issues(source: dict, github_conn_id: str) -> pd.DataFrame:
 
     while page:
         for issue in page:
-            if issue.updated_at.date() >= source["cutoff_date"] and issue.number >= source["cutoff_issue_number"]:
-                print(issue.number)
-                comments = []
-                for comment in issue.get_comments():
-                    if not any(substring in comment.body for substring in drop_content):
-                        comments.append(
-                            comment_markdown_template.format(
-                                user=comment.user.login, date=issue.created_at.strftime("%m-%d-%Y"), body=comment.body
-                            )
+            print(issue.number)
+            comments = []
+            for comment in issue.get_comments():
+                if not any(substring in comment.body for substring in drop_content):
+                    comments.append(
+                        comment_markdown_template.format(
+                            user=comment.user.login, date=issue.created_at.strftime("%m-%d-%Y"), body=comment.body
                         )
-                downloaded_docs.append(
-                    {
-                        "docLink": issue.html_url,
-                        "sha": "",
-                        "content": issue_markdown_template.format(
-                            title=issue.title,
-                            date=issue.created_at.strftime("%m-%d-%Y"),
-                            user=issue.user.login,
-                            state=issue.state,
-                            body=issue.body,
-                            comments="\n".join(comments),
-                        ),
-                        "docSource": f"{source['repo_base']}/issues",
-                    }
-                )
+                    )
+            downloaded_docs.append(
+                {
+                    "docLink": issue.html_url,
+                    "sha": "",
+                    "content": issue_markdown_template.format(
+                        title=issue.title,
+                        date=issue.created_at.strftime("%m-%d-%Y"),
+                        user=issue.user.login,
+                        state=issue.state,
+                        body=issue.body,
+                        comments="\n".join(comments),
+                    ),
+                    "docSource": f"{repo_base}/issues",
+                }
+            )
         page_num = page_num + 1
         page = issues.get_page(page_num)
 

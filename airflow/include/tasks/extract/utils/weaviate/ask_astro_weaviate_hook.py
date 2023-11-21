@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from typing import Any
 
 import pandas as pd
@@ -13,8 +12,6 @@ from weaviate.util import generate_uuid5
 from airflow.exceptions import AirflowException
 from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
 
-WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDevAnkit")
-
 
 class AskAstroWeaviateHook(WeaviateHook):
     """Extends the WeaviateHook to include specific methods for handling Ask-Astro."""
@@ -24,11 +21,12 @@ class AskAstroWeaviateHook(WeaviateHook):
         self.logger = logging.getLogger("airflow.task")
         self.client = self.get_client()
 
-    def get_schema(self, schema_file: str) -> list:
+    def get_schema(self, schema_file: str, weaviate_class: str) -> list:
         """
         Reads and processes the schema from a JSON file.
 
-        :param schema_file: path to the schema JSON file
+        :param schema_file: path to the schema JSON file.
+        :param weaviate_class: The name of the class to import data.  Class should be created with weaviate schema.
         """
         try:
             with open(schema_file) as file:
@@ -42,7 +40,7 @@ class AskAstroWeaviateHook(WeaviateHook):
 
         classes = schema_data.get("classes", [schema_data])
         for class_object in classes:
-            class_object.update({"class": WEAVIATE_CLASS})
+            class_object.update({"class": weaviate_class})
 
         self.logger.info("Schema processing completed.")
         return classes

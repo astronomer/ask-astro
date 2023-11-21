@@ -17,7 +17,7 @@ ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 _GITHUB_CONN_ID = "github_ro"
-WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDevAnkit")
+WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
 
 ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
 
@@ -65,7 +65,7 @@ def ask_astro_load_bulk():
     This DAG performs the initial load of data from sources.
 
     If seed_baseline_url (set above) points to a parquet file with pre-embedded data it will be
-    ingested.  Otherwise, new data is extracted, split, embedded and ingested.
+    ingested. Otherwise, new data is extracted, split, embedded and ingested.
 
     The first time this DAG runs (without seeded baseline) it will take at lease 90 minutes to
     extract data from all sources. Extracted data is then serialized to disk in the project
@@ -81,7 +81,7 @@ def ask_astro_load_bulk():
 
         :param schema_file: path to the schema JSON file
         """
-        return ask_astro_weaviate_hook.get_schema(schema_file="include/data/schema.json")
+        return ask_astro_weaviate_hook.get_schema(schema_file="include/data/schema.json", weaviate_class=WEAVIATE_CLASS)
 
     @task.branch
     def check_schema(class_objects: list) -> list[str]:
@@ -178,12 +178,12 @@ def ask_astro_load_bulk():
     #     return df
 
     @task(trigger_rule="none_failed")
-    def extract_github_issues(source: dict):
+    def extract_github_issues(repo_base: str):
         try:
-            df = pd.read_parquet(f"include/data/{source['repo_base']}/issues.parquet")
+            df = pd.read_parquet(f"include/data/{repo_base}/issues.parquet")
         except Exception:
-            df = github.extract_github_issues(source, _GITHUB_CONN_ID)
-            df.to_parquet(f"include/data/{source['repo_base']}/issues.parquet")
+            df = github.extract_github_issues(repo_base, _GITHUB_CONN_ID)
+            df.to_parquet(f"include/data/{repo_base}/issues.parquet")
 
         return df
 
