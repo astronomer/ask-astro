@@ -31,7 +31,7 @@ code_samples_sources = [
     {"doc_dir": "code-samples", "repo_base": "astronomer/docs"},
 ]
 issues_docs_sources = [
-    {"repo_base": "apache/airflow", "cutoff_date": datetime.date(2020, 1, 1), "cutoff_issue_number": 30000}
+    "apache/airflow",
 ]
 slack_channel_sources = [
     {
@@ -75,13 +75,22 @@ def ask_astro_load_bulk():
     """
 
     @task
-    def get_schema(schema_file: str) -> list:
+    def get_schema_and_process(schema_file: str) -> list:
         """
         Retrieves and processes the schema from a given JSON file.
 
         :param schema_file: path to the schema JSON file
         """
-        return ask_astro_weaviate_hook.get_schema(schema_file="include/data/schema.json", weaviate_class=WEAVIATE_CLASS)
+        class_objects = ask_astro_weaviate_hook.get_schema(schema_file="include/data/schema.json")
+        class_objects["classes"][0].update({"class": WEAVIATE_CLASS})
+
+        if "classes" not in class_objects:
+            class_objects = [class_objects]
+        else:
+            class_objects = class_objects["classes"]
+
+        logger.info("Schema processing completed.")
+        return class_objects
 
     @task.branch
     def check_schema(class_objects: list) -> list[str]:
@@ -92,7 +101,11 @@ def ask_astro_load_bulk():
 
         :param class_objects: Class objects to be checked against the current schema.
         """
-        return ask_astro_weaviate_hook.check_schema(class_objects=class_objects)
+        return (
+            ["check_seed_baseline"]
+            if ask_astro_weaviate_hook.check_schema(class_objects=class_objects)
+            else ["create_schema"]
+        )
 
     @task(trigger_rule="none_failed")
     def create_schema(class_objects: list, existing: str = "ignore") -> None:
@@ -218,7 +231,7 @@ def ask_astro_load_bulk():
         return [df]
 
     md_docs = extract_github_markdown.expand(source=markdown_docs_sources)
-    issues_docs = extract_github_issues.expand(source=issues_docs_sources)
+    issues_docs = extract_github_issues.expand(repo_base=issues_docs_sources)
     stackoverflow_docs = extract_stack_overflow.expand(tag=stackoverflow_tags)
     # slack_docs = extract_slack_archive.expand(source=slack_channel_sources)
     registry_cells_docs = extract_astro_registry_cell_types()
@@ -227,7 +240,7 @@ def ask_astro_load_bulk():
     code_samples = extract_github_python.expand(source=code_samples_sources)
     _airflow_docs = extract_airflow_docs()
 
-    _get_schema = get_schema(schema_file="include/data/schema.json")
+    _get_schema = get_schema_and_process(schema_file="include/data/schema.json")
     _check_schema = check_schema(class_objects=_get_schema)
     _create_schema = create_schema(class_objects=_get_schema)
     _check_seed_baseline = check_seed_baseline(seed_baseline_url=seed_baseline_url)

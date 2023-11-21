@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -21,16 +22,14 @@ class AskAstroWeaviateHook(WeaviateHook):
         self.logger = logging.getLogger("airflow.task")
         self.client = self.get_client()
 
-    def get_schema(self, schema_file: str, weaviate_class: str) -> list:
+    def get_schema(self, schema_file: str) -> list:
         """
-        Reads and processes the schema from a JSON file.
+        Reads the schema from a JSON file.
 
         :param schema_file: path to the schema JSON file.
-        :param weaviate_class: The name of the class to import data.  Class should be created with weaviate schema.
         """
         try:
-            with open(schema_file) as file:
-                schema_data = json.load(file)
+            class_objects = json.loads(Path(schema_file).read_text())
         except FileNotFoundError:
             self.logger.error(f"Schema file {schema_file} not found.")
             raise
@@ -38,12 +37,7 @@ class AskAstroWeaviateHook(WeaviateHook):
             self.logger.error(f"Invalid JSON in the schema file {schema_file}.")
             raise
 
-        classes = schema_data.get("classes", [schema_data])
-        for class_object in classes:
-            class_object.update({"class": weaviate_class})
-
-        self.logger.info("Schema processing completed.")
-        return classes
+        return class_objects
 
     def compare_schema_subset(self, class_object: Any, class_schema: Any) -> bool:
         """
@@ -84,14 +78,14 @@ class AskAstroWeaviateHook(WeaviateHook):
         """
         try:
             class_schema = self.client.schema.get(class_object.get("class", ""))
-            return not self.compare_schema_subset(class_object=class_object, class_schema=class_schema)
+            return self.compare_schema_subset(class_object=class_object, class_schema=class_schema)
         except UnexpectedStatusCodeException as e:
             return e.status_code == 404 and "with response body: None." in e.message
         except Exception as e:
             self.logger.error(f"Error checking schema: {e}")
             raise ValueError(f"Error during schema check {e}")
 
-    def check_schema(self, class_objects: list) -> list[str]:
+    def check_schema(self, class_objects: list) -> bool:
         """
         Verifies if the current schema includes the requested schema.
 
@@ -102,10 +96,10 @@ class AskAstroWeaviateHook(WeaviateHook):
 
             if missing_objects:
                 self.logger.warning(f"Classes {missing_objects} are not in the current schema.")
-                return ["create_schema"]
+                return False
             else:
                 self.logger.info("All classes are present in the current schema.")
-                return ["check_seed_baseline"]
+                return True
         except Exception as e:
             self.logger.error(f"Error during schema check: {e}")
             raise ValueError(f"Error during schema check {e}")
@@ -136,7 +130,7 @@ class AskAstroWeaviateHook(WeaviateHook):
 
     def prepare_data_for_ingestion(
         self, dfs: list[pd.DataFrame], class_name: str, existing: str, uuid_column: str, vector_column: str
-    ) -> tuple(pd.DataFrame, str):
+    ) -> tuple[pd.DataFrame, str]:
         """
         Prepares data for ingestion into Weaviate.
 
@@ -168,9 +162,6 @@ class AskAstroWeaviateHook(WeaviateHook):
             )
 
             df.drop_duplicates(inplace=True)
-
-            if df[uuid_column].duplicated().any():
-                raise AirflowException("Duplicate rows found. Remove duplicates before ingest.")
 
         return df, uuid_column
 
@@ -254,8 +245,7 @@ class AskAstroWeaviateHook(WeaviateHook):
                         self.logger.error(f"Failed to add row {row_id} with UUID {uuid}. Error: {e}")
                     batch_errors.append({"row_id": row_id, "uuid": uuid, "error": str(e)})
 
-        results = batch.create_objects()
-        return batch_errors + [item for result in results for item in result.get("errors", [])], results
+        return batch_errors
 
     def process_batch_errors(self, results: list, verbose: bool) -> list:
         """
@@ -339,11 +329,11 @@ class AskAstroWeaviateHook(WeaviateHook):
 
         self.logger.info(f"Passing {len(df)} objects for ingest.")
 
-        batch_errors, results = self.batch_process_data(
+        batch_errors = self.batch_process_data(
             df, class_name, uuid_column, vector_column, batch_params, existing, verbose
         )
 
-        batch_errors += self.process_batch_errors(results, verbose)
+        batch_errors += self.process_batch_errors(batch_errors, verbose)
 
         if existing == "upsert" and batch_errors:
             self.logger.warning("Error during upsert. Rolling back all inserts.")
