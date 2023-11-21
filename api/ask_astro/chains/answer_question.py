@@ -46,6 +46,7 @@ retriever = MultiQueryRetriever.from_llm(
         text_key=WeaviateConfig.text_key,
         attributes=WeaviateConfig.attributes,
         create_schema_if_missing=True,
+        k=5,
     ),
 )
 
