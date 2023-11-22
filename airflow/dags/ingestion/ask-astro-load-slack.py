@@ -1,15 +1,17 @@
 import os
 from datetime import datetime
 
-from include.tasks import ingest, split
+from include.tasks import split
 from include.tasks.extract import slack
+from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
 
-ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "")
+ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
-WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsProd")
+WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
+ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
 slack_channel_sources = [
     {
         "channel_name": "troubleshooting",
@@ -43,12 +45,17 @@ def ask_astro_load_slack():
 
     split_md_docs = task(split.split_markdown).expand(dfs=[slack_docs])
 
-    task.weaviate_import(
-        ingest.import_upsert_data,
-        weaviate_conn_id=_WEAVIATE_CONN_ID,
-    ).partial(
-        class_name=WEAVIATE_CLASS, primary_key="docLink"
-    ).expand(dfs=[split_md_docs])
+    _import_data = (
+        task(ask_astro_weaviate_hook.ingest_data, retries=10)
+        .partial(
+            class_name=WEAVIATE_CLASS,
+            existing="upsert",
+            doc_key="docLink",
+            batch_params={"batch_size": 1000},
+            verbose=True,
+        )
+        .expand(dfs=[split_md_docs])
+    )
 
 
 ask_astro_load_slack()
