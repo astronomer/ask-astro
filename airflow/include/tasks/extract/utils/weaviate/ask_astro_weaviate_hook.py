@@ -82,8 +82,9 @@ class AskAstroWeaviateHook(WeaviateHook):
         except UnexpectedStatusCodeException as e:
             return e.status_code == 404 and "with response body: None." in e.message
         except Exception as e:
-            self.logger.error(f"Error checking schema: {e}")
-            raise ValueError(f"Error during schema check {e}")
+            error_msg = f"Error during schema check {e}"
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
 
     def check_schema(self, class_objects: list) -> bool:
         """
@@ -101,8 +102,9 @@ class AskAstroWeaviateHook(WeaviateHook):
                 self.logger.info("All classes are present in the current schema.")
                 return True
         except Exception as e:
-            self.logger.error(f"Error during schema check: {e}")
-            raise ValueError(f"Error during schema check {e}")
+            error_msg = f"Error during schema check {e}"
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
 
     def create_schema(self, class_objects: list, existing: str = "ignore") -> None:
         """
@@ -184,7 +186,7 @@ class AskAstroWeaviateHook(WeaviateHook):
         current_schema = self.client.schema.get(class_name=class_name)
         doc_key_schema = [prop for prop in current_schema["properties"] if prop["name"] == doc_key]
 
-        if len(doc_key_schema) < 1:
+        if not doc_key_schema:
             raise AirflowException("doc_key does not exist in current schema.")
         elif doc_key_schema[0]["tokenization"] != "field":
             raise AirflowException("Tokenization for provided doc_key is not set to 'field'. Cannot upsert safely.")
@@ -264,7 +266,7 @@ class AskAstroWeaviateHook(WeaviateHook):
                 batch_errors.append(item_error)
         return batch_errors
 
-    def handle_upsert_rollback(self, objects_to_upsert: dict, class_name: str, verbose: bool):
+    def handle_upsert_rollback(self, objects_to_upsert: dict, class_name: str, verbose: bool) -> None:
         """
         Handles rollback of inserts in case of errors during upsert operation.
 
