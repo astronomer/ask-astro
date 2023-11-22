@@ -21,7 +21,7 @@ from langchain.retrievers.document_compressors import CohereRerank
 from langchain.retrievers.weaviate_hybrid_search import WeaviateHybridSearchRetriever
 
 from ask_astro.clients.weaviate_ import client
-from ask_astro.config import AzureOpenAIParams, WeaviateConfig
+from ask_astro.config import AzureOpenAIParams, CohereConfig, WeaviateConfig
 from ask_astro.settings import (
     CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_DEPLOYMENT_NAME,
     CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_TEMPERATURE,
@@ -67,12 +67,14 @@ class AskAstroCoversationalRetrievalChainChain(ConversationalRetrievalChain):
         run_manager: CallbackManagerForChainRun,
     ):
         docs = super()._get_docs(question=question, inputs=inputs, run_manager=run_manager)
-        compressor = CohereRerank(top_n=3)
-        return compressor.compress_documents(docs, question)
+        if CohereConfig.cohere_api_key:
+            compressor = CohereRerank(top_n=CohereConfig.top_n)
+            return compressor.compress_documents(docs, question)
+        return docs
 
 
-# Set up a ConversationalRetrievalChain to generate answers using the retriever.
-answer_question_chain = ConversationalRetrievalChain(
+# Set up a AskAstroCoversationalRetrievalChainChain to generate answers using the retriever.
+answer_question_chain = AskAstroCoversationalRetrievalChainChain(
     retriever=retriever,
     return_source_documents=True,
     question_generator=LLMChain(

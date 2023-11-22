@@ -64,3 +64,10 @@ class WeaviateConfig:
     k = int(os.environ.get("WEAVIATE_K", "5"))
     alpha = float(os.environ.get("WEAVIATE_ALPHA", "0.5"))
     create_schema_if_missing = bool(os.environ.get("WEAVIATE_CREATE_SCHEMA_IF_MISSING", "").lower() == "true")
+
+
+class CohereConfig:
+    """Contains the config variables for the Cohere API."""
+
+    cohere_api_key = os.environ.get("COHERE_API_KEY")
+    top_n = int(os.environ.get("COHERE_TOP_N", 3))
