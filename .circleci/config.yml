@@ -54,7 +54,7 @@ jobs:
           command: pre-commit run --all-files
 
   build-docs:
-    description: "Build docs check (the actual publishing is handled by .readthedocs.yaml)"
+    description: "Build docs"
     executor:
       name: docker-executor
     steps:
@@ -68,6 +68,32 @@ jobs:
       - run:
           name: Run Sphinx
           command: poetry run inv docs.build
+      - persist_to_workspace:
+          root: docs/_build
+          paths: [html]
+
+  deploy-docs:
+    docker:
+      - image: node:8.10.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: docs/_build
+      - run:
+          name: Disable jekyll builds
+          command: touch docs/_build/html/.nojekyll
+      - run:
+          name: Install and configure dependencies
+          command: |
+            npm install -g --silent gh-pages@2.0.1
+            git config user.email "airflow-oss-bot@astronomer.io"
+            git config user.name "airflow-oss-bot"
+      - add_ssh_keys:
+          fingerprints:
+            - 26:04:e6:0d:ce:4c:79:c4:e6:46:62:3f:fa:4e:d2:33
+      - run:
+          name: Deploy docs to gh-pages branch
+          command: gh-pages --dotfiles --message "[skip ci] Updates" --dist docs/_build/html
 
 workflows:
   tests:
@@ -82,3 +108,9 @@ workflows:
           <<: *all_branches_and_version_tag
       - build-docs:
           <<: *all_branches_and_version_tag
+      - deploy-docs:
+          requires:
+            - build-docs
+          filters:
+            branches:
+              only: main
