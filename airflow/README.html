@@ -294,7 +294,10 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ingest-and-embedding">Ingest and Embedding</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feedback">Feedback</a></li>
 </ul>
             </nav>
         </div>
@@ -306,13 +309,234 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="ask-astro-airflow">
+  <br />
+<p align="center">
+  <img src="../_static/ingestion.png" />
+</p>
+<br />
+<section id="ask-astro-airflow">
 <h1>ask-astro Airflow<a class="headerlink" href="#ask-astro-airflow" title="Permalink to this heading">#</a></h1>
-<section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">#</a></h2>
+<p>Ask Astro is an open-source reference implementation of <a class="reference external" href="https://a16z.com/emerging-architectures-for-llm-applications/">Andreessen Horowitz’s LLM Application Architecture</a> built by <a class="reference external" href="https://astronomer.io">Astronomer</a>. It provides an end-to-end example of a Q&amp;A LLM application used to answer questions about Apache Airflow and Astronomer, including:</p>
+<section id="ingest-and-embedding">
+<h2>Ingest and Embedding<a class="headerlink" href="#ingest-and-embedding" title="Permalink to this heading">#</a></h2>
+<p>In order to make the responses as factual and accurate as possible, Ask Astro uses <a class="reference external" href="https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html">Retrieval Augmented Generation (RAG)</a>. The following setup procedures can be followed to ingest and embed documents for RAG with Apache Airflow and Astro.</p>
+<p>Ask Astro uses a set of Airflow DAGs that: ingest data from a source via an API or Python library, preprocesses and splits the data into smaller chunks, embeds those chunks, and writes the embeddings to Weaviate. As of today, Ask Astro retrieves data from the following sources:</p>
 <ul class="simple">
+<li><p><a class="reference external" href="https://airflow.apache.org/docs/">Apache Airflow docs</a></p></li>
+<li><p><a class="reference external" href="https://docs.astronomer.io">Astronomer docs</a></p></li>
+<li><p><a class="reference external" href="https://www.astronomer.io/blog/">Astronomer blog</a></p></li>
+<li><p><a class="reference external" href="https://registry.astronomer.io">Astronomer Registry</a></p></li>
+<li><p><a class="reference external" href="https://github.com/apache/airflow">Apache Airflow GitHub</a> issues and pull requests</p></li>
+<li><p><a class="reference external" href="https://github.com/OpenLineage/OpenLineage">OpenLineage GitHub</a></p></li>
+<li><p><a class="reference external" href="https://github.com/OpenLineage/docs">OpenLineage GitHub docs</a></p></li>
+<li><p>Apache Airflow Slack’s <a class="reference external" href="https://app.slack.com/client/TCQ18L22Z/CCQ7EGB1P">#troubleshooting channel</a></p></li>
+<li><p><a class="reference external" href="https://archive.org/details/stackexchange">StackOverflow’s Stack Exchange Data Dump</a></p></li>
 <li><p><a class="reference external" href="https://docs.astronomer.io/astro/cli/overview">astro-cli</a></p></li>
 </ul>
+<p>Generally, each of these sources has a DAG that handles the ingestion flow. We use LangChain’s built-in text splitters for processing Markdown, RST, and Python code into smaller chunks to ensure each document is small enough to give accurate results when doing embeddings. We then use a Weaviate provider that we’ve built (and plan to publish) to both embed and store each document as a vector in Weaviate using OpenAI’s embedding model.</p>
+<p>In addition to the individual DAGs per source, we have one DAG to do full-database refresh based on a baseline of all data. The first time the <code class="docutils literal notranslate"><span class="pre">ask-astro-load-bulk</span></code> DAG runs it saves extracted documents in parquet files for a point-in-time baseline. This baseline allows us to experiment with new vector databases, embedding models, chunking strategies, etc. much more quickly.</p>
+<p>Additionally, a baseline of pre-embedded data provides the ability to ingest a stable baseline for upstream evaluation. See step 5 below.</p>
+<p align="center">
+  <img src="../docs/static/DAG.png" />
+</p>
+</section>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">#</a></h2>
+<p>There are many options for LLMs and vector databases. This template currently uses Microsoft Azure OpenAI for the LLMs and Weaviate vector database.</p>
+<ul class="simple">
+<li><p>Docker Desktop or similar Docker services running locally with the docker CLI installed.</p></li>
+<li><p><a class="reference external" href="https://platform.openai.com/signup">OpenAI account</a> (optional)</p></li>
+<li><p><a class="reference external" href="https://www.astronomer.io/try-astro/">Astronomer account</a> (optional)</p></li>
+<li><p><a class="reference external" href="https://console.weaviate.cloud/">Weaviate account</a> (optional)</p></li>
+</ul>
+</section>
+<section id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p>Install Astronomer’s <a class="reference external" href="https://github.com/astronomer/astro-cli">Astro CLI</a>. The Astro CLI is an Apache 2.0 licensed, open-source tool for building Airflow instances and is the fastest and easiest way to be up and running with Airflow in minutes. The Astro CLI is a Docker Compose-based tool and also integrates easily with Weaviate for a local developer environment. Open a terminal window and run:</p></li>
+</ol>
+<p>For MacOS</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>astro
+</pre></div>
+</div>
+<p>For Linux</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-sSL<span class="w"> </span>install.astronomer.io<span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>bash<span class="w"> </span>-s
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Clone this repository:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/astronomer/ask-astro
+<span class="nb">cd</span><span class="w"> </span>ask-astro
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Create a file called <code class="docutils literal notranslate"><span class="pre">airflow/.env</span></code> with the following connection strings and environment variables.</p></li>
+</ol>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ASK_ASTRO_ENV</span></code>: This is an environment variable that allows us to switch easily between local development and hosted test/prod instances.
+Example:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ASK_ASTRO_ENV</span><span class="o">=</span><span class="s1">&#39;local&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AIRFLOW_CONN_GITHUB_RO</span></code>: Add a github <a class="reference external" href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens">personal access token</a>. The token needs NO PRIVILEGES for the example DAGs since it is reading from public repos. If adding another private repo use a token with read privileges for that repo.
+Example:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">AIRFLOW_CONN_GITHUB_RO</span><span class="o">=</span><span class="s1">&#39;{&quot;conn_type&quot;: &quot;github&quot;, &quot;password&quot;: &quot;ghp_xxxxxxxxxxxxxx&quot;}&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AIRFLOW_CONN_WEAVIATE_LOCAL</span></code>: Add OpenAI keys to be used during embedding ingest and for data query.
+– <code class="docutils literal notranslate"><span class="pre">X-Azure-Api-Key</span></code>: Specify for OpenAI endpoints with Microsoft Azure.
+– <code class="docutils literal notranslate"><span class="pre">X-OpenAI-Api-Key</span></code>: Specify for public OpenAI endpoints.
+Example:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">AIRFLOW_CONN_WEAVIATE_LOCAL</span><span class="o">=</span><span class="s1">&#39;{&quot;conn_type&quot;: &quot;weaviate&quot;, &quot;host&quot;: &quot;http://weaviate:8081&quot;, &quot;extra&quot;: {&quot;X-OpenAI-Api-Key&quot;: &quot;sk-xxxxxxx&quot;}}&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">AIRFLOW_CONN_SLACK_API_RO</span></code>: Optionally add a Slack token for reading slack messages from the desired slack channel. This is not needed for the bulk ingest of Airflow <code class="docutils literal notranslate"><span class="pre">troubleshooting</span></code> channel as a baseline from slack archives is used.</p></li>
+</ul>
+<ol class="arabic simple" start="4">
+<li><p>Update the schema: The template includes a single document class called <code class="docutils literal notranslate"><span class="pre">Docs</span></code>. This is for simplicity of the reference architecture and, even with a simple schema, Ask Astro performs very well. When building a new usecase from the reference architecture it will likely be necessary to optimize the schema for the specific document types and use-case.</p></li>
+</ol>
+<p>The Weaviate schema specifies LLM models to use for <a class="reference external" href="https://weaviate.io/developers/weaviate/modules/retriever-vectorizer-modules/text2vec-openai">embedding</a>. This repo provides a sample schema in the <code class="docutils literal notranslate"><span class="pre">airflow/include/data/schema.json</span></code> file based on OpenAI endpoints.</p>
+<p>For Microsoft Azure OpenAI endpoints edit the schema file and change the <code class="docutils literal notranslate"><span class="pre">text2vec-openai</span></code> module settings to following with your specific <code class="docutils literal notranslate"><span class="pre">resourceName</span></code> and <code class="docutils literal notranslate"><span class="pre">deploymentId</span></code>:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="nt">&quot;text2vec-openai&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;resourceName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;xxxxxxxxxxxx&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;deploymentId&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;xxxxxxxxxxxx&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;vectorizeClassName&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;False&quot;</span>
+<span class="p">},</span>
+</pre></div>
+</div>
+<p>For the basic functionality of ingest and embedding a <a class="reference external" href="https://weaviate.io/developers/weaviate/modules/retriever-vectorizer-modules#vectorization-with-text2vec--modules">vectorizer module</a> is the only requirement. The Streamlit application will use the OpenAI key for <a class="reference external" href="https://weaviate.io/developers/weaviate/modules/reader-generator-modules/generative-openai">generative search</a> and <a class="reference external" href="https://weaviate.io/developers/weaviate/modules/reader-generator-modules/qna-openai">Q&amp;A</a>.</p>
+<ol class="arabic simple" start="5">
+<li><p>(Optional) Use pre-embedded baseline: The <code class="docutils literal notranslate"><span class="pre">ask_astro_load_bulk</span></code> DAG has been configured to optionally use a seeded baseline of pre-embedded data. This is useful for RAG evaluation purposes. To ingest from the seeded baseline:</p></li>
+</ol>
+<ul class="simple">
+<li><p>Open the file <code class="docutils literal notranslate"><span class="pre">include/dags/ask_astro_load.py</span></code></p></li>
+<li><p>Set the <code class="docutils literal notranslate"><span class="pre">seed_baseline</span></code> variable to ‘https://astronomer-demos-public-readonly.s3.us-west-2.amazonaws.com/ask-astro/baseline_data_v2.parquet’</p></li>
+<li><p>Save the file</p></li>
+</ul>
+<ol class="arabic simple" start="6">
+<li><p>Start Apache Airflow and Weaviate</p></li>
+</ol>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>airflow
+astro<span class="w"> </span>dev<span class="w"> </span>start
+</pre></div>
+</div>
+<p>The Astro CLI uses Docker Compose to instantiate a local containerized instance of Airflow. Weaviate also provides a containerized version for local development which integrates easily with Astro. See the weaviate section in the file <code class="docutils literal notranslate"><span class="pre">airflow/include/docker-compose.override.yml</span></code> for details.</p>
+<p>After Airflow starts a browser window should open to <a class="reference external" href="http://localhost:8080">http://localhost:8080</a>
+Login with</p>
+<ul class="simple">
+<li><p>username: <code class="docutils literal notranslate"><span class="pre">admin</span></code></p></li>
+<li><p>password: <code class="docutils literal notranslate"><span class="pre">admin</span></code></p></li>
+</ul>
+<ol class="arabic simple" start="7">
+<li><p>Run the <code class="docutils literal notranslate"><span class="pre">ask_astro_load_bulk</span></code> DAG</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>astro<span class="w"> </span>dev<span class="w"> </span>run<span class="w"> </span>dags<span class="w"> </span>unpause<span class="w"> </span>ask_astro_load_bulk
+astro<span class="w"> </span>dev<span class="w"> </span>run<span class="w"> </span>dags<span class="w"> </span>trigger<span class="w"> </span>ask_astro_load_bulk
+</pre></div>
+</div>
+<p>Due to the number of document sources and API rate limits some of the tasks need to run serially or with multiple retries. The first time the DAG runs it can take ~25min for the extract and split. These extracted documents are serialized and subsequent runs will be much faster.</p>
+<p>Follow the status of the DAG run in the <a class="reference external" href="http://localhost:8080/dags/ask_astro_load_bulk/grid">Airflow UI</a> (username: <code class="docutils literal notranslate"><span class="pre">admin</span></code>, password: <code class="docutils literal notranslate"><span class="pre">admin</span></code>)</p>
+<ol class="arabic simple" start="8">
+<li><p>Open the <a class="reference external" href="https://link.weaviate.io/48TqGKz">Weaviate console</a> to query the local instance.</p></li>
+<li><p>Incremental ingest DAGs have been created for each data source type and are designed to run periodically (nightly) to ingest new documents since the bulk ingest. These DAGs use the same logic as the bulk ingest for ‘extraction’ (see <code class="docutils literal notranslate"><span class="pre">airflow/include/tasks/extract.py</span></code>), document splitting (see <code class="docutils literal notranslate"><span class="pre">airflow/include/tasks/split.py</span></code>) and ingestion (see <code class="docutils literal notranslate"><span class="pre">airflow/include/tasks/ingest.py</span></code>).</p></li>
+</ol>
+<p>Unpause these DAGs to see how they ingest and upsert any documents that have changed. If running these DAGs directly after the bulk ingest there will be very few documents to update. Look at the logs for the <code class="docutils literal notranslate"><span class="pre">import_data</span></code> tasks to see that ingestion of most documents is ‘skipped’.</p>
+<ol class="arabic simple" start="10">
+<li><p>Update the DAGs with other sources.</p></li>
+</ol>
+<ul class="simple">
+<li><p>The Airflow ingest DAGs use <a class="reference external" href="https://docs.astronomer.io/learn/dynamic-tasks">dynamic tasks</a> to iterate over multiple document sources. For instance, the bulk ingest DAG (<code class="docutils literal notranslate"><span class="pre">airflow/include/dags/ingest/ask-astro-load.py</span></code>) specifies markdown sources in github repositories.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">markdown_docs_sources</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;doc_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;learn&quot;</span><span class="p">,</span> <span class="s2">&quot;repo_base&quot;</span><span class="p">:</span> <span class="s2">&quot;astronomer/docs&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;doc_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;astro&quot;</span><span class="p">,</span> <span class="s2">&quot;repo_base&quot;</span><span class="p">:</span> <span class="s2">&quot;astronomer/docs&quot;</span><span class="p">},</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>To ingest markdown documents from additional repositories simply add the source and re-run the DAG.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">markdown_docs_sources</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;doc_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;learn&quot;</span><span class="p">,</span> <span class="s2">&quot;repo_base&quot;</span><span class="p">:</span> <span class="s2">&quot;astronomer/docs&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;doc_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;astro&quot;</span><span class="p">,</span> <span class="s2">&quot;repo_base&quot;</span><span class="p">:</span> <span class="s2">&quot;astronomer/docs&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;doc_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;base&quot;</span><span class="p">,</span> <span class="s2">&quot;repo_base&quot;</span><span class="p">:</span> <span class="s2">&quot;OpenLineage/docs&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;doc_dir&quot;</span><span class="p">:</span> <span class="s2">&quot;base&quot;</span><span class="p">,</span> <span class="s2">&quot;repo_base&quot;</span><span class="p">:</span> <span class="s2">&quot;OpenLineage/OpenLineage&quot;</span><span class="p">},</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>The ‘extract’ logic for each data source is specified in <code class="docutils literal notranslate"><span class="pre">airflow/include/tasks/extract.py</span></code>.  These functions can be copied/pasted to select new sources.
+For instance, the <code class="docutils literal notranslate"><span class="pre">extract_astro_blogs</span></code> function shows an example of using the Python <a class="reference external" href="https://pypi.org/project/requests/">requests</a> and <a class="reference external" href="https://pypi.org/project/beautifulsoup4/">Beautiful Soup</a> libraries to extract blog posts from http://astronomer.io/blog.  This code can be adapted to ingeset from other sources.</p></li>
+</ul>
+<ol class="arabic simple" start="11">
+<li><p>Ingest to Test: A free Weaviate Sandbox cluster can be created with a trial account. The sandbox is a free 14-day temporary cluster. After creating the sandbox cluster note the <code class="docutils literal notranslate"><span class="pre">Cluster</span> <span class="pre">URL</span></code> and the Admin API Key.</p></li>
+</ol>
+<ul class="simple">
+<li><p>Open the <code class="docutils literal notranslate"><span class="pre">airflow/.env</span></code> file and update the following:
+– <code class="docutils literal notranslate"><span class="pre">ASK_ASTRO_ENV</span></code>: Set it to <code class="docutils literal notranslate"><span class="pre">test</span></code>
+– <code class="docutils literal notranslate"><span class="pre">AIRFLOW_CONN_WEAVIATE_TEST</span></code>: Update the host and token with the sandbox settings. The OpenAI key should be the same as in the ‘local’ setting.</p></li>
+<li><p>Restart astro with the new environment variables.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>astro<span class="w"> </span>dev<span class="w"> </span>restart
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Rerun the bulk ingest DAG</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>astro<span class="w"> </span>dev<span class="w"> </span>run<span class="w"> </span>dags<span class="w"> </span>unpause<span class="w"> </span>ask_astro_load_bulk
+astro<span class="w"> </span>dev<span class="w"> </span>run<span class="w"> </span>dags<span class="w"> </span>trigger<span class="w"> </span>ask_astro_load_bulk
+</pre></div>
+</div>
+<p>This time when the DAG runs it will use the serialized extracted documents which will run much faster. Only the <code class="docutils literal notranslate"><span class="pre">import_data</span></code> tasks will take time. Look in the task logs for this task to note that it is now using the ‘test’ cluster. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">2023</span><span class="o">-</span><span class="mi">10</span><span class="o">-</span><span class="mi">17</span><span class="p">,</span> <span class="mi">12</span><span class="p">:</span><span class="mi">26</span><span class="p">:</span><span class="mi">21</span> <span class="n">UTC</span><span class="p">]</span> <span class="p">{</span><span class="n">base</span><span class="o">.</span><span class="n">py</span><span class="p">:</span><span class="mi">73</span><span class="p">}</span> <span class="n">INFO</span> <span class="o">-</span> <span class="n">Using</span> <span class="n">connection</span> <span class="n">ID</span> <span class="s1">&#39;weaviate_test&#39;</span> <span class="k">for</span> <span class="n">task</span> <span class="n">execution</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>As the DAG runs you can see the document count increasing in the <a class="reference external" href="https://console.weaviate.cloud">Weaviate Console</a> with a query such as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span> <span class="n">Aggregate</span> <span class="p">{</span> <span class="n">Docs</span> <span class="p">{</span> <span class="n">meta</span> <span class="p">{</span> <span class="n">count</span> <span class="p">}</span> <span class="p">}</span> <span class="p">}</span> <span class="p">}</span>
+</pre></div>
+</div>
+<p>After integration testing with the front end the sandbox cluster can be removed.</p>
+<ol class="arabic simple" start="12">
+<li><p>Promote to production: Step 10 showed an example of switching between different Weaviate instances. Follow the same approach to point Airflow at a ‘production’ (ie. non-temporary sandbox). Perform the following to promote from Airflow running locally to a production deployment in Astro.</p></li>
+</ol>
+<ul class="simple">
+<li><p>Create a free <a class="reference external" href="https://docs.astronomer.io/astro/trial">Astro trial</a> account, organization and deployment.</p></li>
+<li><p><a class="reference external" href="https://docs.astronomer.io/astro/deploy-code">Deploy</a> the Astro project</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>astro<span class="w"> </span>login
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>astro<span class="w"> </span>deployment<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span><span class="s1">&#39;ask astro dev&#39;</span>
+astro<span class="w"> </span>deployment<span class="w"> </span>variable<span class="w"> </span>update<span class="w"> </span>-lsn<span class="w"> </span><span class="s1">&#39;ask astro dev&#39;</span>
+astro<span class="w"> </span>deployment<span class="w"> </span>variable<span class="w"> </span>update<span class="w"> </span>-n<span class="w"> </span><span class="s1">&#39;ask astro dev&#39;</span><span class="w"> </span><span class="nv">ASK_ASTRO_ENV</span><span class="o">=</span>dev
+astro<span class="w"> </span>deploy<span class="w"> </span>-fn<span class="w"> </span><span class="s1">&#39;ask astro dev&#39;</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="13">
+<li><p>Query the Data: A simple Streamlit application is provided to query the data. For this application you will have needed to provide an OpenAI key with the Weaviate connection string in step 3.</p></li>
+</ol>
+<ul class="simple">
+<li><p>Connect to the webserver container with the Astro CLI</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>astro<span class="w"> </span>dev<span class="w"> </span>bash<span class="w"> </span>-w
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Start Streamlit</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>include/streamlit
+python<span class="w"> </span>-m<span class="w"> </span>streamlit<span class="w"> </span>run<span class="w"> </span>./streamlit_app.py
+</pre></div>
+</div>
+</section>
+<section id="feedback">
+<h2>Feedback<a class="headerlink" href="#feedback" title="Permalink to this heading">#</a></h2>
+<p>Give us your feedback, comments and ideas at https://github.com/astronomer/ask-astro/discussions</p>
 </section>
 </section>
 
@@ -351,7 +575,10 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ingest-and-embedding">Ingest and Embedding</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup">Setup</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feedback">Feedback</a></li>
 </ul>
   </nav></div>
 
