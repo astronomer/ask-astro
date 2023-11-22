@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import datetime
+import json
 import logging
 import os
+from pathlib import Path
 
 import pandas as pd
 from include.tasks import split
@@ -81,7 +83,15 @@ def ask_astro_load_bulk():
 
         :param schema_file: path to the schema JSON file
         """
-        class_objects = ask_astro_weaviate_hook.get_schema(schema_file="include/data/schema.json")
+        try:
+            class_objects = json.loads(Path(schema_file).read_text())
+        except FileNotFoundError:
+            logger.error(f"Schema file {schema_file} not found.")
+            raise
+        except json.JSONDecodeError:
+            logger.error(f"Invalid JSON in the schema file {schema_file}.")
+            raise
+
         class_objects["classes"][0].update({"class": WEAVIATE_CLASS})
 
         if "classes" not in class_objects:

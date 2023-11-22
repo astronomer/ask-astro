@@ -48,7 +48,7 @@ def extract_astro_blogs(blog_cutoff_date: datetime) -> list[pd.DataFrame]:
     df = pd.DataFrame(zip(links, dates), columns=["docLink", "date"])
 
     df["date"] = pd.to_datetime(df["date"]).dt.date
-    df = df[df["date"] > blog_cutoff_date.date()]
+    df = df[df["date"] > blog_cutoff_date]
     df.drop("date", inplace=True, axis=1)
     df.drop_duplicates(inplace=True)
 

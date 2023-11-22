@@ -9,12 +9,12 @@ from typing import Any
 
 import firebase_admin
 import requests
-from weaviate_provider.hooks.weaviate import WeaviateHook
 
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowException
 from airflow.models import TaskInstance
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
+from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
 from airflow.utils.context import Context
 from airflow.utils.trigger_rule import TriggerRule
 

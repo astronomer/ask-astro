@@ -10,7 +10,7 @@ from airflow.decorators import dag, task
 ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
-WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
+WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDevAnkit")
 ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
 stackoverflow_cutoff_date = "2021-09-01"
 
@@ -38,7 +38,7 @@ def ask_astro_load_stackoverflow():
     """
 
     stack_overflow_docs = (
-        task(stack_overflow.extract_stack_overflow)
+        task(stack_overflow.extract_stack_overflow_archive)
         .partial(stackoverflow_cutoff_date=stackoverflow_cutoff_date)
         .expand(tag=stackoverflow_tags)
     )
