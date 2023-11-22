@@ -60,3 +60,7 @@ class WeaviateConfig:
     index_name = os.environ.get("WEAVIATE_INDEX_NAME")
     text_key = os.environ.get("WEAVIATE_TEXT_KEY")
     attributes = os.environ.get("WEAVIATE_ATTRIBUTES", "").split(",")
+
+    k = int(os.environ.get("WEAVIATE_K", "5"))
+    alpha = float(os.environ.get("WEAVIATE_ALPHA", "0.5"))
+    create_schema_if_missing = bool(os.environ.get("WEAVIATE_CREATE_SCHEMA_IF_MISSING", "").lower() == "true")

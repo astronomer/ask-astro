@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+from typing import Any
+
 from langchain import LLMChain
+from langchain.callbacks.manager import (
+    CallbackManagerForChainRun,
+)
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.conversational_retrieval.prompts import CONDENSE_QUESTION_PROMPT
 from langchain.chains.question_answering import load_qa_chain
@@ -12,6 +17,7 @@ from langchain.prompts import (
     SystemMessagePromptTemplate,
 )
 from langchain.retrievers import MultiQueryRetriever
+from langchain.retrievers.document_compressors import CohereRerank
 from langchain.retrievers.weaviate_hybrid_search import WeaviateHybridSearchRetriever
 
 from ask_astro.clients.weaviate_ import client
@@ -45,10 +51,25 @@ retriever = MultiQueryRetriever.from_llm(
         index_name=WeaviateConfig.index_name,
         text_key=WeaviateConfig.text_key,
         attributes=WeaviateConfig.attributes,
-        create_schema_if_missing=True,
-        k=6,
+        create_schema_if_missing=WeaviateConfig.create_schema_if_missing,
+        k=WeaviateConfig.k,
+        alpha=WeaviateConfig.alpha,
     ),
 )
+
+
+class AskAstroCoversationalRetrievalChainChain(ConversationalRetrievalChain):
+    def _get_docs(
+        self,
+        question: str,
+        inputs: dict[str, Any],
+        *,
+        run_manager: CallbackManagerForChainRun,
+    ):
+        docs = super()._get_docs(question=question, inputs=inputs, run_manager=run_manager)
+        compressor = CohereRerank(top_n=3)
+        return compressor.compress_documents(docs, question)
+
 
 # Set up a ConversationalRetrievalChain to generate answers using the retriever.
 answer_question_chain = ConversationalRetrievalChain(
