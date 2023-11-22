@@ -26,6 +26,7 @@ weaviate-client = "*"
 pydantic = "^2.3.0"
 gunicorn = "^21.2.0"
 uvicorn = "^0.23.2"
+cohere = "^4.36"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
