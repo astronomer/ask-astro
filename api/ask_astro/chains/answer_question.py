@@ -68,8 +68,7 @@ class AskAstroCoversationalRetrievalChainChain(ConversationalRetrievalChain):
     ):
         docs = super()._get_docs(question=question, inputs=inputs, run_manager=run_manager)
         if CohereConfig.cohere_api_key:
-            # compressor = CohereRerank(top_n=CohereConfig.top_n)
-            compressor = CohereRerank()
+            compressor = CohereRerank(top_n=CohereConfig.top_n, user_agent="langchain")
             return compressor.compress_documents(docs, question)
         return docs
 
