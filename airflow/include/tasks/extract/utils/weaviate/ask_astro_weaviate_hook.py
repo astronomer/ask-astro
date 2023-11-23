@@ -13,7 +13,12 @@ from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
 
 
 class AskAstroWeaviateHook(WeaviateHook):
-    """Extends the WeaviateHook to include specific methods for handling Ask-Astro."""
+    """
+    Extends the WeaviateHook to include specific methods for handling Ask-Astro.
+
+    This hook will be directly utilize the functionalities provided by Weaviate providers in
+    upcoming releases of the `apache-airflow-providers-weaviate` package.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
