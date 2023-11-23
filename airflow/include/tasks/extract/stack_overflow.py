@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import pandas as pd
+from weaviate.util import generate_uuid5
+
 from include.tasks.extract.utils.stack_overflow_helpers import (
     process_stack_answers,
     process_stack_comments,
     process_stack_posts,
     process_stack_questions,
 )
-from weaviate.util import generate_uuid5
 
 
 def extract_stack_overflow_archive(tag: str, stackoverflow_cutoff_date: str) -> pd.DataFrame:

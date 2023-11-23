@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 
 from include.tasks import split
-from include.tasks.extract import slack
+from include.tasks.extract import airflow_docs
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
@@ -11,16 +11,10 @@ ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
+
 ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
-slack_channel_sources = [
-    {
-        "channel_name": "troubleshooting",
-        "channel_id": "CCQ7EGB1P",
-        "team_id": "TCQ18L22Z",
-        "team_name": "Airflow Slack Community",
-        "slack_api_conn_id": "slack_api_ro",
-    }
-]
+
+airflow_docs_base_url = "https://airflow.apache.org/docs/"
 
 default_args = {"retries": 3, "retry_delay": 30}
 
@@ -34,16 +28,16 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
     is_paused_upon_creation=True,
     default_args=default_args,
 )
-def ask_astro_load_slack():
+def ask_astro_load_airflow_docs():
     """
-    This DAG performs incremental load for any new slack threads. The slack archive is a point-in-time capture.  This
-    DAG should run nightly to capture threads between archive periods. By using the upsert logic of the
-    weaviate_import decorator any existing documents that have been updated will be removed and re-added.
+    This DAG performs incremental load for any new Airflow docs. Initial load via ask_astro_load_bulk imported
+    data from a point-in-time data capture. By using the upsert logic of the weaviate_import decorator
+    any existing documents that have been updated will be removed and re-added.
     """
 
-    slack_docs = task(slack.extract_slack).expand(source=slack_channel_sources)
+    extracted_airflow_docs = task(airflow_docs.extract_airflow_docs)(docs_base_url=airflow_docs_base_url)
 
-    split_md_docs = task(split.split_markdown).expand(dfs=[slack_docs])
+    split_md_docs = task(split.split_html).expand(dfs=[extracted_airflow_docs])
 
     _import_data = (
         task(ask_astro_weaviate_hook.ingest_data, retries=10)
@@ -58,4 +52,4 @@ def ask_astro_load_slack():
     )
 
 
-ask_astro_load_slack()
+ask_astro_load_airflow_docs()

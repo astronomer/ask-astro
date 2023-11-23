@@ -20,7 +20,7 @@ answer_template = dedent(
     {body}{answer_comments}"""
 )
 
-comment_template = "{user} on {date} [Score: {score}]: {body}\n"
+comment_template = "\n{user} on {date} [Score: {score}]: {body}\n"
 
 post_types = {
     "1": "Question",
