@@ -397,15 +397,19 @@ class AskAstroWeaviateHook(WeaviateHook):
             verbose=verbose,
         )
 
-        batch_errors = self.process_batch_errors(results=batch_errors, verbose=True)
-
         if existing == "upsert" and batch_errors:
             self.logger.warning("Error during upsert. Rolling back all inserts for docs with errors.")
-            self.handle_upsert_rollback(
+            rollback_errors = self.handle_upsert_rollback(
                 objects_to_upsert=objects_to_upsert, batch_errors=batch_errors, class_name=class_name, verbose=verbose
             )
 
-        return batch_errors
+            if len(rollback_errors) > 0:
+                self.logger.error("Errors encountered during rollback.")
+                raise AirflowException("Errors encountered during rollback.")
+
+        if batch_errors:
+            self.logger.error("Errors encountered during ingest.")
+            raise AirflowException("Errors encountered during ingest.")
 
     def _query_objects(self, value: Any, doc_key: str, class_name: str, uuid_column: str) -> set:
         """
