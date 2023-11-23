@@ -204,7 +204,7 @@ def check_weaviate_status(**context) -> None:
     """
     try:
         weaviate_hook = WeaviateHook(weaviate_conn_id)
-        client = weaviate_hook.get_conn()
+        client = weaviate_hook.get_client()
         schemas = client.query.aggregate(weaviate_class).with_meta_count().do()
         schema = schemas["data"]["Aggregate"][weaviate_class]
         count = 0

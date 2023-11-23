@@ -64,7 +64,7 @@ class AskAstroWeaviateHook(WeaviateHook):
         """
         try:
             class_schema = self.client.schema.get(class_object.get("class", ""))
-            return self.compare_schema_subset(class_object=class_object, class_schema=class_schema)
+            return not self.compare_schema_subset(class_object=class_object, class_schema=class_schema)
         except UnexpectedStatusCodeException as e:
             return e.status_code == 404 and "with response body: None." in e.message
         except Exception as e:

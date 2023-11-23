@@ -1,7 +1,6 @@
 import datetime
 import os
 
-from dateutil.relativedelta import relativedelta
 from include.tasks import split
 from include.tasks.extract import github
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
@@ -26,11 +25,7 @@ code_samples_sources = [
     {"doc_dir": "code-samples", "repo_base": "astronomer/docs"},
 ]
 issues_docs_sources = [
-    {
-        "repo_base": "apache/airflow",
-        "cutoff_date": datetime.date.today() - relativedelta(months=1),
-        "cutoff_issue_number": 30000,
-    }
+    "apache/airflow",
 ]
 
 default_args = {"retries": 3, "retry_delay": 30}
@@ -59,7 +54,7 @@ def ask_astro_load_github():
     )
 
     issues_docs = (
-        task(github.extract_github_issues).partial(github_conn_id=_GITHUB_CONN_ID).expand(source=issues_docs_sources)
+        task(github.extract_github_issues).partial(github_conn_id=_GITHUB_CONN_ID).expand(repo_base=issues_docs_sources)
     )
 
     code_samples = (

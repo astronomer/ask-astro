@@ -140,7 +140,6 @@ def ask_astro_load_bulk():
                 "extract_github_markdown",
                 "extract_airflow_docs",
                 "extract_stack_overflow",
-                # "extract_slack_archive",
                 "extract_astro_registry_cell_types",
                 "extract_github_issues",
                 "extract_astro_blogs",
@@ -190,16 +189,6 @@ def ask_astro_load_bulk():
 
         return df
 
-    # @task(trigger_rule="none_failed")
-    # def extract_slack_archive(source: dict):
-    #     try:
-    #         df = pd.read_parquet("include/data/slack/troubleshooting.parquet")
-    #     except Exception:
-    #         df = slack.extract_slack_archive(source)
-    #         df.to_parquet("include/data/slack/troubleshooting.parquet")
-    #
-    #     return df
-
     @task(trigger_rule="none_failed")
     def extract_github_issues(repo_base: str):
         try:
@@ -243,7 +232,6 @@ def ask_astro_load_bulk():
     md_docs = extract_github_markdown.expand(source=markdown_docs_sources)
     issues_docs = extract_github_issues.expand(repo_base=issues_docs_sources)
     stackoverflow_docs = extract_stack_overflow.expand(tag=stackoverflow_tags)
-    # slack_docs = extract_slack_archive.expand(source=slack_channel_sources)
     registry_cells_docs = extract_astro_registry_cell_types()
     blogs_docs = extract_astro_blogs()
     registry_dags_docs = extract_astro_registry_dags()
@@ -259,7 +247,6 @@ def ask_astro_load_bulk():
         md_docs,
         issues_docs,
         stackoverflow_docs,
-        # slack_docs,
         blogs_docs,
         registry_cells_docs,
     ]
