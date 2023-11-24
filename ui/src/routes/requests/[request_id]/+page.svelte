@@ -38,6 +38,11 @@
 
         return 0;
       }) || [];
+
+    sortedMessages.reverse().forEach(function(item ,index){
+      item.id = index;
+    })
+    sortedMessages.reverse();
   }
 
   $: {
@@ -87,7 +92,7 @@
     />
   {/if}
 
-  {#each sortedMessages as message}
+  {#each sortedMessages as message (message.id)}
     <MessageCard {...message} />
   {/each}
 
