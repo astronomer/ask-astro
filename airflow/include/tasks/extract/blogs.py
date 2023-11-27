@@ -28,30 +28,29 @@ def extract_astro_blogs(blog_cutoff_date: datetime) -> list[pd.DataFrame]:
     'sha': A UUID from the other fields
     """
 
-    headers = {}
-    links = []
-    dates = []
+    links: list[str] = []
     page = 1
 
-    response = requests.get(page_url.format(page=page), headers=headers)
+    response = requests.get(page_url.format(page=page), headers={})
     while response.ok:
         soup = BeautifulSoup(response.text, "lxml")
-        cards = soup.find_all(class_="post-card__cover")
-        card_links = [base_url + card.find("a", href=True)["href"] for card in cards]
+
+        articles = soup.find_all("article")
+
+        card_links = [
+            f"{base_url}{article.find('a', href=True)['href']}"
+            for article in articles
+            if datetime.fromisoformat(article.find("time")["datetime"]).date() > blog_cutoff_date
+        ]
         links.extend(card_links)
-        meta = soup.find_all(class_="post-card__meta")
-        dates.extend([post.find("time")["datetime"] for post in meta])
+        if len(articles) != len(card_links):
+            break
 
         page = page + 1
-        response = requests.get(page_url.format(page=page), headers=headers)
+        response = requests.get(page_url.format(page=page), headers={})
 
-    df = pd.DataFrame(zip(links, dates), columns=["docLink", "date"])
-
-    df["date"] = pd.to_datetime(df["date"]).dt.date
-    df = df[df["date"] > blog_cutoff_date]
-    df.drop("date", inplace=True, axis=1)
+    df = pd.DataFrame(links, columns=["docLink"])
     df.drop_duplicates(inplace=True)
-
     df["content"] = df["docLink"].apply(lambda x: requests.get(x).content)
     df["title"] = df["content"].apply(
         lambda x: BeautifulSoup(x, "lxml").find(class_="post-card__meta").find(class_="title").get_text()
