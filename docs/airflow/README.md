@@ -46,7 +46,7 @@ There are many options for LLMs and vector databases. This template currently us
 
 ## Setup
 
-1. Install Astronomer's [Astro CLI](https://github.com/astronomer/astro-cli). The Astro CLI is an Apache 2.0 licensed, open-source tool for building Airflow instances and provides the fastest and easiest way to be up and running with Airflow in minutes. The Astro CLI is a Docker Compose-based tool and integrates easily with Weaviate for a local developer environment. 
+1. Install Astronomer's [Astro CLI](https://github.com/astronomer/astro-cli). The Astro CLI is an Apache 2.0 licensed, open-source tool for building Airflow instances and provides the fastest and easiest way to be up and running with Airflow in minutes. The Astro CLI is a Docker Compose-based tool and integrates easily with Weaviate for a local developer environment.
 
 To install the Astro CLI, open a terminal window and run:
 
@@ -197,7 +197,7 @@ astro deployment variable update -n 'ask astro dev' ASK_ASTRO_ENV=dev
 astro deploy -fn 'ask astro dev'
 ```
 
-13. Query the Data: This template also includes a simple Streamlit application to query the data. For this application to work, you need to provide an OpenAI key with the Weaviate connection string. 
+13. Query the Data: This template also includes a simple Streamlit application to query the data. For this application to work, you need to provide an OpenAI key with the Weaviate connection string.
 
 - (Optional) Check the configuration in your `.env` file for `AIRFLOW_CONN_WEAVIATE_LOCAL` that you made in Step 3 to confirm that you added an OpenAI Admin Key.
 
