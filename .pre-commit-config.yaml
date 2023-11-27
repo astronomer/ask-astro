@@ -55,13 +55,14 @@ repos:
         additional_dependencies: [black>=22.10.0]
         types: [markdown]
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.1.3'
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 'v0.1.6'
     hooks:
-      - id: ruff
-        args:
-          - --config=./pyproject.toml
-        types: [python]
+    # Run the linter.
+    - id: ruff
+      args: [ --fix ]
+    # Run the formatter.
+    - id: ruff-format
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.6
