@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import pandas as pd
-from weaviate.util import generate_uuid5
 
 from include.tasks.extract.utils.stack_overflow_helpers import (
-    process_stack_answers,
+    combine_stack_dfs,
     process_stack_comments,
     process_stack_posts,
-    process_stack_questions,
 )
 
 
@@ -32,8 +30,7 @@ def extract_stack_overflow_archive(tag: str, stackoverflow_cutoff_date: str) -> 
 
     """
 
-    posts_df = pd.read_parquet("include/data/stack_overflow/posts/posts.parquet")
-
+    posts_df = pd.read_parquet("include/data/stack_overflow/base.parquet")
     posts_df = process_stack_posts(posts_df=posts_df, stackoverflow_cutoff_date=stackoverflow_cutoff_date)
 
     comments_df = pd.concat(
@@ -45,22 +42,4 @@ def extract_stack_overflow_archive(tag: str, stackoverflow_cutoff_date: str) -> 
     )
 
     comments_df = process_stack_comments(comments_df=comments_df)
-
-    questions_df = process_stack_questions(posts_df=posts_df, comments_df=comments_df, tag=tag)
-
-    answers_df = process_stack_answers(posts_df=posts_df, comments_df=comments_df)
-
-    # Join questions with answers
-    df = questions_df.join(answers_df)
-    df = df.apply(
-        lambda x: pd.Series([f"stackoverflow {tag}", x.docLink, "\n".join([x.content, x.answer_text])]), axis=1
-    )
-    df.columns = ["docSource", "docLink", "content"]
-
-    df.reset_index(inplace=True, drop=True)
-    df["sha"] = df.apply(generate_uuid5, axis=1)
-
-    # column order matters for uuid generation
-    df = df[["docSource", "sha", "content", "docLink"]]
-
-    return df
+    return combine_stack_dfs(posts_df=posts_df, comments_df=comments_df, tag=tag)

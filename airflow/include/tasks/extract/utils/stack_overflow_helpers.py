@@ -2,6 +2,7 @@ from textwrap import dedent
 
 import pandas as pd
 from html2text import html2text
+from weaviate.util import generate_uuid5
 
 question_template = dedent(
     """
@@ -190,3 +191,23 @@ def process_stack_answers(posts_df: pd.DataFrame, comments_df: pd.DataFrame) -> 
     answers_df = answers_df.groupby("question_id")["answer_text"].apply(lambda x: "".join(x))
 
     return answers_df
+
+
+def combine_stack_dfs(*, posts_df: pd.DataFrame, comments_df: pd.DataFrame, tag: str) -> pd.DataFrame:
+    questions_df = process_stack_questions(posts_df=posts_df, comments_df=comments_df, tag=tag)
+    answers_df = process_stack_answers(posts_df=posts_df, comments_df=comments_df)
+
+    # Join questions with answers
+    df = questions_df.join(answers_df)
+    df = df.apply(
+        lambda x: pd.Series([f"stackoverflow {tag}", x.docLink, "\n".join([x.content, x.answer_text])]), axis=1
+    )
+    df.columns = ["docSource", "docLink", "content"]
+
+    df.reset_index(inplace=True, drop=True)
+    df["sha"] = df.apply(generate_uuid5, axis=1)
+
+    # column order matters for uuid generation
+    df = df[["docSource", "sha", "content", "docLink"]]
+
+    return df
