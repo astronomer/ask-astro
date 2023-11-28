@@ -265,7 +265,7 @@ def ask_astro_load_bulk():
         task(ask_astro_weaviate_hook.ingest_data, retries=10)
         .partial(
             class_name=WEAVIATE_CLASS,
-            existing="upsert",
+            existing="skip",
             doc_key="docLink",
             batch_params={"batch_size": 1000},
             verbose=True,
@@ -276,7 +276,7 @@ def ask_astro_load_bulk():
     _import_baseline = task(ask_astro_weaviate_hook.import_baseline, trigger_rule="none_failed")(
         seed_baseline_url=seed_baseline_url,
         class_name=WEAVIATE_CLASS,
-        existing="upsert",
+        existing="error",
         doc_key="docLink",
         uuid_column="id",
         vector_column="vector",
