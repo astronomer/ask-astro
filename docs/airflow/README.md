@@ -136,7 +136,7 @@ Follow the status of the DAG run in the [Airflow UI](http://localhost:8080/dags/
 Unpause the incremental ingest DAGs to see how they ingest and upsert any documents that have changed. If you manually run these DAGs directly after the bulk ingest, it is unlikely that many documents have changed, and there won't be many updates. In this scenario, when you look at the logs for the `import_data` tasks, you see that ingestion of most documents is **Skipped**.
 
 10. Update the DAGs with other sources.
-- The Airflow ingest DAGs use [dynamic tasks](https://docs.astronomer.io/learn/dynamic-tasks) to iterate over multiple document sources. For example, the bulk ingest DAG, `airflow/include/dags/ingest/ask-astro-load.py`, specifies markdown sources in Github repositories.
+- The Airflow ingest DAGs use [dynamic tasks](https://docs.astronomer.io/learn/dynamic-tasks) to iterate over multiple document sources. For example, the bulk ingest DAG, `airflow/include/dags/ingest/ask-astro-load.py`, specifies markdown sources in GitHub repositories.
 ```python
 markdown_docs_sources = [
     {"doc_dir": "learn", "repo_base": "astronomer/docs"},

@@ -15,7 +15,7 @@
     * `SLACK_SIGNING_SECRET`: Signing Secret
 6. Start the ask-astro API backend by using a a reachable host, such as ngrok.
 7. Go to the [OAuth & Permissions](https://api.slack.com/apps/<API_ID>/oauth?) page.
-8. Add  `https://<ask-astro api backend host>/slack/oauth_redirect` to **Redirect URLs**.
+8. Add `https://<ask-astro api backend host>/slack/oauth_redirect` to **Redirect URLs**.
     ![6-redirect-url](static/6-redirect-url.png)
 9. Add the following scopes.
     * commands
