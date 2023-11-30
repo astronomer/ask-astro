@@ -18,8 +18,10 @@ async def _update_firestore_request(request: AskAstroRequest) -> None:
 
     :param request: The AskAstroRequest object to update in Firestore.
     """
-    await firestore_client.collection(FirestoreCollections.requests).document(str(request.uuid)).set(
-        request.to_firestore()
+    await (
+        firestore_client.collection(FirestoreCollections.requests)
+        .document(str(request.uuid))
+        .set(request.to_firestore())
     )
 
 

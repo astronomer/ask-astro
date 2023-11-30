@@ -37,6 +37,7 @@ class ZendeskConfig:
 
 class SlackAppConfig:
     "Contains the config variables for the Slack app."
+
     client_id = os.environ.get("SLACK_CLIENT_ID")
     client_secret = os.environ.get("SLACK_CLIENT_SECRET")
     signing_secret = os.environ.get("SLACK_SIGNING_SECRET")
