@@ -12,7 +12,7 @@ ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
 ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
-stackoverflow_cutoff_date = "2021-09-01"
+stackoverflow_cutoff_date = os.environ.get("STACKOVERFLOW_CUTOFF_DATE", "2021-09-01")
 
 stackoverflow_tags = [
     "airflow",
