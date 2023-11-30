@@ -37,19 +37,13 @@ def ask_astro_load_stackoverflow():
     any existing documents that have been updated will be removed and re-added.
     """
 
-    stack_overflow_archive_docs = (
-        task(stack_overflow.extract_stack_overflow_archive)
-        .partial(stackoverflow_cutoff_date=stackoverflow_cutoff_date)
-        .expand(tag=stackoverflow_tags)
-    )
-
     stack_overflow_docs = (
         task(stack_overflow.extract_stack_overflow)
         .partial(stackoverflow_cutoff_date=stackoverflow_cutoff_date)
         .expand(tag=stackoverflow_tags)
     )
 
-    split_md_docs = task(split.split_markdown).expand(dfs=[stack_overflow_archive_docs, stack_overflow_docs])
+    split_md_docs = task(split.split_markdown).expand(dfs=[stack_overflow_docs])
 
     _import_data = (
         task(ask_astro_weaviate_hook.ingest_data, retries=10)
