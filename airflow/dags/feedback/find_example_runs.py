@@ -15,7 +15,6 @@ from langsmith import Client
 from airflow.decorators import dag, task
 from airflow.operators.empty import EmptyOperator
 
-
 default_args = {"retries": 3, "retry_delay": 30}
 
 
