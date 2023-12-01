@@ -15,6 +15,8 @@ from langsmith import Client
 from airflow.decorators import dag, task
 from airflow.operators.empty import EmptyOperator
 
+default_args = {"retries": 3, "retry_delay": 30}
+
 
 def get_firestore_client():
     """
@@ -115,6 +117,7 @@ def process_run(run: dict[str, Any]):
 @dag(
     schedule="@daily",
     start_date=datetime(2023, 1, 1),
+    default_args=default_args,
     catchup=False,
 )
 def find_example_runs():
