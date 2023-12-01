@@ -321,7 +321,7 @@ document.write(`
 <h1>Monitoring and Observability for Ask-Astro<a class="headerlink" href="#monitoring-and-observability-for-ask-astro" title="Permalink to this heading">#</a></h1>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">#</a></h2>
-<p>This document outlines the monitoring and observability practices implemented for Ask-Astro. These practices are designed to ensure the system’s reliability, performance, and quick detection and resolution of issues. They can be adapted for similar systems requiring robust monitoring solutions.</p>
+<p>This document outlines the monitoring and observability practices implemented for Ask-Astro. These practices ensure the system’s reliability and performance, as well as quick detection and resolution of issues. You can adapted them for similar systems requiring robust monitoring solutions.</p>
 </section>
 <section id="infrastructure-monitoring">
 <h2>Infrastructure Monitoring<a class="headerlink" href="#infrastructure-monitoring" title="Permalink to this heading">#</a></h2>
@@ -336,7 +336,7 @@ document.write(`
 <section id="alerting">
 <h3>Alerting<a class="headerlink" href="#alerting" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
-<li><p><strong>Slack Integration</strong>: In case of any failures, alerts are sent to the designated Slack channel as DAGs run every 5 minutes. Regular status updates are also posted daily.</p></li>
+<li><p><strong>Slack Integration</strong>: In case of any failures, sends alerts to the designated Slack channel as DAGs run every 5 minutes. Regular status updates are also posted daily.</p></li>
 </ul>
 <p><img alt="slack alerts" src="_images/slack_alerts.png" /></p>
 </section>
@@ -345,51 +345,51 @@ document.write(`
 <ol class="arabic simple">
 <li><p><strong>APIs</strong>: Back-end APIs are tested in sequence. Failure of any test results in an immediate alert.
 <img alt="APIs swagger UI" src="_images/api_swagger.png" /></p></li>
-<li><p><strong>Google Firebase</strong>: Monitoring the Firestore app for its existence and health.</p></li>
-<li><p><strong>Weaviate Database</strong>: Ensuring the presence of necessary classes and checking embedding counts.</p></li>
+<li><p><strong>Google Firebase</strong>: Monitors the Firestore app for its existence and health.</p></li>
+<li><p><strong>Weaviate Database</strong>: Ensures the presence of necessary classes and checks embedding counts.</p></li>
 <li><p><strong>UI Monitoring</strong>: Regular checks of the UI for a 200 response status.</p>
 <ul class="simple">
 <li><p>UI Link: <a class="reference external" href="https://ask.astronomer.io/">https://ask.astronomer.io/</a></p></li>
 </ul>
 </li>
-<li><p><strong>Airflow Data Ingestion and Feedback DAGs</strong>: Monitoring for completeness and errors.</p></li>
-<li><p><strong>Open AI Integration</strong>: Ensuring the availability and response quality of Open AI services.</p></li>
+<li><p><strong>Airflow Data Ingestion and Feedback DAGs</strong>: Monitors for completeness and errors.</p></li>
+<li><p><strong>Open AI Integration</strong>: Ensures the availability and response quality of Open AI services.</p></li>
 </ol>
 </section>
 </section>
 <section id="llm-model-monitoring">
 <h2>LLM Model Monitoring<a class="headerlink" href="#llm-model-monitoring" title="Permalink to this heading">#</a></h2>
-<p>Utilizing <strong>Langsmith</strong> or a similar AI monitoring platform for detailed insights into the LLM’s performance.</p>
+<p>Uses <strong>Langsmith</strong> or a similar AI monitoring platform for detailed insights into the LLM’s performance.</p>
 <p><img alt="langsmith dashboard" src="_images/langsmith1.png" />
 <img alt="langsmith latency" src="_images/latency.png" /></p>
 <section id="aspects-monitored">
 <h3>Aspects Monitored<a class="headerlink" href="#aspects-monitored" title="Permalink to this heading">#</a></h3>
 <ol class="arabic simple">
-<li><p><strong>Usage Statistics</strong>: Tracking query frequency, types, and usage patterns.</p></li>
-<li><p><strong>Response Quality</strong>: Evaluating accuracy, relevance, and helpfulness of LLM responses.</p></li>
-<li><p><strong>User Feedback</strong>: Collecting and analyzing user feedback for continuous improvement.</p></li>
-<li><p><strong>Volume Metrics</strong>: Monitoring trace counts, call counts, and success rates.</p></li>
-<li><p><strong>Token Analysis</strong>: Examining patterns in the model’s responses.</p></li>
-<li><p><strong>Error Rates</strong>: Keeping track of model error rates to maintain reliability.</p></li>
-<li><p><strong>Latency Metrics</strong>: Measuring response times for optimal user experience.</p></li>
+<li><p><strong>Usage Statistics</strong>: Tracks query frequency, types, and usage patterns.</p></li>
+<li><p><strong>Response Quality</strong>: Evaluates accuracy, relevance, and helpfulness of LLM responses.</p></li>
+<li><p><strong>User Feedback</strong>: Collects and analyzes user feedback for continuous improvement.</p></li>
+<li><p><strong>Volume Metrics</strong>: Monitors trace counts, call counts, and success rates.</p></li>
+<li><p><strong>Token Analysis</strong>: Examines patterns in the model’s responses.</p></li>
+<li><p><strong>Error Rates</strong>: Keeps track of model error rates to maintain reliability.</p></li>
+<li><p><strong>Latency Metrics</strong>: Measures response times for optimal user experience.</p></li>
 </ol>
 </section>
 </section>
 <section id="handling-failures">
 <h2>Handling Failures<a class="headerlink" href="#handling-failures" title="Permalink to this heading">#</a></h2>
-<p>Detailed procedures for handling failures are should be documented and followed. These procedures should include:</p>
+<p>Document and follow detailed procedures for handling failures. These procedures should include the following</p>
 <ol class="arabic simple">
-<li><p><strong>Alerts</strong>: Alerts should be sent to the designated Slack channel for immediate attention.</p></li>
-<li><p><strong>Error Logs</strong>: Error logs should be generated and stored for future reference.</p></li>
-<li><p><strong>Error Resolution Documentation</strong>: The error resolution process should be documented for future reference.</p></li>
-<li><p><strong>Rolling back Deployment</strong>: In case of a deployment failure, the previous version should be rolled back to ensure system availability.</p></li>
-<li><p><strong>Point of Contact for each Component</strong>: A point of contact should be designated for each component to ensure quick resolution of issues.</p></li>
-<li><p><strong>Update the user</strong>: The user should be notified of the issue and the expected resolution time.</p></li>
+<li><p><strong>Alerts</strong>: Send alerts to the designated Slack channel for immediate attention.</p></li>
+<li><p><strong>Error Logs</strong>: Generate and store error logs for future reference.</p></li>
+<li><p><strong>Error Resolution Documentation</strong>: Document the error resolution process for future reference.</p></li>
+<li><p><strong>Rolling back Deployment</strong>: In case of a deployment failure, roll back to the previous version to ensure system availability.</p></li>
+<li><p><strong>Point of Contact for each Component</strong>: Designate a point of contact for each component to ensure quick resolution of issues.</p></li>
+<li><p><strong>Update the user</strong>: Notify the user of the issue and the expected resolution time.</p></li>
 </ol>
 </section>
 <section id="conclusion">
 <h2>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this heading">#</a></h2>
-<p>This monitoring setup is crucial for maintaining the operational efficiency and reliability of Ask-Astro. It can be adapted and applied to similar systems to ensure consistent performance and quick issue resolution.</p>
+<p>This monitoring setup is crucial for maintaining the operational efficiency and reliability of Ask-Astro. You can adapt and apply it to similar systems to ensure consistent performance and quick issue resolution.</p>
 </section>
 </section>
 

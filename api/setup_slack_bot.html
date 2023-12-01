@@ -300,22 +300,27 @@ document.write(`
   <section id="create-an-ask-astro-slack-bot">
 <h1>Create an ask-astro Slack bot<a class="headerlink" href="#create-an-ask-astro-slack-bot" title="Permalink to this heading">#</a></h1>
 <ol class="arabic simple">
-<li><p>Go to <a class="reference external" href="https://api.slack.com/apps">https://api.slack.com/apps</a></p></li>
-<li><p>Click “Create New Apps” <img alt="1-create-new-app" src="../_images/1-create-new-app.png" /></p></li>
-<li><p>Click “From scratch” in the “Create an app” page</p></li>
-<li><p>Name the app and pick a Slack workspace <img alt="3-name-app" src="../_images/3-name-app.png" /></p></li>
-<li><p>After creating the Slack app, we’ll be redirected to the home page of this app <img alt="4-app-home-page" src="../_images/4-app-home-page.png" /></p></li>
-<li><p>Scroll down, and we’ll find the credentials for the ask-astro API backend <img alt="5-credentials" src="../_images/5-credentials.png" /></p>
+<li><p>Go to <code class="docutils literal notranslate"><span class="pre">https://api.slack.com/apps</span></code>.</p></li>
+<li><p>Click <strong>Create New Apps</strong>.
+<img alt="1-create-new-app" src="../_images/1-create-new-app.png" /></p></li>
+<li><p>On the <strong>Create an app</strong> page, click <strong>From scratch</strong>.</p></li>
+<li><p>Name the app and pick a Slack workspace
+<img alt="3-name-app" src="../_images/3-name-app.png" />
+After creating the Slack app, Slack redirects you to the home page of this app.
+<img alt="4-app-home-page" src="../_images/4-app-home-page.png" /></p></li>
+<li><p>Scroll down, to find the credentials for the ask-astro API backend
+<img alt="5-credentials" src="../_images/5-credentials.png" /></p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SLACK_CLIENT_ID</span></code>: Client ID</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">SLACK_CLIENT_SECRET</span></code>: Client Secret</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SLACK_SIGNING_SECRET</span></code>: Singing Secret</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SLACK_SIGNING_SECRET</span></code>: Signing Secret</p></li>
 </ul>
 </li>
-<li><p>Start the ask-astro API backend with a reachable host (e.g., with ngrok)</p></li>
-<li><p>Go to “OAuth &amp; Permissions” page (<code class="docutils literal notranslate"><span class="pre">https://api.slack.com/apps/&lt;API_ID&gt;/oauth?)</span></code></p></li>
-<li><p>Add  <code class="docutils literal notranslate"><span class="pre">https://&lt;ask-astro</span> <span class="pre">api</span> <span class="pre">backend</span> <span class="pre">host&gt;/slack/oauth_redirect</span></code> to “Redirect URLs” <img alt="6-redirect-url" src="../_images/6-redirect-url.png" /></p></li>
-<li><p>Scroll down and add the following scopes <img alt="7-scope" src="../_images/7-scope.png" /></p>
+<li><p>Start the ask-astro API backend by using a reachable host, such as <a class="reference external" href="https://ngrok.com/">ngrok</a>.</p></li>
+<li><p>Go to the <a class="reference external" href="https://api.slack.com/apps/%3CAPI_ID%3E/oauth?">OAuth &amp; Permissions</a> page.</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">https://&lt;ask-astro</span> <span class="pre">api</span> <span class="pre">backend</span> <span class="pre">host&gt;/slack/oauth_redirect</span></code> to <strong>Redirect URLs</strong>.
+<img alt="6-redirect-url" src="../_images/6-redirect-url.png" /></p></li>
+<li><p>Add the following scopes.</p>
 <ul class="simple">
 <li><p>commands</p></li>
 <li><p>app_mentions:read</p></li>
@@ -331,16 +336,19 @@ document.write(`
 <li><p>team:read</p></li>
 <li><p>im:history</p></li>
 <li><p>mpim:history</p></li>
-<li><p>files:read</p></li>
+<li><p>files:read
+<img alt="7-scope" src="../_images/7-scope.png" /></p></li>
 </ul>
 </li>
-<li><p>Go to “Event Subscriptions” page (<code class="docutils literal notranslate"><span class="pre">https://api.slack.com/apps/&lt;API_ID&gt;/event-subscriptions?</span></code>)</p></li>
-<li><p>Set “Request URL” as <code class="docutils literal notranslate"><span class="pre">https://&lt;ask-astro</span> <span class="pre">api</span> <span class="pre">backend</span> <span class="pre">host&gt;/slack/events</span></code> <img alt="8-event-subscription" src="../_images/8-event-subscription.png" /></p></li>
-<li><p>Go to “Interactivity &amp; Shortcuts” page.</p></li>
-<li><p>Set “Request URL” as <code class="docutils literal notranslate"><span class="pre">https://&lt;ask-astro</span> <span class="pre">api</span> <span class="pre">backend</span> <span class="pre">host&gt;/slack/events</span></code>.</p></li>
-<li><p>Go to <code class="docutils literal notranslate"><span class="pre">https://&lt;ask-astro</span> <span class="pre">api</span> <span class="pre">backend</span> <span class="pre">host&gt;/slack/install</span></code> and you’ll see <img alt="9-slack-install" src="../_images/9-slack-install.png" /></p></li>
-<li><p>The ask-astro bot should be ready to go in you Slack work space</p></li>
+<li><p>Go to <strong>Event Subscriptions</strong> page for your App. (<code class="docutils literal notranslate"><span class="pre">https://api.slack.com/apps/&lt;API_ID&gt;/event-subscriptions?</span></code>)</p></li>
+<li><p>Set <strong>Request URL</strong> to <code class="docutils literal notranslate"><span class="pre">https://&lt;ask-astro</span> <span class="pre">api</span> <span class="pre">backend</span> <span class="pre">host&gt;/slack/events</span></code>.
+<img alt="8-event-subscription" src="../_images/8-event-subscription.png" /></p></li>
+<li><p>Go to the <strong>Interactivity &amp; Shortcuts</strong> page.</p></li>
+<li><p>Set <strong>Request URL</strong> to <code class="docutils literal notranslate"><span class="pre">https://&lt;ask-astro</span> <span class="pre">api</span> <span class="pre">backend</span> <span class="pre">host&gt;/slack/events</span></code>.</p></li>
+<li><p>Go to <code class="docutils literal notranslate"><span class="pre">https://&lt;ask-astro</span> <span class="pre">api</span> <span class="pre">backend</span> <span class="pre">host&gt;/slack/install</span></code> and click <strong>Add to Slack</strong>.
+<img alt="9-slack-install" src="../_images/9-slack-install.png" /></p></li>
 </ol>
+<p>The ask-astro bot is now available to use in your Slack work space!</p>
 </section>
 
 

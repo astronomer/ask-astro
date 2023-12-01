@@ -310,75 +310,72 @@ document.write(`
                   
   <section id="backend-api-ci-cd">
 <h1>Backend API CI/CD<a class="headerlink" href="#backend-api-ci-cd" title="Permalink to this heading">#</a></h1>
-<p>Currently, we use <a class="reference external" href="https://cloud.google.com/run/docs/overview/what-is-cloud-run">Google cloud run</a> to run API server,
-and we deploy the backend API with <a class="reference external" href="https://cloud.google.com/build/docs/overview">cloud build</a>. You can find the cloud
-build configuration <a class="reference download internal" download="" href="../_downloads/c8fb9c31213ade50030e0197ee9f4c4b/cloudbuild.yaml"><span class="xref download myst">/api/cloudbuild.yaml</span></a>.</p>
+<p>Currently, Ask Astro uses <a class="reference external" href="https://cloud.google.com/run/docs/overview/what-is-cloud-run">Google cloud run</a> to run the API server,
+and deploys the backend API with <a class="reference external" href="https://cloud.google.com/build/docs/overview">cloud build</a>. You can find the cloud
+build configuration in <a class="reference download internal" download="" href="../_downloads/c8fb9c31213ade50030e0197ee9f4c4b/cloudbuild.yaml"><span class="xref download myst"><code class="docutils literal notranslate"><span class="pre">/api/cloudbuild.yaml</span></code></span></a>.</p>
 <section id="create-cloud-run-service">
 <h2>Create cloud run service<a class="headerlink" href="#create-cloud-run-service" title="Permalink to this heading">#</a></h2>
+<p>These steps create a cloud service and template for your cloud build on the Google Cloud Platform.</p>
 <ol class="arabic simple">
-<li><p>Go to https://console.cloud.google.com/ and search for “cloud run” service.</p></li>
-<li><p>On cloud run page click on “CREATE SERVICE”</p></li>
+<li><p>Go to <code class="docutils literal notranslate"><span class="pre">https://console.cloud.google.com/</span></code>, and search for the <strong>Cloud Run</strong> service.</p></li>
+<li><p>On the <strong>Cloud Run</strong> page, click on <strong>CREATE SERVICE</strong>.</p></li>
 </ol>
 <p><img alt="create cloud run service" src="../_images/cloud_run_home.png" /></p>
 <ol class="arabic simple" start="3">
-<li><p>Select “continuously deploy new revision from source repository” and “Set up with cloud build”</p></li>
-<li><p>Select Repository provider as “GitHub” and click on next</p></li>
+<li><p>Select <strong>Continuously deploy new revision from source repository</strong> and <strong>Set up with cloud build</strong></p></li>
+<li><p>Select Repository provider as <strong>GitHub</strong> and click <strong>Next</strong>.</p></li>
 </ol>
 <p><img alt="create cloud build config" src="../_images/cloud_run_ci_deploy.png" /></p>
 <ol class="arabic simple" start="5">
-<li><p>Set up build configuration</p>
-<ol class="arabic simple">
-<li><p>Branch name: main</p></li>
+<li><p>Set up the build configuration:</p>
+<ul class="simple">
+<li><p>Branch name: <code class="docutils literal notranslate"><span class="pre">main</span></code></p></li>
 <li><p>Build type: Python via buildpacks</p></li>
-<li><p>build context directory: /api</p></li>
-</ol>
+<li><p>Build context directory: <code class="docutils literal notranslate"><span class="pre">/api</span></code></p></li>
+</ul>
 </li>
 </ol>
 <p><img alt="create cloud build config" src="../_images/cloud_run_build_config.png" /></p>
 <ol class="arabic simple" start="6">
-<li><p>Add service name, region, CPU allocation and pricing, autoscaling, Ingress</p></li>
+<li><p>Add <strong>Service name</strong>, <strong>Region</strong>, <strong>CPU allocation and pricing</strong>, <strong>Autoscaling</strong>, and <strong>Ingress</strong>.</p></li>
 </ol>
 <p><img alt="create cloud build config" src="../_images/cloud_run_config1.png" /></p>
 <ol class="arabic simple" start="7">
-<li><p>Allow unauthenticated invocation and click on create button</p></li>
+<li><p>Allow <strong>Unauthenticated invocation</strong> and click on <strong>Create</strong>.</p></li>
 </ol>
 <p><img alt="create cloud build config" src="../_images/cloud_run_create.png" /></p>
 <ol class="arabic simple" start="8">
-<li><p>Add the Env variable that require to run backend API</p>
+<li><p>Add the required Environment variables to run the backend API.</p>
 <ol class="arabic simple">
-<li><p>Once you create the service visit the created service page</p></li>
-<li><p>Click on “EDIT AND DEPLOY NEW REVISION”</p></li>
-<li><p>Add you Env variable and click on Deploy</p></li>
+<li><p>After you create the service, visit the <strong>Created service</strong> page</p></li>
+<li><p>Click on <strong>EDIT AND DEPLOY NEW REVISION</strong></p></li>
+<li><p>Add you Environment variable and click <strong>Deploy</strong></p></li>
 </ol>
 </li>
 </ol>
 <p><img alt="cloud run edit" src="../_images/cloud_run_edit.png" /></p>
 <p><img alt="create cloud build config" src="../_images/cloud_run_add_env.png" /></p>
-<p>Above steps will create a cloud service and also template for cloud build</p>
 </section>
 <section id="update-cloud-build-configuration">
 <h2>Update cloud build configuration<a class="headerlink" href="#update-cloud-build-configuration" title="Permalink to this heading">#</a></h2>
 <ol class="arabic simple">
-<li><p>Go to https://console.cloud.google.com/ and search for “cloud build” service.</p></li>
+<li><p>Go to <code class="docutils literal notranslate"><span class="pre">https://console.cloud.google.com/</span></code> and search for the <strong>cloud build</strong> service.</p></li>
 </ol>
 <p><img alt="cloud build trigger" src="../_images/cloud_build_trigger.png" /></p>
 <ol class="arabic simple" start="2">
-<li><p>Click on “Triggers”</p></li>
-<li><p>The previous steps will have already created a cloud trigger template for you which you can edit</p></li>
-<li><p>Click on the cloud build trigger created in previous step update the</p>
+<li><p>Click on <strong>Triggers</strong>. When you created a <strong>Cloud Run Service</strong>, it also made a <strong>Cloud Trigger Template</strong> that you can edit.</p></li>
+<li><p>Click on the cloud build trigger template and update the following information:</p>
 <ol class="arabic simple">
-<li><p>Name, Description, Tag, Event as require</p></li>
-<li><p>Select source and branch</p></li>
-<li><p>Select “Cloud Build configuration file” in Configuration and Cloud Build configuration file location as “api/cloudbuild.yaml”</p></li>
-<li><p>Keep advance setting same and save it.</p></li>
+<li><p><strong>Name</strong>, <strong>Description</strong>, <strong>Tag</strong>, and <strong>Event</strong>
+<img alt="cloud build config1" src="../_images/cloud_build_config1.png" /></p></li>
+<li><p>Select your <strong>Source</strong> and <strong>Branch</strong>.
+<img alt="cloud build config2" src="../_images/cloud_build_config2.png" /></p></li>
+<li><p>In Configuration, select <strong>Cloud Build configuration file</strong> and define the Cloud Build configuration file location as <code class="docutils literal notranslate"><span class="pre">api/cloudbuild.yaml</span></code>.</p></li>
+<li><p>Don’t make any changes to the advance settings and click <strong>Save</strong>.
+<img alt="cloud build config3" src="../_images/cloud_build_config3.png" /></p></li>
 </ol>
 </li>
-</ol>
-<p><img alt="cloud build config1" src="../_images/cloud_build_config1.png" /></p>
-<p><img alt="cloud build config2" src="../_images/cloud_build_config2.png" /></p>
-<p><img alt="cloud build config3" src="../_images/cloud_build_config3.png" /></p>
-<ol class="arabic simple" start="5">
-<li><p>In setting enable cloud build and cloud run</p></li>
+<li><p>In settings, enable <strong>Cloud build</strong> and <strong>Cloud run</strong>.</p></li>
 </ol>
 <p><img alt="cloud build setting" src="../_images/cloud_build_setting.png" /></p>
 </section>
