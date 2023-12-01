@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the monitoring and observability practices implemented for Ask-Astro. These practices are designed to ensure the system's reliability, performance, and quick detection and resolution of issues. They can be adapted for similar systems requiring robust monitoring solutions.
+This document outlines the monitoring and observability practices implemented for Ask-Astro. These practices ensure the system's reliability and performance, as well as quick detection and resolution of issues. You can adapted them for similar systems requiring robust monitoring solutions.
 
 ## Infrastructure Monitoring
 
@@ -15,7 +15,7 @@ This document outlines the monitoring and observability practices implemented fo
 
 ### Alerting
 
-- **Slack Integration**: In case of any failures, alerts are sent to the designated Slack channel as DAGs run every 5 minutes. Regular status updates are also posted daily.
+- **Slack Integration**: In case of any failures, sends alerts to the designated Slack channel as DAGs run every 5 minutes. Regular status updates are also posted daily.
 
 ![slack alerts](./_static/images/monitoring/slack_alerts.png)
 
@@ -24,52 +24,52 @@ This document outlines the monitoring and observability practices implemented fo
 1. **APIs**: Back-end APIs are tested in sequence. Failure of any test results in an immediate alert.
   ![APIs swagger UI](./_static/images/monitoring/api_swagger.png)
 
-2. **Google Firebase**: Monitoring the Firestore app for its existence and health.
+2. **Google Firebase**: Monitors the Firestore app for its existence and health.
 
-3. **Weaviate Database**: Ensuring the presence of necessary classes and checking embedding counts.
+3. **Weaviate Database**: Ensures the presence of necessary classes and checks embedding counts.
 
 4. **UI Monitoring**: Regular checks of the UI for a 200 response status.
    - UI Link: [https://ask.astronomer.io/](https://ask.astronomer.io/)
 
-5. **Airflow Data Ingestion and Feedback DAGs**: Monitoring for completeness and errors.
+5. **Airflow Data Ingestion and Feedback DAGs**: Monitors for completeness and errors.
 
-6. **Open AI Integration**: Ensuring the availability and response quality of Open AI services.
+6. **Open AI Integration**: Ensures the availability and response quality of Open AI services.
 
 ## LLM Model Monitoring
 
-Utilizing **Langsmith** or a similar AI monitoring platform for detailed insights into the LLM's performance.
+Uses **Langsmith** or a similar AI monitoring platform for detailed insights into the LLM's performance.
 
 ![langsmith dashboard](./_static/images/monitoring/langsmith1.png)
 ![langsmith latency](./_static/images/monitoring/latency.png)
 
 ### Aspects Monitored
 
-1. **Usage Statistics**: Tracking query frequency, types, and usage patterns.
+1. **Usage Statistics**: Tracks query frequency, types, and usage patterns.
 
-2. **Response Quality**: Evaluating accuracy, relevance, and helpfulness of LLM responses.
+2. **Response Quality**: Evaluates accuracy, relevance, and helpfulness of LLM responses.
 
-3. **User Feedback**: Collecting and analyzing user feedback for continuous improvement.
+3. **User Feedback**: Collects and analyzes user feedback for continuous improvement.
 
-4. **Volume Metrics**: Monitoring trace counts, call counts, and success rates.
+4. **Volume Metrics**: Monitors trace counts, call counts, and success rates.
 
-5. **Token Analysis**: Examining patterns in the model's responses.
+5. **Token Analysis**: Examines patterns in the model's responses.
 
-6. **Error Rates**: Keeping track of model error rates to maintain reliability.
+6. **Error Rates**: Keeps track of model error rates to maintain reliability.
 
-7. **Latency Metrics**: Measuring response times for optimal user experience.
+7. **Latency Metrics**: Measures response times for optimal user experience.
 
 
 ## Handling Failures
 
-Detailed procedures for handling failures are should be documented and followed. These procedures should include:
-1. **Alerts**: Alerts should be sent to the designated Slack channel for immediate attention.
-2. **Error Logs**: Error logs should be generated and stored for future reference.
-3. **Error Resolution Documentation**: The error resolution process should be documented for future reference.
-4. **Rolling back Deployment**: In case of a deployment failure, the previous version should be rolled back to ensure system availability.
-5. **Point of Contact for each Component**: A point of contact should be designated for each component to ensure quick resolution of issues.
-6. **Update the user**: The user should be notified of the issue and the expected resolution time.
+Document and follow detailed procedures for handling failures. These procedures should include the following
+1. **Alerts**: Send alerts to the designated Slack channel for immediate attention.
+2. **Error Logs**: Generate and store error logs for future reference.
+3. **Error Resolution Documentation**: Document the error resolution process for future reference.
+4. **Rolling back Deployment**: In case of a deployment failure, roll back to the previous version to ensure system availability.
+5. **Point of Contact for each Component**: Designate a point of contact for each component to ensure quick resolution of issues.
+6. **Update the user**: Notify the user of the issue and the expected resolution time.
 
 
 ## Conclusion
 
-This monitoring setup is crucial for maintaining the operational efficiency and reliability of Ask-Astro. It can be adapted and applied to similar systems to ensure consistent performance and quick issue resolution.
+This monitoring setup is crucial for maintaining the operational efficiency and reliability of Ask-Astro. You can adapt and apply it to similar systems to ensure consistent performance and quick issue resolution.
