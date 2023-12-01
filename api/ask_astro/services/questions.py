@@ -5,6 +5,8 @@ import asyncio
 import time
 from logging import getLogger
 
+from tenacity import retry, stop_after_attempt, wait_exponential
+
 from ask_astro.clients.firestore import firestore_client
 from ask_astro.config import FirestoreCollections
 from ask_astro.models.request import AskAstroRequest, Source
@@ -25,6 +27,7 @@ async def _update_firestore_request(request: AskAstroRequest) -> None:
     )
 
 
+@retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, max=10))
 async def answer_question(request: AskAstroRequest) -> None:
     """
     Performs the actual question answering logic and updates the request object.
