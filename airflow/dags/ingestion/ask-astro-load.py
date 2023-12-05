@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 from include.tasks import split
-from include.tasks.extract import airflow_docs, blogs, github, registry, stack_overflow
+from include.tasks.extract import airflow_docs, astro_cli_docs, blogs, github, registry, stack_overflow
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
@@ -193,6 +193,17 @@ def ask_astro_load_bulk():
         return [df]
 
     @task(trigger_rule="none_failed")
+    def extract_astro_cli_docs():
+        astro_cli_parquet_path = "include/data/astronomer/docs/astro-cli.parquet"
+        try:
+            df = pd.read_parquet(astro_cli_parquet_path)
+        except Exception:
+            df = astro_cli_docs.extract_astro_cli_docs()[0]
+            df.to_parquet(astro_cli_parquet_path)
+
+        return [df]
+
+    @task(trigger_rule="none_failed")
     def extract_stack_overflow(tag: str, stackoverflow_cutoff_date: str = stackoverflow_cutoff_date):
         parquet_file = "include/data/stack_overflow/base.parquet"
 
@@ -277,6 +288,7 @@ def ask_astro_load_bulk():
     registry_dags_docs = extract_astro_registry_dags()
     code_samples = extract_github_python.expand(source=code_samples_sources)
     _airflow_docs = extract_airflow_docs()
+    _astro_cli_docs = extract_astro_cli_docs()
 
     _get_schema = get_schema_and_process(schema_file="include/data/schema.json")
     _check_schema = check_schema(class_objects=_get_schema)
@@ -291,7 +303,7 @@ def ask_astro_load_bulk():
         registry_cells_docs,
     ]
 
-    html_tasks = [_airflow_docs]
+    html_tasks = [_airflow_docs, _astro_cli_docs]
 
     python_code_tasks = [registry_dags_docs, code_samples]
 

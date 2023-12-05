@@ -27,7 +27,7 @@ def extract_astro_cli_docs() -> list[pd.DataFrame]:
     df["content"] = df["content"].apply(lambda x: re.sub("¶", "", x))
 
     df["sha"] = df["content"].apply(generate_uuid5)
-    df["docSource"] = "apache/airflow/docs"
+    df["docSource"] = "astronomer/docs/astro-cli"
     df.reset_index(drop=True, inplace=True)
 
     # column order matters for uuid generation
