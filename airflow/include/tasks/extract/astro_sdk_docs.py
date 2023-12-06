@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+
 import pandas as pd
 
 from include.tasks.extract.utils.html_url_extractor import extract_internal_url, url_to_df

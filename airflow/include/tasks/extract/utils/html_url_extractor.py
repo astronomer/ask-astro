@@ -35,10 +35,10 @@ def exclude_path(url, exclude_docs=None):
 
 def get_all_links(url, exclude_docs=None):
     """
-   Extract all valid and internal links from the given URL.
+    Extract all valid and internal links from the given URL.
 
-   param url (str): The URL to extract links from.
-   param exclude_docs (list): List of strings to exclude from the URL path.
+    param url (str): The URL to extract links from.
+    param exclude_docs (list): List of strings to exclude from the URL path.
     """
     if exclude_docs is None:
         exclude_docs = []
