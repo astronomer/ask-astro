@@ -10,5 +10,5 @@ def extract_provider_docs() -> list[pd.DataFrame]:
     base_url = "https://astronomer-providers.readthedocs.io/en/stable/"
 
     urls = extract_internal_url(base_url, exclude_docs)
-    df = url_to_df(urls)
+    df = url_to_df(urls, "astronomer-providers")
     return [df]

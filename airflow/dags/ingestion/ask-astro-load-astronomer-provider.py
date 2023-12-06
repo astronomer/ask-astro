@@ -48,7 +48,7 @@ def ask_astro_load_astronomer_providers():
             batch_params={"batch_size": 1000},
             verbose=True,
         )
-        .expand(dfs=get_provider_content())
+        .expand(dfs=[get_provider_content()])
     )
 
 

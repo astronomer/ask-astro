@@ -42,7 +42,7 @@ def ask_astro_load_astro_sdk():
             batch_params={"batch_size": 1000},
             verbose=True,
         )
-        .expand(dfs=get_astro_sdk_content())
+        .expand(dfs=[get_astro_sdk_content()])
     )
 
 

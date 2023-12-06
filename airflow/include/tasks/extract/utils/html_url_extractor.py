@@ -35,24 +35,23 @@ def exclude_path(url, exclude_docs=None):
 
 def get_all_links(url, exclude_docs=None):
     """
-    Extract all valid and internal links from the given URL.
+   Extract all valid and internal links from the given URL.
 
-    param url (str): The URL to extract links from.
-    param exclude_docs (list): List of strings to exclude from the URL path.
+   param url (str): The URL to extract links from.
+   param exclude_docs (list): List of strings to exclude from the URL path.
     """
     if exclude_docs is None:
         exclude_docs = []
-
     urls = set()
     domain_name = urlparse(url).netloc
-
-    with requests.Session() as session:
-        response = session.get(url)
-        soup = BeautifulSoup(response.content, "html.parser")
-
-    for a_tag in soup.find_all("a"):
-        href = a_tag.attrs.get("href", "")
+    soup = BeautifulSoup(requests.get(url).content, "html.parser")
+    for a_tag in soup.findAll("a"):
+        href = a_tag.attrs.get("href")
+        if href == "" or href is None:
+            continue
         href = urljoin(url, href)
+        parsed_href = urlparse(href)
+        href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
         if (
             not is_valid_url(href)
             or href in internal_urls
@@ -60,7 +59,6 @@ def get_all_links(url, exclude_docs=None):
             or exclude_path(href, exclude_docs)
         ):
             continue
-
         urls.add(href)
         print(href)
         internal_urls.add(href)
@@ -86,7 +84,7 @@ def extract_internal_url(url, exclude_docs=None):
     return internal_urls
 
 
-def clean_content(text_content: str) -> str:
+def clean_content(text_content: str) -> str | None:
     """
     Clean the HTML content by removing script and style tags, collapsing whitespaces, and extracting text.
 
@@ -94,6 +92,8 @@ def clean_content(text_content: str) -> str:
     """
     soup = BeautifulSoup(text_content, "html.parser").find("body")
 
+    if soup is None:
+        return
     # Remove script and style tags
     for script_or_style in soup(["script", "style"]):
         script_or_style.extract()
@@ -114,7 +114,7 @@ def fetch_url_content(url):
         return None
 
 
-def process_url(url):
+def process_url(url, doc_source=""):
     """
     Process a URL by fetching its content, cleaning it, and generating a unique identifier (SHA) based on the cleaned content.
 
@@ -124,18 +124,18 @@ def process_url(url):
     if content is not None:
         cleaned_content = clean_content(content)
         sha = generate_uuid5(cleaned_content)
-        return {"docSource": "", "sha": sha, "content": cleaned_content, "docLink": url}
+        return {"docSource": doc_source, "sha": sha, "content": cleaned_content, "docLink": url}
     else:
         return None
 
 
-def url_to_df(urls):
+def url_to_df(urls, doc_source=""):
     """
     Create a DataFrame from a list of URLs by processing each URL and organizing the results.
 
     param urls (list): A list of URLs to be processed.
     """
-    df_data = [process_url(url) for url in urls]
+    df_data = [process_url(url, doc_source) for url in urls]
     df_data = [entry for entry in df_data if entry is not None]  # Remove failed entries
     df = pd.DataFrame(df_data)
     df = df[["docSource", "sha", "content", "docLink"]]  # Reorder columns if needed
