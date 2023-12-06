@@ -12,7 +12,7 @@ from include.tasks.extract.utils.stack_overflow_helpers import (
 
 
 def extract_stack_overflow(
-    tag: str, stackoverflow_cutoff_date: str, *, max_pagesize: int = 100, max_pages: int = 10000000
+    tag: str, stackoverflow_cutoff_date: str, *, page_size: int = 100, max_pages: int = 10000000
 ) -> pd.DataFrame:
     """
     This task generates stack overflow documents as a single markdown document per question with associated comments
@@ -35,7 +35,7 @@ def extract_stack_overflow(
     questions = fetch_questions_through_stack_api(
         tag=tag,
         stackoverflow_cutoff_date=stackoverflow_cutoff_date,
-        max_pagesize=max_pagesize,
+        page_size=page_size,
         max_pages=max_pages,
     )
     posts_df = process_stack_api_posts(questions)

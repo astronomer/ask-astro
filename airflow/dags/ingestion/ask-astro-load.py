@@ -205,18 +205,11 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_stack_overflow(tag: str, stackoverflow_cutoff_date: str = stackoverflow_cutoff_date):
-        parquet_file = "include/data/stack_overflow/base.parquet"
-
-        if os.path.isfile(parquet_file):
-            if os.access(parquet_file, os.R_OK):
-                df = pd.read_parquet(parquet_file)
-            else:
-                raise Exception("Parquet file exists locally but is not readable.")
-        else:
-            df = stack_overflow.extract_stack_overflow_archive(
-                tag=tag, stackoverflow_cutoff_date=stackoverflow_cutoff_date
-            )
-            df.to_parquet(parquet_file)
+        try:
+            df = pd.read_parquet("include/data/stack_overflow/base.parquet")
+        except Exception:
+            df = stack_overflow.extract_stack_overflow(tag=tag, stackoverflow_cutoff_date=stackoverflow_cutoff_date)
+            df.to_parquet("include/data/stack_overflow/base.parquet")
 
         return df
 

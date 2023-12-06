@@ -26,24 +26,58 @@ comment_template = "\n{user} on {date} [Score: {score}]: {body}\n"
 
 
 def fetch_questions_through_stack_api(
-    tag: str, stackoverflow_cutoff_date: str, *, max_pagesize: int = 100, max_pages: int = 10000000
+    tag: str, stackoverflow_cutoff_date: str, *, page_size: int = 100, max_pages: int = 10000000
 ) -> dict:
-    stack_api = StackAPI(name="stackoverflow", max_pagesize=max_pagesize, max_pages=max_pages)
     fromdate = datetime.strptime(stackoverflow_cutoff_date, "%Y-%m-%d")
+    first_question_id, first_question_creation_date = fetch_first_question_after_fromdate(tag=tag, fromdate=fromdate)
+
+    stack_api = StackAPI(name="stackoverflow", page_size=page_size, max_pages=max_pages)
 
     # https://api.stackexchange.com/docs/read-filter#filters=!-(5KXGCFLp3w9.-7QsAKFqaf5yFPl**9q*_hsHzYGjJGQ6BxnCMvDYijFE&filter=default&run=true
     filter_ = "!-(5KXGCFLp3w9.-7QsAKFqaf5yFPl**9q*_hsHzYGjJGQ6BxnCMvDYijFE"
 
-    questions_resp = stack_api.fetch(endpoint="questions", tagged=tag, fromdate=fromdate, filter=filter_)
+    questions_resp = stack_api.fetch(
+        endpoint="questions",
+        filter=filter_,
+        tagged=tag,
+        fromdate=fromdate,
+        order="desc",
+        sort="creation",
+    )
     questions = questions_resp.pop("items")
-
-    # TODO: check if we need to paginate
-    len(questions)
-
-    # TODO: add backoff logic.  For now just fail the task if we can't fetch all results due to api rate limits.
-    assert not questions_resp["has_more"]
+    while questions_resp["quota_remaining"] > 0 and questions[-1]["question_id"] != first_question_id:
+        todate = questions[-1]["creation_date"]
+        questions_resp = stack_api.fetch(
+            endpoint="questions",
+            filter=filter_,
+            tagged=tag,
+            fromdate=fromdate,
+            todate=todate,
+            order="desc",
+            sort="creation",
+        )
+        questions.extend(questions_resp.pop("items"))
 
     return questions
+
+
+def fetch_first_question_after_fromdate(*, tag: str, fromdate: datetime.date) -> tuple[int, int]:
+    """Get the first question id after fromdate"""
+    stack_api = StackAPI(name="stackoverflow")
+    filter_ = "!*1PUVE3_-UtLf0rvavrile9fyVsn*T)jdVaO6_P)K"
+    questions_resp = stack_api.fetch(
+        endpoint="questions",
+        page=1,
+        pagesize=1,
+        order="asc",
+        sort="creation",
+        fromdate=fromdate,
+        tagged=tag,
+        filter=filter_,
+    )
+    first_question = questions_resp["items"][0]
+
+    return first_question["question_id"], first_question["creation_date"]
 
 
 def process_stack_api_posts(questions: dict) -> pd.DataFrame:
@@ -60,28 +94,7 @@ def process_stack_api_posts(questions: dict) -> pd.DataFrame:
     return posts_df
 
 
-def process_stack_api_comments(comments: list) -> str:
-    """
-    This helper function processes a list of slack comments for a question or answer
-
-    param comments: a list of stack overflow comments from the api
-    type comments: list
-
-    """
-    return "".join(
-        [
-            comment_template.format(
-                user=comment["owner"]["user_id"],
-                date=datetime.fromtimestamp(comment["creation_date"]).strftime("%Y-%m-%d"),
-                score=comment["score"],
-                body=comment["body_markdown"],
-            )
-            for comment in comments
-        ]
-    )
-
-
-def process_stack_api_questions(posts_df: dict, tag: str) -> pd.DataFrame:
+def process_stack_api_questions(posts_df: pd.DataFrame, tag: str) -> pd.DataFrame:
     """
     This helper function processes a dataframe of slack posts into a set format.
 
@@ -97,7 +110,7 @@ def process_stack_api_questions(posts_df: dict, tag: str) -> pd.DataFrame:
     questions_df["question_text"] = questions_df.apply(
         lambda x: question_template.format(
             title=x.title,
-            user=x.owner["user_id"],
+            user=x.owner.get("user_id", ""),
             date=datetime.fromtimestamp(x.creation_date).strftime("%Y-%m-%d"),
             score=x.score,
             body=x.body_markdown,
@@ -109,6 +122,27 @@ def process_stack_api_questions(posts_df: dict, tag: str) -> pd.DataFrame:
     questions_df["docSource"] = f"stackoverflow {tag}"
     questions_df.rename({"link": "docLink", "question_text": "content"}, axis=1, inplace=True)
     return questions_df
+
+
+def process_stack_api_comments(comments: list) -> str:
+    """
+    This helper function processes a list of slack comments for a question or answer
+
+    param comments: a list of stack overflow comments from the api
+    type comments: list
+
+    """
+    return "".join(
+        [
+            comment_template.format(
+                user=comment["owner"].get("user_id", ""),
+                date=datetime.fromtimestamp(comment["creation_date"]).strftime("%Y-%m-%d"),
+                score=comment["score"],
+                body=comment["body_markdown"],
+            )
+            for comment in comments
+        ]
+    )
 
 
 def process_stack_api_answers(posts_df: pd.DataFrame) -> pd.DataFrame:
@@ -131,7 +165,7 @@ def process_stack_api_answers(posts_df: pd.DataFrame) -> pd.DataFrame:
         lambda x: answer_template.format(
             score=x.answers["score"],
             date=datetime.fromtimestamp(x.answers["creation_date"]).strftime("%Y-%m-%d"),
-            user=x.answers["owner"]["user_id"],
+            user=x.answers["owner"].get("user_id", ""),
             body=x.answers["body_markdown"],
             answer_comments=x.answer_comments,
         ),
