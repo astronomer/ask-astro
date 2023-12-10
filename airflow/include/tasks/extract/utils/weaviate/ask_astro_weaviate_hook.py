@@ -3,8 +3,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import os
 import pandas as pd
-import requests
 from weaviate.exceptions import UnexpectedStatusCodeException
 from weaviate.util import generate_uuid5
 
@@ -451,17 +451,17 @@ class AskAstroWeaviateHook(WeaviateHook):
                     self.logger.error("Errors encountered during rollback.")
                     self.logger.error("\n".join(rollback_errors))
                     raise AirflowException("Errors encountered during rollback.")
-        else:
-            removal_errors = self.handle_successful_upsert(
-                objects_to_remove={item for sublist in objects_to_upsert.objects_to_delete for item in sublist},
-                class_name=class_name,
-                verbose=verbose,
-                tenant=tenant,
-            )
-            if removal_errors:
-                self.logger.error("Errors encountered during removal.")
-                self.logger.error("\n".join(removal_errors))
-                raise AirflowException("Errors encountered during removal.")
+            else:
+                removal_errors = self.handle_successful_upsert(
+                    objects_to_remove={item for sublist in objects_to_upsert.objects_to_delete for item in sublist},
+                    class_name=class_name,
+                    verbose=verbose,
+                    tenant=tenant,
+                )
+                if removal_errors:
+                    self.logger.error("Errors encountered during removal.")
+                    self.logger.error("\n".join(removal_errors))
+                    raise AirflowException("Errors encountered during removal.")
 
         if self.batch_errors:
             self.logger.error("Errors encountered during ingest.")
@@ -518,18 +518,17 @@ class AskAstroWeaviateHook(WeaviateHook):
 
         seed_filename = f"include/data/{seed_baseline_url.split('/')[-1]}"
 
-        try:
-            df = pd.read_parquet(seed_filename)
-
-        except Exception:
-            with open(seed_filename, "wb") as fh:
-                response = requests.get(seed_baseline_url, stream=True)
-                fh.writelines(response.iter_content(1024))
-
-            df = pd.read_parquet(seed_filename)
+        if os.path.isfile(seed_filename):
+            if os.access(seed_filename, os.R_OK):
+                df = pd.read_parquet(seed_filename)
+            else: 
+                raise AirflowException("Baseline file exists locally but is not readable.")
+        else:
+            df = pd.read_parquet(seed_baseline_url)
+            df.to_parquet(seed_filename)
 
         return self.ingest_data(
-            dfs=df,
+            dfs=[df],
             class_name=class_name,
             existing=existing,
             doc_key=doc_key,
