@@ -149,13 +149,12 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_github_markdown(source: dict):
-
         parquet_file = f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet"
 
         if os.path.isfile(parquet_file):
             if os.access(parquet_file, os.R_OK):
                 df = pd.read_parquet(parquet_file)
-            else: 
+            else:
                 raise Exception("Parquet file exists locally but is not readable.")
         else:
             df = github.extract_github_markdown(source, github_conn_id=_GITHUB_CONN_ID)
@@ -165,13 +164,12 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_github_python(source: dict):
-
         parquet_file = f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet"
 
         if os.path.isfile(parquet_file):
             if os.access(parquet_file, os.R_OK):
                 df = pd.read_parquet(parquet_file)
-            else: 
+            else:
                 raise Exception("Parquet file exists locally but is not readable.")
         else:
             df = github.extract_github_python(source, _GITHUB_CONN_ID)
@@ -181,13 +179,12 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_airflow_docs():
-
         parquet_file = "include/data/apache/airflow/docs.parquet"
 
         if os.path.isfile(parquet_file):
             if os.access(parquet_file, os.R_OK):
                 df = pd.read_parquet(parquet_file)
-            else: 
+            else:
                 raise Exception("Parquet file exists locally but is not readable.")
         else:
             df = airflow_docs.extract_airflow_docs(docs_base_url=airflow_docs_base_url)[0]
@@ -197,13 +194,12 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_stack_overflow(tag: str, stackoverflow_cutoff_date: str = stackoverflow_cutoff_date):
-
         parquet_file = "include/data/stack_overflow/base.parquet"
 
         if os.path.isfile(parquet_file):
             if os.access(parquet_file, os.R_OK):
                 df = pd.read_parquet(parquet_file)
-            else: 
+            else:
                 raise Exception("Parquet file exists locally but is not readable.")
         else:
             df = stack_overflow.extract_stack_overflow_archive(
@@ -215,13 +211,12 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_github_issues(repo_base: str):
-
         parquet_file = f"include/data/{repo_base}/issues.parquet"
 
         if os.path.isfile(parquet_file):
             if os.access(parquet_file, os.R_OK):
                 df = pd.read_parquet(parquet_file)
-            else: 
+            else:
                 raise Exception("Parquet file exists locally but is not readable.")
         else:
             df = github.extract_github_issues(repo_base, _GITHUB_CONN_ID)
@@ -231,13 +226,12 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_registry_cell_types():
-
         parquet_file = "include/data/astronomer/registry/registry_cells.parquet"
 
         if os.path.isfile(parquet_file):
             if os.access(parquet_file, os.R_OK):
                 df = pd.read_parquet(parquet_file)
-            else: 
+            else:
                 raise Exception("Parquet file exists locally but is not readable.")
         else:
             df = registry.extract_astro_registry_cell_types()[0]
@@ -247,13 +241,12 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_registry_dags():
-
         parquet_file = "include/data/astronomer/registry/registry_dags.parquet"
 
         if os.path.isfile(parquet_file):
             if os.access(parquet_file, os.R_OK):
                 df = pd.read_parquet(parquet_file)
-            else: 
+            else:
                 raise Exception("Parquet file exists locally but is not readable.")
         else:
             df = registry.extract_astro_registry_dags()[0]
@@ -263,13 +256,12 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_blogs():
-
         parquet_file = "include/data/astronomer/blogs/astro_blogs.parquet"
 
         if os.path.isfile(parquet_file):
             if os.access(parquet_file, os.R_OK):
                 df = pd.read_parquet(parquet_file)
-            else: 
+            else:
                 raise Exception("Parquet file exists locally but is not readable.")
         else:
             df = blogs.extract_astro_blogs(blog_cutoff_date)[0]
