@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any
 
-import os
 import pandas as pd
 from weaviate.exceptions import UnexpectedStatusCodeException
 from weaviate.util import generate_uuid5
@@ -521,7 +521,7 @@ class AskAstroWeaviateHook(WeaviateHook):
         if os.path.isfile(seed_filename):
             if os.access(seed_filename, os.R_OK):
                 df = pd.read_parquet(seed_filename)
-            else: 
+            else:
                 raise AirflowException("Baseline file exists locally but is not readable.")
         else:
             df = pd.read_parquet(seed_baseline_url)
