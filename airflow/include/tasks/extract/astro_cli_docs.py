@@ -9,6 +9,16 @@ from weaviate.util import generate_uuid5
 
 
 def extract_astro_cli_docs() -> list[pd.DataFrame]:
+    """
+    This task downloads Blogs from the astro-cli documentation website and returns a list of pandas dataframes.
+    Return type is a list in order to map to upstream dynamic tasks.
+
+    The returned data includes the following fields:
+    'docSource': 'apache/airflow/docs'
+    'docLink': URL for the page
+    'content': HTML content of the page
+    'sha': A UUID from the other fields
+    """
     astronomer_base_url = "https://docs.astronomer.io"
     astro_cli_overview_endpoint = "/astro/cli/overview"
 
