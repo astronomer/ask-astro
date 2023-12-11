@@ -28,6 +28,7 @@ comment_template = "\n{user} on {date} [Score: {score}]: {body}\n"
 def fetch_questions_through_stack_api(
     tag: str, stackoverflow_cutoff_date: str, *, page_size: int = 100, max_pages: int = 10000000
 ) -> dict:
+    """Fetch data from stackoverflow site through stack api"""
     fromdate = datetime.strptime(stackoverflow_cutoff_date, "%Y-%m-%d")
     first_question_id, first_question_creation_date = fetch_first_question_after_fromdate(tag=tag, fromdate=fromdate)
 
@@ -176,6 +177,7 @@ def process_stack_api_answers(posts_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def combine_stack_dfs(*, questions_df: pd.DataFrame, answers_df: pd.DataFrame, tag: str) -> pd.DataFrame:
+    """This helper function builds a dataframe based on posts and answers."""
     # Join questions with answers
     df = questions_df.join(answers_df)
     df = df.apply(
