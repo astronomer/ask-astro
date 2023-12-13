@@ -3,9 +3,13 @@ from __future__ import annotations
 from urllib.parse import urljoin, urlparse
 
 import pandas as pd
+import logging
+
 import requests
 from bs4 import BeautifulSoup
 from weaviate.util import generate_uuid5
+
+logger = logging.getLogger("airflow.task")
 
 internal_urls = set()
 
@@ -60,7 +64,7 @@ def get_all_links(url, exclude_docs=None):
         ):
             continue
         urls.add(href)
-        print(href)
+        logger.info(href)
         internal_urls.add(href)
 
     return urls
@@ -110,7 +114,7 @@ def fetch_url_content(url):
         response.raise_for_status()  # Raise an HTTPError for bad responses
         return response.content
     except requests.RequestException as e:
-        print(f"Error fetching content for {url}: {e}")
+        logger.info("Error fetching content for %s: %s", url, url)
         return None
 
 
