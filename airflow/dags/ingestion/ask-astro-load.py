@@ -147,6 +147,9 @@ def ask_astro_load_bulk():
                 "extract_astro_blogs",
                 "extract_github_python",
                 "extract_astro_registry_dags",
+                "extract_astro_cli_docs",
+                "extract_astro_sdk_doc",
+                "extract_astro_provider_doc",
             }
 
     @task(trigger_rule="none_failed")
