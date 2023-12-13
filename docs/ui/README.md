@@ -1,4 +1,4 @@
-# ask-astro UI
+# Ask-Astro UI
 
 ## Developing
 
