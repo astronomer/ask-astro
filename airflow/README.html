@@ -133,10 +133,11 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../local_development.html">Setup Local Development Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../monitoring.html">Monitoring and Observability for Ask-Astro</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">💻 Develop UI</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../ui/README.html">ask-astro UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ui/README.html">Ask-Astro UI</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">💻 Develop Backend Server</span></p>
 <ul class="nav bd-sidenav">
@@ -337,7 +338,7 @@ document.write(`
 <p>In addition to the individual DAGs per source, Ask Astro uses one DAG to do full-database refresh based on a baseline of all extracted data sources. The first time the <code class="docutils literal notranslate"><span class="pre">ask-astro-load-bulk</span></code> DAG runs, it saves extracted documents in parquet files for a point-in-time baseline. This baseline allows us to experiment with new vector databases, embedding models, chunking strategies, much more quickly than without a baseline to compare new versions against.</p>
 <p>Additionally, a baseline of pre-embedded data provides the ability to ingest a stable baseline for upstream evaluation, which is described in Step 5 of the following procedure.</p>
 <p align="center">
-  <img src="../docs/static/DAG.png" />
+  <img src="../_static/DAG.png" />
 </p>
 </section>
 <section id="prerequisites">

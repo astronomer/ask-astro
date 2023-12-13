@@ -33,7 +33,7 @@ In addition to the individual DAGs per source, Ask Astro uses one DAG to do full
 Additionally, a baseline of pre-embedded data provides the ability to ingest a stable baseline for upstream evaluation, which is described in Step 5 of the following procedure.
 
 <p align="center">
-  <img src="../docs/static/DAG.png" />
+  <img src="../_static/DAG.png" />
 </p>
 
 ## Prerequisites

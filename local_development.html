@@ -44,7 +44,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'local_development';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="ask-astro UI" href="ui/README.html" />
+    <link rel="next" title="Monitoring and Observability for Ask-Astro" href="monitoring.html" />
     <link rel="prev" title="Data Retrieval &amp; Embedding" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -134,10 +134,11 @@
     <div class="bd-toc-item navbar-nav active">
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Setup Local Development Tool</a></li>
+<li class="toctree-l1"><a class="reference internal" href="monitoring.html">Monitoring and Observability for Ask-Astro</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">💻 Develop UI</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="ui/README.html">ask-astro UI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ui/README.html">Ask-Astro UI</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">💻 Develop Backend Server</span></p>
 <ul class="nav bd-sidenav">
@@ -298,7 +299,10 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup-project-root-poetry-envinroment-for-development-tools">Setup project root poetry envinroment for development tools</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-tasks">Documentation Tasks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#airflow-dags-tasks">Airflow DAGs Tasks</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#backend-api-tasks">Backend API Tasks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ui-tasks">UI Tasks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-linters">Run linters</a></li>
 </ul>
 </li>
 </ul>
@@ -353,11 +357,35 @@ $<span class="w"> </span>poetry<span class="w"> </span>install
 </ul>
 <p><img alt="docs.generate-tasks-help-screenshot" src="_images/docs-generate-tasks-help-screenshot.svg" /></p>
 </section>
+<section id="airflow-dags-tasks">
+<h3>Airflow DAGs Tasks<a class="headerlink" href="#airflow-dags-tasks" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Run ask-astro airflow</p></li>
+</ul>
+<p><img alt="airflow.run" src="_images/airflow-run.svg" /></p>
+<ul class="simple">
+<li><p>Stop ask-astro airflow</p></li>
+</ul>
+<p><img alt="airflow.stop" src="_images/airflow-stop.svg" /></p>
+</section>
 <section id="backend-api-tasks">
 <h3>Backend API Tasks<a class="headerlink" href="#backend-api-tasks" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Go to <a class="reference internal" href="api/README.html"><span class="std std-doc">Ask Astro Backend API</span></a></p></li>
 </ul>
+</section>
+<section id="ui-tasks">
+<h3>UI Tasks<a class="headerlink" href="#ui-tasks" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Go to <a class="reference internal" href="ui/README.html"><span class="std std-doc">Ask-Astro UI</span></a></p></li>
+</ul>
+</section>
+<section id="run-linters">
+<h3>Run linters<a class="headerlink" href="#run-linters" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Run pre-commit checks</p></li>
+</ul>
+<p><img alt="run-pre-commit" src="_images/run-pre-commit.svg" /></p>
 </section>
 </section>
 </section>
@@ -383,11 +411,11 @@ $<span class="w"> </span>poetry<span class="w"> </span>install
       </div>
     </a>
     <a class="right-next"
-       href="ui/README.html"
+       href="monitoring.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">ask-astro UI</p>
+        <p class="prev-next-title">Monitoring and Observability for Ask-Astro</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -409,7 +437,10 @@ $<span class="w"> </span>poetry<span class="w"> </span>install
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup-project-root-poetry-envinroment-for-development-tools">Setup project root poetry envinroment for development tools</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation-tasks">Documentation Tasks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#airflow-dags-tasks">Airflow DAGs Tasks</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#backend-api-tasks">Backend API Tasks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ui-tasks">UI Tasks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#run-linters">Run linters</a></li>
 </ul>
 </li>
 </ul>
