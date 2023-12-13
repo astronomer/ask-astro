@@ -214,19 +214,19 @@ def ask_astro_load_bulk():
         try:
             df = pd.read_parquet(astro_sdk_parquet_path)
         except Exception:
-            df = extract_astro_sdk_docs()
-            df.to_parquet(df)
+            df = extract_astro_sdk_docs()[0]
+            df.to_parquet(astro_sdk_parquet_path)
 
         return [df]
 
     @task(trigger_rule="none_failed")
     def extract_astro_provider_doc():
-        astro_sdk_parquet_path = "include/data/astronomer/docs/astro-provider.parquet"
+        astro_provider_parquet_path = "include/data/astronomer/docs/astro-provider.parquet"
         try:
-            df = pd.read_parquet(astro_sdk_parquet_path)
+            df = pd.read_parquet(astro_provider_parquet_path)
         except Exception:
-            df = extract_provider_docs()
-            df.to_parquet(df)
+            df = extract_provider_docs()[0]
+            df.to_parquet(astro_provider_parquet_path)
 
         return [df]
 
