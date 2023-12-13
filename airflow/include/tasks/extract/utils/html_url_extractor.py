@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+import logging
 from urllib.parse import urljoin, urlparse
 
 import pandas as pd
-import logging
-
 import requests
 from bs4 import BeautifulSoup
 from weaviate.util import generate_uuid5
@@ -113,7 +112,7 @@ def fetch_url_content(url):
         response = requests.get(url)
         response.raise_for_status()  # Raise an HTTPError for bad responses
         return response.content
-    except requests.RequestException as e:
+    except requests.RequestException:
         logger.info("Error fetching content for %s: %s", url, url)
         return None
 
