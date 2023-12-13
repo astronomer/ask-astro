@@ -48,7 +48,7 @@ $ poetry install
 
 - Stop ask-astro airflow
 
-![airflow.stop](Stop ask-astro airflow)
+![airflow.stop](_static/images/task_help_message/airflow-stop.svg)
 
 ### Backend API Tasks
 

@@ -3,7 +3,6 @@
 
 ```{toctree}
 :hidden:
-:caption:
 
 local_development.md
 monitoring.md
