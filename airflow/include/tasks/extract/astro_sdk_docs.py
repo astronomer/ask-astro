@@ -15,9 +15,8 @@ def extract_astro_sdk_docs() -> list[pd.DataFrame]:
     base_url = "https://astro-sdk-python.readthedocs.io/en/stable/"
 
     urls = extract_internal_url(base_url, exclude_docs)
-    version_pattern = re.compile(r"[0-9]+(\.[0-9]+){1,2}")
 
-    new_urls = [url for url in urls if not version_pattern.search(url)]
+    new_urls = [url for url in urls if "stable" in url]
     logger.info("******ingesting****")
     logger.info(new_urls)
     logger.info("*********************")
