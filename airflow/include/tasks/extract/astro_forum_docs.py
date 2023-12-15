@@ -1,10 +1,10 @@
 import logging
+from datetime import datetime
 
+import pandas as pd
+import pytz
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
-import pytz
-import pandas as pd
 from weaviate.util import generate_uuid5
 
 cutoff_date = datetime(2022, 1, 1, tzinfo=pytz.UTC)
