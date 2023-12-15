@@ -1,12 +1,12 @@
 import aiohttp
 import asyncio
 import json
-import os
-from weaviate.client import Client as WeaviateClient
+
+from airflow.providers.google.suite.hooks.drive import GoogleDriveHook
 from langchain.retrievers import MultiQueryRetriever
 from langchain.chat_models import AzureChatOpenAI
 from langchain.vectorstores import Weaviate as WeaviateVectorStore
-
+from weaviate.client import Client as WeaviateClient
 
 async def get_answer(askastro_endpoint_url: str, request_payload: dict):
 
@@ -35,11 +35,19 @@ async def get_answer(askastro_endpoint_url: str, request_payload: dict):
                 else: 
                     await asyncio.sleep(1)
 
-def generate_answer(askastro_endpoint_url: str, question: str) -> (str, str, str):
+def generate_answer(
+        askastro_endpoint_url: str, 
+        question: str,
+        langchain_org_id: str,
+        langchain_project_id: str
+        ) -> (str, str, str):
     """
     This function uses Ask Astro frontend to answer questions.
 
+    :param askastro_endpoint_url: HTTP url for the running ask astro service
     :param question: A question.
+    :param langchain_org_id: The organization ID for generating langsmith links
+    :param langchain_project_id: The project ID for generating langsmith links
     :return: A list of strings for answers and references
     """
 
@@ -57,8 +65,8 @@ def generate_answer(askastro_endpoint_url: str, question: str) -> (str, str, str
         references = {source["name"] for source in response.get("sources")}
         references = '\n'.join(references)
         langsmith_link = langsmith_link_template.format(
-                org=os.environ.get('LANGCHAIN_ORG', ''),
-                project=os.environ.get('LANGCHAIN_PROJECT_ID_PROD', ''),
+                org=langchain_org_id,
+                project=langchain_project_id,
                 run_id=response.get("langchain_run_id"))
 
     except Exception as e:
@@ -108,7 +116,11 @@ def weaviate_search(weaviate_client:WeaviateClient, question:str, class_name:str
     
     return references
 
-def weaviate_search_mqr(weaviate_client:WeaviateClient, question:str, class_name:str) -> str:
+def weaviate_search_mqr(
+        weaviate_client:WeaviateClient, 
+        question:str, 
+        class_name:str,
+        azure_endpoint:str) -> str:
     """
     This function uses LangChain's  
     [MultiQueryRetriever](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.multi_query.MultiQueryRetriever.html)
@@ -117,6 +129,7 @@ def weaviate_search_mqr(weaviate_client:WeaviateClient, question:str, class_name
     :param weaviate_client: An instantiated weaviate client to use for the search.
     :param question: A question.
     :param class_name: The name of the class to search.
+    :param azure_gpt35_endpoint: Azure OpenAI endpoint to use for multi-query retrieval
     :return: A string concatenation of references
     """
 
@@ -129,7 +142,7 @@ def weaviate_search_mqr(weaviate_client:WeaviateClient, question:str, class_name
 
     retriever = MultiQueryRetriever.from_llm(
         llm=AzureChatOpenAI(
-            **json.loads(os.environ['AZURE_OPENAI_USEAST_PARAMS']),
+            **json.loads(azure_endpoint),
             deployment_name="gpt-35-turbo",
             temperature="0.0",
         ),
@@ -148,3 +161,34 @@ def weaviate_search_mqr(weaviate_client:WeaviateClient, question:str, class_name
     
     return references
 
+def get_or_create_drive_folder(gd_hook: GoogleDriveHook, folder_name: str, parent_id: str | None) -> str:
+    """
+    Creates a google drive folder if it does not exist.
+
+    :param gd_hook: An Google drive hook
+    :param folder_name: Name of the folder to create if it does not exist
+    :param parent: Nam
+    :return: A string of the folder ID
+    """
+
+    current_file_list = gd_hook.get_conn().files().list().execute().get("files")
+
+    existing_folder_ids=[]
+    for file in current_file_list:
+        if file["name"] == folder_name and \
+            file["mimeType"] == "application/vnd.google-apps.folder":
+            existing_folder_ids.append(file["id"])
+
+    if len(existing_folder_ids) > 1:
+        raise ValueError("More than one folder found.")
+    elif len(existing_folder_ids) == 1:
+        return existing_folder_ids[0]
+    else:
+        folder = gd_hook.get_conn().files().create(
+            body={
+                "name": folder_name, 
+                "mimeType": "application/vnd.google-apps.folder", 
+                "parents": [parent_id]},
+            fields="id"
+        ).execute()
+        return folder["id"]
