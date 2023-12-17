@@ -32,8 +32,8 @@ def filter_cutoff_questions(questions_urls):
     valid_urls = []
     for question_url in questions_urls:
         html_content = requests.get(question_url).content
-        if get_publish_date(html_content) > cutoff_date:
-            return valid_urls
+        if get_publish_date(html_content) < cutoff_date:
+            continue
         valid_urls.append(question_url)
     return valid_urls
 
@@ -44,15 +44,14 @@ def get_cutoff_questions(forum_url):
     all_valid_url = []
     while True:
         page_url = f"{base_url}{page_number}"
+        logger.info(page_url)
         page_number = page_number + 1
         html_content = requests.get(page_url).content
         questions_urls = get_questions_urls(html_content)
         if len(questions_urls) == 0:  # reached at the end of page
-            return all_valid_url
+            return set(all_valid_url)
         filter_questions_urls = filter_cutoff_questions(questions_urls)
-        all_valid_url.extend(questions_urls)
-        if len(questions_urls) > len(filter_questions_urls):  # reached cutoff date
-            return all_valid_url
+        all_valid_url.extend(filter_questions_urls)
 
 
 def clean_content(row_content):
@@ -107,5 +106,6 @@ def url_to_df(urls, doc_source=""):
 
 def get_forum_df():
     questions_link = get_cutoff_questions("https://forum.astronomer.io/latest")
+    logger.info(questions_link)
     df = url_to_df(questions_link, "astro-forum")
     return [df]
