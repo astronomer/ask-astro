@@ -9,6 +9,7 @@ from pathlib import Path
 import pandas as pd
 from include.tasks import split
 from include.tasks.extract import airflow_docs, astro_cli_docs, blogs, github, registry, stack_overflow
+from include.tasks.extract.astro_forum_docs import get_forum_df
 from include.tasks.extract.astro_sdk_docs import extract_astro_sdk_docs
 from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
@@ -150,6 +151,7 @@ def ask_astro_load_bulk():
                 "extract_astro_cli_docs",
                 "extract_astro_sdk_doc",
                 "extract_astro_provider_doc",
+                "extract_astro_forum_doc",
             }
 
     @task(trigger_rule="none_failed")
@@ -241,6 +243,17 @@ def ask_astro_load_bulk():
         return df
 
     @task(trigger_rule="none_failed")
+    def extract_astro_forum_doc():
+        astro_forum_parquet_path = "include/data/astronomer/docs/astro-forum.parquet"
+        try:
+            df = pd.read_parquet(astro_forum_parquet_path)
+        except Exception:
+            df = get_forum_df()[0]
+            df.to_parquet(astro_forum_parquet_path)
+
+        return [df]
+
+    @task(trigger_rule="none_failed")
     def extract_github_issues(repo_base: str):
         parquet_file = f"include/data/{repo_base}/issues.parquet"
 
@@ -311,6 +324,7 @@ def ask_astro_load_bulk():
     _astro_cli_docs = extract_astro_cli_docs()
     _extract_astro_sdk_docs = extract_astro_sdk_doc()
     _extract_astro_providers_docs = extract_astro_provider_doc()
+    _astro_forum_docs = extract_astro_forum_doc()
 
     _get_schema = get_schema_and_process(schema_file="include/data/schema.json")
     _check_schema = check_schema(class_objects=_get_schema)
@@ -325,7 +339,13 @@ def ask_astro_load_bulk():
         registry_cells_docs,
     ]
 
-    html_tasks = [_airflow_docs, _astro_cli_docs, _extract_astro_sdk_docs, _extract_astro_providers_docs]
+    html_tasks = [
+        _airflow_docs,
+        _astro_cli_docs,
+        _extract_astro_sdk_docs,
+        _extract_astro_providers_docs,
+        _astro_forum_docs,
+    ]
 
     python_code_tasks = [registry_dags_docs, code_samples]
 
