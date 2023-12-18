@@ -14,7 +14,6 @@ from include.tasks.extract.utils.retrieval_tests import (
     weaviate_search,
     weaviate_search_mqr,
 )
-
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
@@ -71,9 +70,34 @@ def test_retrieval(question_number_subset: str):
     This DAG performs a test of document retrieval from Ask Astro's vector database.
 
     It downloads a set of test questions as a CSV file from Google Sheets.
-    Set TEST_QUESTIONS_SHEET_ID environment variable to specify the source of test questions.
 
-    Retrieved answers and references are saved as CSV and uploaded to a Google Spreadsheet.
+    Environment variables needed:
+    - ASK_ASTRO_ENV the environment name (ie. 'dev', 'prod', 'local')
+    - WEAVIATE_CLASS schema class name (ie. 'DocsLocal', 'DocsProd', etc.)
+    - AIRFLOW_CONN_WEAVIATE_<env> Airflow connection string for the weaviate instance
+    - AZURE_OPENAI_USEAST_PARAMS Airflow connection string for Azure OpenAI instance used for
+        multiquery retriever tests.
+    - AIRFLOW_CONN_GOOGLE_CLOUD_DRIVE Airflow connection string for Google Drive (with scope
+        "https://www.googleapis.com/auth/drive") for the Ask Astro Project test pipeline
+        service account.
+    - LANGCHAIN_ORG Organization ID for creating the link to the Langsmith run
+    - LANGCHAIN_PROJECT_ID_<env> Project ID for creating the link to the Langsmith run
+    - TEST_QUESTIONS_SHEET_ID the Google sheet ID for the test questions this should be in the
+        Google project account.
+    - ASK_ASTRO_ENDPOINT_URL the endpoint URL for the Ask Astro frontend to be tested.
+    - GOOGLE_DOMAIN_ID the Google Cloud domain ID to grant access to for reading the results.
+
+    Retrieved answers and references are saved as CSV and uploaded to a Google Spreadsheet.  The
+    `upload_results` task logs print a link to the uploaded sheet.
+
+    Additionally, this DAG is parameterized to allow running a subset of the questions.  The
+    estimated cost is approximately $.50 per question.  If the number of questions is large and a
+    specific change to the ingest only impacts a subset of questions it may be advantageous to test
+    only that subset first (potentially multiple times) before testing the entire question set for
+    regressions.
+
+    :param question_number_subset: A json string of a list of integers representing a subset of
+    test numbers from the test question template spreadsheet.
     """
 
     @task

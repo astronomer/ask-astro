@@ -10,7 +10,13 @@ from weaviate.client import Client as WeaviateClient
 from airflow.providers.google.suite.hooks.drive import GoogleDriveHook
 
 
-async def get_answer(askastro_endpoint_url: str, request_payload: dict):
+async def get_answer(askastro_endpoint_url: str, request_payload: dict) -> str:
+    """
+    This function posts a question to the Ask Astro endpoint asynchronously and returns an answer.
+
+    :param askastro_endpoint_url:
+    :param request_payload:
+    """
     async with aiohttp.ClientSession() as session:
         async with session.post(url=askastro_endpoint_url + "/requests", json=request_payload) as response:
             assert response.status == 200
@@ -105,7 +111,9 @@ def weaviate_search(weaviate_client: WeaviateClient, question: str, class_name: 
     return references
 
 
-def weaviate_search_multiquery_retriever(weaviate_client: WeaviateClient, question: str, class_name: str, azure_endpoint: str) -> str:
+def weaviate_search_multiquery_retriever(
+    weaviate_client: WeaviateClient, question: str, class_name: str, azure_endpoint: str
+) -> str:
     """
     This function uses LangChain's
     [MultiQueryRetriever](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.multi_query.MultiQueryRetriever.html)
