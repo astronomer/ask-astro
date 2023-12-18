@@ -83,7 +83,6 @@ def test_retrieval(question_number_subset: str):
         If the folders already exist it returns the folder ID.
 
         :param drive_folder:  A fully-qualified path name for the folders. ie. "ask_astro/tests_dev"
-        :return: A list of folder IDs.
         """
 
         gd_hook = GoogleDriveHook(gcp_conn_id=_DRIVE_CONN_ID)
