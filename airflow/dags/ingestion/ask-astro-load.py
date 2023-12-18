@@ -8,15 +8,10 @@ from pathlib import Path
 
 import pandas as pd
 from include.tasks import split
-<<<<<<< HEAD
 from include.tasks.extract import airflow_docs, astro_cli_docs, blogs, github, registry, stack_overflow
 from include.tasks.extract.astro_forum_docs import get_forum_df
 from include.tasks.extract.astro_sdk_docs import extract_astro_sdk_docs
 from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
-=======
-from include.tasks.extract import airflow_docs, blogs, github, registry, stack_overflow
-from include.tasks.extract.astro_forum_docs import get_forum_df
->>>>>>> bcac955 (Add forum ask in bulk load)
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
