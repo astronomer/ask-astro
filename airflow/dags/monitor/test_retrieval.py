@@ -13,7 +13,6 @@ from include.tasks.extract.utils.retrieval_tests import (
     weaviate_search_mqr,
 )
 
-# from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
