@@ -154,7 +154,6 @@ def get_or_create_drive_folder(gd_hook: GoogleDriveHook, folder_name: str, paren
     :param gd_hook: An Google drive hook
     :param folder_name: Name of the folder to create if it does not exist
     :param parent_id: File ID for the parent or None for root.
-    :return: A string of the folder ID
     """
 
     current_file_list = gd_hook.get_conn().files().list().execute().get("files")
