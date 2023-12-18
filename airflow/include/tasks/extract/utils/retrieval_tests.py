@@ -79,7 +79,6 @@ def weaviate_search(weaviate_client: WeaviateClient, question: str, class_name: 
     :param weaviate_client: An instantiated weaviate client to use for the search.
     :param question: A question.
     :param class_name: The name of the class to search.
-    :return: A string of newline separated references with certainty level.
     """
 
     try:
