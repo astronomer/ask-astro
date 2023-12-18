@@ -106,7 +106,7 @@ def weaviate_search(weaviate_client: WeaviateClient, question: str, class_name: 
     return references
 
 
-def weaviate_search_mqr(weaviate_client: WeaviateClient, question: str, class_name: str, azure_endpoint: str) -> str:
+def weaviate_search_multiquery_retriever(weaviate_client: WeaviateClient, question: str, class_name: str, azure_endpoint: str) -> str:
     """
     This function uses LangChain's
     [MultiQueryRetriever](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.multi_query.MultiQueryRetriever.html)
