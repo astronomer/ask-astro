@@ -116,7 +116,6 @@ def weaviate_search_mqr(weaviate_client: WeaviateClient, question: str, class_na
     :param question: A question.
     :param class_name: The name of the class to search.
     :param azure_gpt35_endpoint: Azure OpenAI endpoint to use for multi-query retrieval
-    :return: A string concatenation of references
     """
 
     docsearch = WeaviateVectorStore(
