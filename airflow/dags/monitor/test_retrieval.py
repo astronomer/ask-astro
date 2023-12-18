@@ -25,7 +25,7 @@ ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 test_questions_sheet_id = os.environ.get("TEST_QUESTIONS_SHEET_ID")
 askastro_endpoint_url = os.environ.get("ASK_ASTRO_ENDPOINT_URL")
 langchain_org_id = os.environ.get("LANGCHAIN_ORG")
-langchain_project_id = os.environ.get("LANGCHAIN_PROJECT_ID_" + ask_astro_env.upper(), None)
+langchain_project_id = os.environ.get(f"LANGCHAIN_PROJECT_ID_{ask_astro_env.upper()}", None)
 azure_endpoint = os.environ["AZURE_OPENAI_USEAST_PARAMS"]
 google_domain_id = os.environ["GOOGLE_DOMAIN_ID"]
 
