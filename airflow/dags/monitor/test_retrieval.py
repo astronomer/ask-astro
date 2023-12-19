@@ -166,8 +166,7 @@ def test_retrieval(question_number_subset: str):
 
         if doc_count >= expected_count:
             return True
-        else:
-            raise AirflowException("Unknown vectordb state. Ingest baseline or change expected_count.")
+        raise AirflowException("Unknown vectordb state. Ingest baseline or change expected_count.")
 
     @task
     def download_test_questions(test_questions_sheet_id: str):
