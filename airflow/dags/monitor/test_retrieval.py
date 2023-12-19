@@ -132,10 +132,7 @@ def test_retrieval(question_number_subset: str):
         class_objects = json.loads(Path(schema_file).read_text())
         class_objects["classes"][0].update({"class": WEAVIATE_CLASS})
 
-        if "classes" not in class_objects:
-            class_objects = [class_objects]
-        else:
-            class_objects = class_objects["classes"]
+        class_objects = class_objects.get("classes", [class_objects])
 
         return class_objects
 
