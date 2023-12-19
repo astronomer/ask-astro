@@ -54,6 +54,31 @@ def get_cutoff_questions(forum_url):
         all_valid_url.extend(filter_questions_urls)
 
 
+def truncate_tokens(text: str, encoding_name: str, max_length: int = 8192) -> str:
+    """
+    Truncates a text string based on the maximum number of tokens.
+
+    Parameters:
+    - string (str): The input text string to be truncated.
+    - encoding_name (str): The name of the encoding model.
+    - max_length (int): The maximum number of tokens allowed. Default is 8192.
+    """
+    import tiktoken
+
+    try:
+        encoding = tiktoken.encoding_for_model(encoding_name)
+    except ValueError as e:
+        raise ValueError(f"Invalid encoding_name: {e}")
+
+    encoded_string = encoding.encode(text)
+    num_tokens = len(encoded_string)
+
+    if num_tokens > max_length:
+        text = encoding.decode(encoded_string[:max_length])
+
+    return text
+
+
 def clean_content(row_content):
     soup = BeautifulSoup(row_content, "html.parser").find("body")
 
@@ -65,7 +90,9 @@ def clean_content(row_content):
 
     # Get text and handle whitespaces
     text = " ".join(soup.stripped_strings)
-    return text
+    # Need to truncate because in some cases the token size
+    # exceeding the max token size. Better solution can be get summary and ingest it.
+    return truncate_tokens(text, "gpt-3.5-turbo", 7692)
 
 
 def fetch_url_content(url):

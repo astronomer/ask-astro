@@ -12,7 +12,7 @@ _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
 ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
 
-blog_cutoff_date = datetime.date(2023, 1, 19)
+blog_cutoff_date = datetime.date(2022, 1, 1)
 
 default_args = {"retries": 3, "retry_delay": 30}
 
