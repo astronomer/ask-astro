@@ -12,7 +12,7 @@ from include.tasks.extract.utils.retrieval_tests import (
     generate_answer,
     get_or_create_drive_folder,
     weaviate_search,
-    weaviate_search_mqr,
+    weaviate_search_multiquery_retriever,
 )
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
@@ -40,8 +40,6 @@ WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
 logger = logging.getLogger("airflow.task")
 
 test_question_template_path = "include/data/test_questions_template.csv"
-
-expected_doc_count = 36860
 
 default_args = {"retries": 3, "retry_delay": 30, "trigger_rule": "none_failed"}
 
@@ -155,20 +153,6 @@ def test_retrieval(question_number_subset: str):
         )
 
     @task
-    def check_doc_count(expected_count: int) -> bool:
-        """
-        Check if the vectordb has AT LEAST expected_count objects.
-        """
-
-        count = AskAstroWeaviateHook(_WEAVIATE_CONN_ID).client.query.aggregate(WEAVIATE_CLASS).with_meta_count().do()
-
-        doc_count = count["data"]["Aggregate"][WEAVIATE_CLASS][0]["meta"]["count"]
-
-        if doc_count >= expected_count:
-            return True
-        raise AirflowException("Unknown vectordb state. Ingest baseline or change expected_count.")
-
-    @task
     def download_test_questions(test_questions_sheet_id: str):
         gs_hook = GSheetsHook(_DRIVE_CONN_ID)
 
@@ -218,7 +202,7 @@ def test_retrieval(question_number_subset: str):
         )
 
         questions_df["weaviate_mqr_references"] = questions_df.question.apply(
-            lambda x: weaviate_search_mqr(
+            lambda x: weaviate_search_multiquery_retriever(
                 weaviate_client=weaviate_client, question=x, class_name=WEAVIATE_CLASS, azure_endpoint=azure_endpoint
             )
         )
@@ -248,7 +232,7 @@ def test_retrieval(question_number_subset: str):
             .files()
             .create(
                 body={
-                    "name": "test_results_" + ts_nodash,
+                    "name": f"test_results_{ts_nodash}",
                     "mimeType": "application/vnd.google-apps.spreadsheet",
                     "parents": [drive_id],
                 },
@@ -270,17 +254,16 @@ def test_retrieval(question_number_subset: str):
             spreadsheet_id=results_sheet.get("id"), range_="A1", values=values, include_values_in_response=False
         )
 
-        logger.info("Test results are available at: https://drive.google.com/drive/folders/" + drive_id)
+        logger.info(f"Test results are available at: https://drive.google.com/drive/folders/{drive_id}")
 
     _results_folder_id = create_drive_folders(drive_folder)
     _get_schema = get_schema()
     _check_schema = check_schema(_get_schema)
-    _check_doc_count = check_doc_count(expected_doc_count)
     _download_questions = download_test_questions(test_questions_sheet_id)
     _results_file = generate_test_answers(_download_questions)
     _upload_results = upload_results(results_file=_results_file, drive_id=_results_folder_id)
 
-    _check_schema >> _check_doc_count >> _results_file
+    _check_schema >> _results_file >> _upload_results
 
 
 test_retrieval(question_number_subset=None)

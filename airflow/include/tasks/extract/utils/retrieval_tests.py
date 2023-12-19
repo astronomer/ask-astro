@@ -1,15 +1,20 @@
-import asyncio
-import json
+from __future__ import annotations
 
 import aiohttp
+import asyncio
+import backoff
+import json
+import logging
+
+from airflow.providers.google.suite.hooks.drive import GoogleDriveHook
 from langchain.chat_models import AzureChatOpenAI
 from langchain.retrievers import MultiQueryRetriever
 from langchain.vectorstores import Weaviate as WeaviateVectorStore
 from weaviate.client import Client as WeaviateClient
 
-from airflow.providers.google.suite.hooks.drive import GoogleDriveHook
+logger = logging.getLogger("airflow.task")
 
-
+@backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=10)
 async def get_answer(askastro_endpoint_url: str, request_payload: dict) -> str:
     """
     This function posts a question to the Ask Astro endpoint asynchronously and returns an answer.
@@ -18,23 +23,37 @@ async def get_answer(askastro_endpoint_url: str, request_payload: dict) -> str:
     :param request_payload:
     """
     async with aiohttp.ClientSession() as session:
-        async with session.post(url=askastro_endpoint_url + "/requests", json=request_payload) as response:
-            assert response.status == 200
+        async with session.post(
+            url=f"{askastro_endpoint_url}/requests", json=request_payload, raise_for_status=True
+        ) as response:
 
-            json_response = await response.json()
-            request_id = json_response.get("request_uuid")
+            if response.status == 200:
+                json_response = await response.json()
+                request_id = json_response.get("request_uuid")
 
-            assert request_id
+                if request_id:
+                    response.close()
+                else:
+                    logger.info(f"Request not accepted: {json_response}")
+                    raise aiohttp.ClientError("Retrying")
+            else:
+                logger.info(f"Could not connect to ask astro frontend: {response.reason}")
+                raise aiohttp.ClientError("Retrying")
 
         while True:
-            async with session.get(url=askastro_endpoint_url + f"/requests/{request_id}") as response:
-                assert response.status == 200
+            async with session.get(url=f"{askastro_endpoint_url}/requests/{request_id}") as response:
+                if response.status == 200:
 
-                json_response = await response.json()
-                if json_response.get("response"):
-                    return json_response
+                    json_response = await response.json()
+                    if json_response.get("response"):
+                        response.close()
+                        session.close()
+                        return json_response
+                    else:
+                        await asyncio.sleep(1)
                 else:
-                    await asyncio.sleep(1)
+                    logger.info(f"Could not connect to ask astro frontend to get response: {response.reason}")
+                    raise aiohttp.ClientError("Retrying")
 
 
 def generate_answer(
@@ -67,7 +86,7 @@ def generate_answer(
         )
 
     except Exception as e:
-        print(e)
+        logger.info(e)
         answer = ""
         references = ""
         langsmith_link = ""
@@ -105,7 +124,7 @@ def weaviate_search(weaviate_client: WeaviateClient, question: str, class_name: 
         )
 
     except Exception as e:
-        print(e)
+        logger.info(e)
         references = []
 
     return references
@@ -148,7 +167,7 @@ def weaviate_search_multiquery_retriever(
         references = "\n".join(references)
 
     except Exception as e:
-        print(e)
+        logger.info(e)
         references = []
 
     return references
