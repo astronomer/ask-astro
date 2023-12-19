@@ -81,16 +81,19 @@ def fetch_first_question_after_fromdate(*, tag: str, fromdate: datetime.date) ->
     return first_question["question_id"], first_question["creation_date"]
 
 
-def process_stack_api_posts(questions: dict) -> pd.DataFrame:
+def process_stack_api_posts(questions: dict, *, score_threshold: int = 1) -> pd.DataFrame:
     """
     This helper function processes questions pulled from slack api endpoint into a set format.
 
     param questions: a dict of questions pulled from stack API
     type questions: dict
+
+    param score_threshold: the minimum required score for posts
+    type score_threshold: int
     """
     posts_df = pd.DataFrame(questions)
     posts_df = posts_df[posts_df["answer_count"] >= 1]
-    posts_df = posts_df[posts_df["score"] >= 1]
+    posts_df = posts_df[posts_df["score"] >= score_threshold]
     posts_df.reset_index(inplace=True, drop=True)
     return posts_df
 
