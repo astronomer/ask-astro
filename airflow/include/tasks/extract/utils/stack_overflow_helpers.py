@@ -1,7 +1,9 @@
+from datetime import datetime
 from textwrap import dedent
 
 import pandas as pd
-from html2text import html2text
+from stackapi import StackAPI
+from weaviate.util import generate_uuid5
 
 question_template = dedent(
     """
@@ -22,171 +24,174 @@ answer_template = dedent(
 
 comment_template = "\n{user} on {date} [Score: {score}]: {body}\n"
 
-post_types = {
-    "1": "Question",
-    "2": "Answer",
-    "3": "Wiki",
-    "4": "TagWikiExcerpt",
-    "5": "TagWiki",
-    "6": "ModeratorNomination",
-    "7": "WikiPlaceholder",
-    "8": "PrivilegeWiki",
-}
 
-posts_columns = {
-    "_COL_0": "post_id",
-    "_COL_1": "type",
-    "_COL_3": "parent_id",
-    "_COL_4": "created_on",
-    "_COL_6": "score",
-    "_COL_8": "body",
-    "_COL_9": "user_id",
-    "_COL_10": "user_name",
-    "_COL_15": "title",
-    "_COL_17": "answer_count",
-}
+def fetch_questions_through_stack_api(
+    tag: str, stackoverflow_cutoff_date: str, *, page_size: int = 100, max_pages: int = 10000000
+) -> dict:
+    """Fetch data from stackoverflow site through stack api"""
+    fromdate = datetime.strptime(stackoverflow_cutoff_date, "%Y-%m-%d")
+    first_question_id, first_question_creation_date = fetch_first_question_after_fromdate(tag=tag, fromdate=fromdate)
 
-comments_columns = {
-    "_COL_0": "comment_id",
-    "_COL_1": "post_id",
-    "_COL_2": "comment_score",
-    "_COL_3": "comment_body",
-    "_COL_4": "comment_created_on",
-    "_COL_5": "comment_user_name",
-    "_COL_6": "comment_user_id",
-}
+    stack_api = StackAPI(name="stackoverflow", page_size=page_size, max_pages=max_pages)
+
+    # https://api.stackexchange.com/docs/read-filter#filters=!-(5KXGCFLp3w9.-7QsAKFqaf5yFPl**9q*_hsHzYGjJGQ6BxnCMvDYijFE&filter=default&run=true
+    filter_ = "!-(5KXGCFLp3w9.-7QsAKFqaf5yFPl**9q*_hsHzYGjJGQ6BxnCMvDYijFE"
+
+    questions_resp = stack_api.fetch(
+        endpoint="questions",
+        filter=filter_,
+        tagged=tag,
+        fromdate=fromdate,
+        order="desc",
+        sort="creation",
+    )
+    questions = questions_resp.pop("items")
+    while questions_resp["quota_remaining"] > 0 and questions[-1]["question_id"] != first_question_id:
+        todate = questions[-1]["creation_date"]
+        questions_resp = stack_api.fetch(
+            endpoint="questions",
+            filter=filter_,
+            tagged=tag,
+            fromdate=fromdate,
+            todate=todate,
+            order="desc",
+            sort="creation",
+        )
+        questions.extend(questions_resp.pop("items"))
+
+    return questions
 
 
-def process_stack_posts(posts_df: pd.DataFrame, stackoverflow_cutoff_date: str) -> pd.DataFrame:
+def fetch_first_question_after_fromdate(*, tag: str, fromdate: datetime.date) -> tuple[int, int]:
+    """Get the first question id after fromdate"""
+    stack_api = StackAPI(name="stackoverflow")
+    filter_ = "!*1PUVE3_-UtLf0rvavrile9fyVsn*T)jdVaO6_P)K"
+    questions_resp = stack_api.fetch(
+        endpoint="questions",
+        page=1,
+        pagesize=1,
+        order="asc",
+        sort="creation",
+        fromdate=fromdate,
+        tagged=tag,
+        filter=filter_,
+    )
+    first_question = questions_resp["items"][0]
+
+    return first_question["question_id"], first_question["creation_date"]
+
+
+def process_stack_api_posts(questions: dict, *, score_threshold: int = 1) -> pd.DataFrame:
     """
-    This helper function processes a dataframe of slack posts into a set format.
+    This helper function processes questions pulled from slack api endpoint into a set format.
 
-    param posts_df: a dataframe with stack overflow posts from an archive
-    type posts_df: pd.DataFrame
+    param questions: a dict of questions pulled from stack API
+    type questions: dict
 
-    param stackoverflow_cutoff_date: Only messages from after this date will be extracted.
-    type stackoverflow_cutoff_date: str
-
+    param score_threshold: the minimum required score for posts
+    type score_threshold: int
     """
-    posts_df = posts_df[posts_columns.keys()]
-
-    posts_df.rename(posts_columns, axis=1, inplace=True)
-    posts_df["type"] = posts_df["type"].apply(lambda x: post_types[x])
-    posts_df["created_on"] = pd.to_datetime(posts_df["created_on"])
-
-    posts_df["post_id"] = posts_df["post_id"].astype(str)
-    posts_df["parent_id"] = posts_df["parent_id"].astype(str)
-    posts_df["user_id"] = posts_df["user_id"].astype(str)
-    posts_df["user_name"] = posts_df["user_name"].astype(str)
-
-    posts_df = posts_df[posts_df["created_on"] >= stackoverflow_cutoff_date]
-    posts_df["user_id"] = posts_df.apply(lambda x: x.user_id or x.user_name or "Unknown User", axis=1)
+    posts_df = pd.DataFrame(questions)
+    posts_df = posts_df[posts_df["answer_count"] >= 1]
+    posts_df = posts_df[posts_df["score"] >= score_threshold]
     posts_df.reset_index(inplace=True, drop=True)
-
     return posts_df
 
 
-def process_stack_comments(comments_df: pd.DataFrame) -> pd.DataFrame:
+def process_stack_api_questions(posts_df: pd.DataFrame, tag: str) -> pd.DataFrame:
     """
-    This helper function processes a dataframe of slack comments into a set format.
+    This helper function processes a dataframe of slack posts into a set format.
 
-    param comments_df: a dataframe with stack overflow comments from an archive
-    type comments_df: pd.DataFrame
-
-    """
-    comments_df = comments_df[comments_columns.keys()]
-
-    comments_df.rename(comments_columns, axis=1, inplace=True)
-    comments_df["comment_created_on"] = pd.to_datetime(comments_df["comment_created_on"])
-    comments_df["comment_user_id"] = comments_df.apply(
-        lambda x: x.comment_user_id or x.comment_user_name or "Unknown User", axis=1
-    )
-
-    comments_df["post_id"] = comments_df["post_id"].astype(str)
-    comments_df["comment_user_id"] = comments_df["comment_user_id"].astype(str)
-    comments_df["comment_user_name"] = comments_df["comment_user_name"].astype(str)
-    comments_df[["comment_score"]] = comments_df[["comment_score"]].astype(int)
-
-    comments_df["comment_text"] = comments_df.apply(
-        lambda x: comment_template.format(
-            user=x.comment_user_id, date=x.comment_created_on, score=x.comment_score, body=x.comment_body
-        ),
-        axis=1,
-    )
-    comments_df = comments_df[["post_id", "comment_text"]].groupby("post_id").agg(list)
-    comments_df["comment_text"] = comments_df["comment_text"].apply(lambda x: "\n".join(x))
-    comments_df.reset_index(inplace=True)
-
-    return comments_df
-
-
-def process_stack_questions(posts_df: pd.DataFrame, comments_df: pd.DataFrame, tag: str) -> pd.DataFrame:
-    """
-    This helper function builds a dataframe of slack questions based on posts and comments.
-
-    The column question_text is created in markdown format based on question_template.
+    param posts_df: a dataframe with stack overflow posts from an stack API
+    type posts_df: pd.DataFrame
 
     """
-    questions_df = posts_df[posts_df["type"] == "Question"]
-    questions_df = questions_df.drop("parent_id", axis=1)
-    questions_df.rename({"body": "question_body", "post_id": "question_id"}, axis=1, inplace=True)
-    questions_df["answer_count"] = questions_df["answer_count"].astype(int)
-    questions_df["score"] = questions_df["score"].astype(int)
-    questions_df = questions_df[questions_df["score"] >= 1]
-    questions_df = questions_df[questions_df["answer_count"] >= 1]
-    questions_df.reset_index(inplace=True, drop=True)
+    questions_df = posts_df
+    questions_df["comments"] = questions_df["comments"].fillna("")
+    questions_df["question_comments"] = questions_df["comments"].apply(lambda x: process_stack_api_comments(x))
 
-    questions_df = pd.merge(questions_df, comments_df, left_on="question_id", right_on="post_id", how="left")
-    questions_df["comment_text"].fillna("", inplace=True)
-    questions_df.drop("post_id", axis=1, inplace=True)
-    questions_df["link"] = questions_df["question_id"].apply(lambda x: f"https://stackoverflow.com/questions/{x}")
-
+    # format question content
     questions_df["question_text"] = questions_df.apply(
         lambda x: question_template.format(
             title=x.title,
-            user=x.user_id,
-            date=x.created_on,
+            user=x.owner.get("user_id", ""),
+            date=datetime.fromtimestamp(x.creation_date).strftime("%Y-%m-%d"),
             score=x.score,
-            body=html2text(x.question_body),
-            question_comments=x.comment_text,
+            body=x.body_markdown,
+            question_comments=x.question_comments,
         ),
         axis=1,
     )
-
-    questions_df = questions_df[["link", "question_id", "question_text"]]
-    questions_df = questions_df.set_index("question_id")
+    questions_df = questions_df[["link", "question_id", "question_text"]].set_index("question_id")
     questions_df["docSource"] = f"stackoverflow {tag}"
-    questions_df = questions_df[["docSource", "link", "question_text"]]
-    questions_df.columns = ["docSource", "docLink", "content"]
-
+    questions_df.rename({"link": "docLink", "question_text": "content"}, axis=1, inplace=True)
     return questions_df
 
 
-def process_stack_answers(posts_df: pd.DataFrame, comments_df: pd.DataFrame) -> pd.DataFrame:
+def process_stack_api_comments(comments: list) -> str:
     """
-    This helper function builds a dataframe of slack answers based on posts and comments.
+    This helper function processes a list of slack comments for a question or answer
+
+    param comments: a list of stack overflow comments from the api
+    type comments: list
+
+    """
+    return "".join(
+        [
+            comment_template.format(
+                user=comment["owner"].get("user_id", ""),
+                date=datetime.fromtimestamp(comment["creation_date"]).strftime("%Y-%m-%d"),
+                score=comment["score"],
+                body=comment["body_markdown"],
+            )
+            for comment in comments
+        ]
+    )
+
+
+def process_stack_api_answers(posts_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    This helper function builds a dataframe of slack answers based on posts.
 
     The column answer_text is created in markdown format based on answer_template.
 
+    param posts_df: a dataframe with stack overflow posts from an stack API
+    type posts_df: pd.DataFrame
+
     """
-    answers_df = posts_df[posts_df["type"] == "Answer"]
-    answers_df = answers_df[["created_on", "score", "user_id", "post_id", "parent_id", "body"]]
-    answers_df.rename({"body": "answer_body", "post_id": "answer_id", "parent_id": "question_id"}, axis=1, inplace=True)
-    answers_df.reset_index(inplace=True, drop=True)
-    answers_df = pd.merge(answers_df, comments_df, left_on="answer_id", right_on="post_id", how="left")
-    answers_df["comment_text"].fillna("", inplace=True)
-    answers_df.drop("post_id", axis=1, inplace=True)
-    answers_df["link"] = answers_df["question_id"].apply(lambda x: f"https://stackoverflow.com/questions/{x}")
-    answers_df["answer_text"] = answers_df.apply(
+
+    answers_df = posts_df.explode("answers").reset_index(drop=True)
+    answers_df["comments"] = answers_df["answers"].apply(lambda x: x.get("comments"))
+    answers_df["comments"] = answers_df["comments"].fillna("")
+    answers_df["answer_comments"] = answers_df["comments"].apply(lambda x: process_stack_api_comments(x))
+
+    answers_df["answer_text"] = answers_df[["answers", "answer_comments"]].apply(
         lambda x: answer_template.format(
-            user=x.user_id,
-            date=x.created_on,
-            score=x.score,
-            body=html2text(x.answer_body),
-            answer_comments=x.comment_text,
+            score=x.answers["score"],
+            date=datetime.fromtimestamp(x.answers["creation_date"]).strftime("%Y-%m-%d"),
+            user=x.answers["owner"].get("user_id", ""),
+            body=x.answers["body_markdown"],
+            answer_comments=x.answer_comments,
         ),
         axis=1,
     )
     answers_df = answers_df.groupby("question_id")["answer_text"].apply(lambda x: "".join(x))
-
     return answers_df
+
+
+def combine_stack_dfs(*, questions_df: pd.DataFrame, answers_df: pd.DataFrame, tag: str) -> pd.DataFrame:
+    """This helper function builds a dataframe based on posts and answers."""
+    # Join questions with answers
+    df = questions_df.join(answers_df)
+    df = df.apply(
+        lambda x: pd.Series([f"stackoverflow {tag}", x.docLink, "\n".join([x.content, x.answer_text])]),
+        axis=1,
+    )
+    df.columns = ["docSource", "docLink", "content"]
+
+    df.reset_index(inplace=True, drop=True)
+    df["sha"] = df.apply(generate_uuid5, axis=1)
+
+    # column order matters for uuid generation
+    df = df[["docSource", "sha", "content", "docLink"]]
+    return df
