@@ -30,7 +30,7 @@ langchain_project_id = os.environ.get(f"LANGCHAIN_PROJECT_ID_{ask_astro_env.uppe
 azure_endpoint = os.environ["AZURE_OPENAI_USEAST_PARAMS"]
 google_domain_id = os.environ["GOOGLE_DOMAIN_ID"]
 
-drive_folder = "ask_astro/tests_" + ask_astro_env
+drive_folder = f"ask_astro/tests_{ask_astro_env}"
 
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 _DRIVE_CONN_ID = "google_cloud_drive"
