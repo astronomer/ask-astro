@@ -28,11 +28,31 @@ def get_publish_date(html_content) -> datetime:
 
 
 def filter_cutoff_questions(questions_urls: list[str]) -> list[str]:
-    return [
-        question_url
-        for question_url in questions_urls
-        if get_publish_date(requests.get(question_url).content) >= cutoff_date
-    ]
+    """
+    Filters a list of question URLs based on the publish dates.
+
+    Parameters:
+    - questions_urls (list[str]): A list of question URLs.
+    """
+    filter_questions_urls = []
+
+    for question_url in questions_urls:
+        try:
+            html_content = requests.get(question_url).content
+        except requests.RequestException as e:
+            logger.error(f"Error fetching content for {question_url}: {e}")
+            continue  # Move on to the next iteration
+
+        soup = BeautifulSoup(html_content, "html.parser")
+        reply = soup.find("div", itemprop="comment")
+        if not reply:
+            logger.info("No reply, Ignoring it!")
+            continue
+
+        if get_publish_date(html_content) >= cutoff_date:
+            filter_questions_urls.append(question_url)
+
+    return filter_questions_urls
 
 
 def get_cutoff_questions(forum_url: str) -> set[str]:
