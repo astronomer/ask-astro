@@ -146,13 +146,13 @@ def test_retrieval(question_number_subset: str):
 
         if AskAstroWeaviateHook(_WEAVIATE_CONN_ID).check_schema(class_objects=class_objects):
             return True
-        else:
-            raise AirflowException(
-                """
-                Class does not exist in current schema. Create it with
-                'AskAstroWeaviateHook(_WEAVIATE_CONN_ID).create_schema(class_objects=class_objects, existing="error")'
-                """
-            )
+
+        raise AirflowException(
+            """
+            Class does not exist in current schema. Create it with
+            'AskAstroWeaviateHook(_WEAVIATE_CONN_ID).create_schema(class_objects=class_objects, existing="error")'
+            """
+        )
 
     @task
     def check_doc_count(expected_count: int) -> bool:
