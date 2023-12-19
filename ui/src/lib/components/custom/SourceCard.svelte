@@ -85,4 +85,9 @@
     color: #8c80b0;
     font-size: 15px;
   }
+
+  div.rendered-md :global(h1) {
+    text-align: left;
+  }
+
 </style>
