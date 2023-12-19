@@ -6,7 +6,7 @@ from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstr
 
 from airflow.decorators import dag, task
 
-ask_astro_env = os.environ.get("`ASK_ASTRO_ENV", "dev")
+ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
@@ -21,8 +21,7 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 
 @task
 def get_astro_forum_content():
-    dfs = get_forum_df()
-    return dfs
+    return get_forum_df()
 
 
 @dag(

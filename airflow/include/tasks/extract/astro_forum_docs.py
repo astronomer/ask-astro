@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 from datetime import datetime
 
@@ -12,15 +14,12 @@ cutoff_date = datetime(2022, 1, 1, tzinfo=pytz.UTC)
 logger = logging.getLogger("airflow.task")
 
 
-def get_questions_urls(html_content: str):
+def get_questions_urls(html_content: str) -> list[str]:
     soup = BeautifulSoup(html_content, "html.parser")
-    url_list = []
-    for a_tag in soup.findAll("a", class_="title raw-link raw-topic-link"):
-        url_list.append(a_tag.attrs.get("href"))
-    return url_list
+    return [a_tag.attrs.get("href") for a_tag in soup.findAll("a", class_="title raw-link raw-topic-link")]
 
 
-def get_publish_date(html_content):
+def get_publish_date(html_content) -> datetime:
     soup = BeautifulSoup(html_content, "html.parser")
     # TODO: use og:article:tag for tag filter
     publish_date = soup.find("meta", property="article:published_time")["content"]
@@ -28,17 +27,21 @@ def get_publish_date(html_content):
     return publish_date
 
 
-def filter_cutoff_questions(questions_urls):
-    valid_urls = []
-    for question_url in questions_urls:
-        html_content = requests.get(question_url).content
-        if get_publish_date(html_content) < cutoff_date:
-            continue
-        valid_urls.append(question_url)
-    return valid_urls
+def filter_cutoff_questions(questions_urls: list[str]) -> list[str]:
+    return [
+        question_url
+        for question_url in questions_urls
+        if get_publish_date(requests.get(question_url).content) >= cutoff_date
+    ]
 
 
-def get_cutoff_questions(forum_url):
+def get_cutoff_questions(forum_url: str) -> set[str]:
+    """
+    Retrieves a set of valid question URLs from a forum page.
+
+    Parameters:
+    - forum_url (str): The URL of the forum.
+    """
     page_number = 0
     base_url = f"{forum_url}?page="
     all_valid_url = []
@@ -48,7 +51,7 @@ def get_cutoff_questions(forum_url):
         page_number = page_number + 1
         html_content = requests.get(page_url).content
         questions_urls = get_questions_urls(html_content)
-        if len(questions_urls) == 0:  # reached at the end of page
+        if not questions_urls:  # reached at the end of page
             return set(all_valid_url)
         filter_questions_urls = filter_cutoff_questions(questions_urls)
         all_valid_url.extend(filter_questions_urls)
@@ -79,7 +82,7 @@ def truncate_tokens(text: str, encoding_name: str, max_length: int = 8192) -> st
     return text
 
 
-def clean_content(row_content):
+def clean_content(row_content) -> str | None:
     soup = BeautifulSoup(row_content, "html.parser").find("body")
 
     if soup is None:
@@ -95,7 +98,7 @@ def clean_content(row_content):
     return truncate_tokens(text, "gpt-3.5-turbo", 7692)
 
 
-def fetch_url_content(url):
+def fetch_url_content(url) -> str | None:
     try:
         response = requests.get(url)
         response.raise_for_status()  # Raise an HTTPError for bad responses
@@ -105,7 +108,7 @@ def fetch_url_content(url):
         return None
 
 
-def process_url(url, doc_source=""):
+def process_url(url: str, doc_source: str = "") -> dict | None:
     """
     Process a URL by fetching its content, cleaning it, and generating a unique identifier (SHA) based on the cleaned content.
     param url (str): The URL to be processed.
@@ -115,11 +118,9 @@ def process_url(url, doc_source=""):
         cleaned_content = clean_content(content)
         sha = generate_uuid5(cleaned_content)
         return {"docSource": doc_source, "sha": sha, "content": cleaned_content, "docLink": url}
-    else:
-        return None
 
 
-def url_to_df(urls, doc_source=""):
+def url_to_df(urls: set[str], doc_source: str = "") -> pd.DataFrame:
     """
     Create a DataFrame from a list of URLs by processing each URL and organizing the results.
     param urls (list): A list of URLs to be processed.
@@ -131,8 +132,8 @@ def url_to_df(urls, doc_source=""):
     return df
 
 
-def get_forum_df():
-    questions_link = get_cutoff_questions("https://forum.astronomer.io/latest")
-    logger.info(questions_link)
-    df = url_to_df(questions_link, "astro-forum")
+def get_forum_df() -> list[pd.DataFrame]:
+    questions_links = get_cutoff_questions("https://forum.astronomer.io/latest")
+    logger.info(questions_links)
+    df = url_to_df(questions_links, "astro-forum")
     return [df]
