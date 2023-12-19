@@ -175,14 +175,13 @@ def get_or_create_drive_folder(gd_hook: GoogleDriveHook, folder_name: str, paren
         raise ValueError("More than one folder found.")
     elif len(existing_folder_ids) == 1:
         return existing_folder_ids[0]
-    else:
-        folder = (
-            gd_hook.get_conn()
-            .files()
-            .create(
-                body={"name": folder_name, "mimeType": "application/vnd.google-apps.folder", "parents": [parent_id]},
-                fields="id",
-            )
-            .execute()
+    folder = (
+        gd_hook.get_conn()
+        .files()
+        .create(
+            body={"name": folder_name, "mimeType": "application/vnd.google-apps.folder", "parents": [parent_id]},
+            fields="id",
         )
-        return folder["id"]
+        .execute()
+    )
+    return folder["id"]
