@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-import aiohttp
 import asyncio
-import backoff
 import json
 import logging
 
-from airflow.providers.google.suite.hooks.drive import GoogleDriveHook
+import aiohttp
+import backoff
 from langchain.chat_models import AzureChatOpenAI
 from langchain.retrievers import MultiQueryRetriever
 from langchain.vectorstores import Weaviate as WeaviateVectorStore
 from weaviate.client import Client as WeaviateClient
 
+from airflow.providers.google.suite.hooks.drive import GoogleDriveHook
+
 logger = logging.getLogger("airflow.task")
+
 
 @backoff.on_exception(backoff.expo, aiohttp.ClientError, max_tries=10)
 async def get_answer(askastro_endpoint_url: str, request_payload: dict) -> str:
@@ -26,7 +28,6 @@ async def get_answer(askastro_endpoint_url: str, request_payload: dict) -> str:
         async with session.post(
             url=f"{askastro_endpoint_url}/requests", json=request_payload, raise_for_status=True
         ) as response:
-
             if response.status == 200:
                 json_response = await response.json()
                 request_id = json_response.get("request_uuid")
@@ -43,7 +44,6 @@ async def get_answer(askastro_endpoint_url: str, request_payload: dict) -> str:
         while True:
             async with session.get(url=f"{askastro_endpoint_url}/requests/{request_id}") as response:
                 if response.status == 200:
-
                     json_response = await response.json()
                     if json_response.get("response"):
                         response.close()
