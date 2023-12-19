@@ -165,10 +165,11 @@ def get_or_create_drive_folder(gd_hook: GoogleDriveHook, folder_name: str, paren
 
     current_file_list = gd_hook.get_conn().files().list().execute().get("files")
 
-    existing_folder_ids = []
-    for file in current_file_list:
-        if file["name"] == folder_name and file["mimeType"] == "application/vnd.google-apps.folder":
-            existing_folder_ids.append(file["id"])
+    existing_folder_ids = [
+        file["id"]
+        for file in current_file_list
+        if file["name"] == folder_name and file["mimeType"] == "application/vnd.google-apps.folder"
+    ]
 
     if len(existing_folder_ids) > 1:
         raise ValueError("More than one folder found.")
