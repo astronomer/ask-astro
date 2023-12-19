@@ -179,8 +179,7 @@ def test_retrieval(question_number_subset: str):
             pd.DataFrame(values[1:], columns=values[0]).to_csv(test_question_template_path, index=False)
 
             return test_question_template_path
-        else:
-            raise ValueError("Could not download test question sheet.")
+        raise ValueError("Could not download test question sheet.")
 
     @task
     def generate_test_answers(test_question_template_path: Path, ts_nodash=None, **context):
