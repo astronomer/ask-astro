@@ -1,21 +1,22 @@
 from __future__ import annotations
 
 import pandas as pd
-from weaviate.util import generate_uuid5
 
 from include.tasks.extract.utils.stack_overflow_helpers import (
-    process_stack_answers,
-    process_stack_comments,
-    process_stack_posts,
-    process_stack_questions,
+    combine_stack_dfs,
+    fetch_questions_through_stack_api,
+    process_stack_api_answers,
+    process_stack_api_posts,
+    process_stack_api_questions,
 )
 
 
-def extract_stack_overflow_archive(tag: str, stackoverflow_cutoff_date: str) -> pd.DataFrame:
+def extract_stack_overflow(
+    tag: str, stackoverflow_cutoff_date: str, *, page_size: int = 100, max_pages: int = 10000000
+) -> pd.DataFrame:
     """
     This task generates stack overflow documents as a single markdown document per question with associated comments
-    and answers.  The task returns a pandas dataframe with all documents.  The archive data was pulled from
-    the internet archives and processed to local files for ingest.
+    and answers. The task returns a pandas dataframe with all documents.
 
     param tag: The tag names to include in extracting from stack overflow.
     This is used for populating the 'docSource'
@@ -29,38 +30,15 @@ def extract_stack_overflow_archive(tag: str, stackoverflow_cutoff_date: str) -> 
     'docLink': URL for the base question.
     'content': The question (plus answers) in markdown format.
     'sha': a UUID based on the other fields.  This is for compatibility with other document types.
-
     """
 
-    posts_df = pd.read_parquet("include/data/stack_overflow/posts/posts.parquet")
-
-    posts_df = process_stack_posts(posts_df=posts_df, stackoverflow_cutoff_date=stackoverflow_cutoff_date)
-
-    comments_df = pd.concat(
-        [
-            pd.read_parquet("include/data/stack_overflow/comments/comments_0.parquet"),
-            pd.read_parquet("include/data/stack_overflow/comments/comments_1.parquet"),
-        ],
-        ignore_index=True,
+    questions = fetch_questions_through_stack_api(
+        tag=tag,
+        stackoverflow_cutoff_date=stackoverflow_cutoff_date,
+        page_size=page_size,
+        max_pages=max_pages,
     )
-
-    comments_df = process_stack_comments(comments_df=comments_df)
-
-    questions_df = process_stack_questions(posts_df=posts_df, comments_df=comments_df, tag=tag)
-
-    answers_df = process_stack_answers(posts_df=posts_df, comments_df=comments_df)
-
-    # Join questions with answers
-    df = questions_df.join(answers_df)
-    df = df.apply(
-        lambda x: pd.Series([f"stackoverflow {tag}", x.docLink, "\n".join([x.content, x.answer_text])]), axis=1
-    )
-    df.columns = ["docSource", "docLink", "content"]
-
-    df.reset_index(inplace=True, drop=True)
-    df["sha"] = df.apply(generate_uuid5, axis=1)
-
-    # column order matters for uuid generation
-    df = df[["docSource", "sha", "content", "docLink"]]
-
-    return df
+    posts_df = process_stack_api_posts(questions)
+    questions_df = process_stack_api_questions(posts_df=posts_df, tag=tag)
+    answers_df = process_stack_api_answers(posts_df=posts_df)
+    return combine_stack_dfs(questions_df=questions_df, answers_df=answers_df, tag=tag)

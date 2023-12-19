@@ -9,6 +9,8 @@ from pathlib import Path
 import pandas as pd
 from include.tasks import split
 from include.tasks.extract import airflow_docs, astro_cli_docs, blogs, github, registry, stack_overflow
+from include.tasks.extract.astro_sdk_docs import extract_astro_sdk_docs
+from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
@@ -145,6 +147,9 @@ def ask_astro_load_bulk():
                 "extract_astro_blogs",
                 "extract_github_python",
                 "extract_astro_registry_dags",
+                "extract_astro_cli_docs",
+                "extract_astro_sdk_doc",
+                "extract_astro_provider_doc",
             }
 
     @task(trigger_rule="none_failed")
@@ -204,19 +209,34 @@ def ask_astro_load_bulk():
         return [df]
 
     @task(trigger_rule="none_failed")
-    def extract_stack_overflow(tag: str, stackoverflow_cutoff_date: str = stackoverflow_cutoff_date):
-        parquet_file = "include/data/stack_overflow/base.parquet"
+    def extract_astro_sdk_doc():
+        astro_sdk_parquet_path = "include/data/astronomer/docs/astro-sdk.parquet"
+        try:
+            df = pd.read_parquet(astro_sdk_parquet_path)
+        except Exception:
+            df = extract_astro_sdk_docs()[0]
+            df.to_parquet(astro_sdk_parquet_path)
 
-        if os.path.isfile(parquet_file):
-            if os.access(parquet_file, os.R_OK):
-                df = pd.read_parquet(parquet_file)
-            else:
-                raise Exception("Parquet file exists locally but is not readable.")
-        else:
-            df = stack_overflow.extract_stack_overflow_archive(
-                tag=tag, stackoverflow_cutoff_date=stackoverflow_cutoff_date
-            )
-            df.to_parquet(parquet_file)
+        return [df]
+
+    @task(trigger_rule="none_failed")
+    def extract_astro_provider_doc():
+        astro_provider_parquet_path = "include/data/astronomer/docs/astro-provider.parquet"
+        try:
+            df = pd.read_parquet(astro_provider_parquet_path)
+        except Exception:
+            df = extract_provider_docs()[0]
+            df.to_parquet(astro_provider_parquet_path)
+
+        return [df]
+
+    @task(trigger_rule="none_failed")
+    def extract_stack_overflow(tag: str, stackoverflow_cutoff_date: str = stackoverflow_cutoff_date):
+        try:
+            df = pd.read_parquet("include/data/stack_overflow/base.parquet")
+        except Exception:
+            df = stack_overflow.extract_stack_overflow(tag=tag, stackoverflow_cutoff_date=stackoverflow_cutoff_date)
+            df.to_parquet("include/data/stack_overflow/base.parquet")
 
         return df
 
@@ -289,6 +309,8 @@ def ask_astro_load_bulk():
     code_samples = extract_github_python.expand(source=code_samples_sources)
     _airflow_docs = extract_airflow_docs()
     _astro_cli_docs = extract_astro_cli_docs()
+    _extract_astro_sdk_docs = extract_astro_sdk_doc()
+    _extract_astro_providers_docs = extract_astro_provider_doc()
 
     _get_schema = get_schema_and_process(schema_file="include/data/schema.json")
     _check_schema = check_schema(class_objects=_get_schema)
@@ -303,7 +325,7 @@ def ask_astro_load_bulk():
         registry_cells_docs,
     ]
 
-    html_tasks = [_airflow_docs, _astro_cli_docs]
+    html_tasks = [_airflow_docs, _astro_cli_docs, _extract_astro_sdk_docs, _extract_astro_providers_docs]
 
     python_code_tasks = [registry_dags_docs, code_samples]
 
