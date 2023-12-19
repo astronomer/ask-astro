@@ -32,7 +32,6 @@ Ask Astro uses a set of Airflow DAGs that: ingest data from a source via an API 
 - [Apache Airflow GitHub](https://github.com/apache/airflow) issues and pull requests
 - [OpenLineage GitHub](https://github.com/OpenLineage/OpenLineage)
 - [OpenLineage GitHub docs](https://github.com/OpenLineage/docs)
-- Apache Airflow Slack's [#troubleshooting channel](https://app.slack.com/client/TCQ18L22Z/CCQ7EGB1P)
 - [StackOverflow's Stack Exchange Data Dump](https://archive.org/details/stackexchange)
 
 Generally, each of these sources has a DAG that handles the ingestion flow. We use LangChain's built-in text splitters for processing Markdown, RST, and Python code into smaller chunks to ensure each document is small enough to give accurate results when doing embeddings. We then use a Weaviate provider that we've built (and plan to publish) to both embed and store each document as a vector in Weaviate using OpenAI's embedding model.
