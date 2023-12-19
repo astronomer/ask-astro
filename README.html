@@ -347,7 +347,6 @@ document.write(`
 <li><p><a class="reference external" href="https://github.com/apache/airflow">Apache Airflow GitHub</a> issues and pull requests</p></li>
 <li><p><a class="reference external" href="https://github.com/OpenLineage/OpenLineage">OpenLineage GitHub</a></p></li>
 <li><p><a class="reference external" href="https://github.com/OpenLineage/docs">OpenLineage GitHub docs</a></p></li>
-<li><p>Apache Airflow Slack’s <a class="reference external" href="https://app.slack.com/client/TCQ18L22Z/CCQ7EGB1P">#troubleshooting channel</a></p></li>
 <li><p><a class="reference external" href="https://archive.org/details/stackexchange">StackOverflow’s Stack Exchange Data Dump</a></p></li>
 </ul>
 <p>Generally, each of these sources has a DAG that handles the ingestion flow. We use LangChain’s built-in text splitters for processing Markdown, RST, and Python code into smaller chunks to ensure each document is small enough to give accurate results when doing embeddings. We then use a Weaviate provider that we’ve built (and plan to publish) to both embed and store each document as a vector in Weaviate using OpenAI’s embedding model.</p>
