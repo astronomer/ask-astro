@@ -15,11 +15,21 @@ logger = logging.getLogger("airflow.task")
 
 
 def get_questions_urls(html_content: str) -> list[str]:
+    """
+    Extracts question URLs from HTML content using BeautifulSoup.
+
+    param html_content (str): The HTML content of a web page.
+    """
     soup = BeautifulSoup(html_content, "html.parser")
     return [a_tag.attrs.get("href") for a_tag in soup.findAll("a", class_="title raw-link raw-topic-link")]
 
 
 def get_publish_date(html_content) -> datetime:
+    """
+    Extracts and parses the publish date from HTML content
+
+    html_content (str): The HTML content of a web page.
+    """
     soup = BeautifulSoup(html_content, "html.parser")
     # TODO: use og:article:tag for tag filter
     publish_date = soup.find("meta", property="article:published_time")["content"]
@@ -31,8 +41,7 @@ def filter_cutoff_questions(questions_urls: list[str]) -> list[str]:
     """
     Filters a list of question URLs based on the publish dates.
 
-    Parameters:
-    - questions_urls (list[str]): A list of question URLs.
+    param questions_urls (list[str]): A list of question URLs.
     """
     filter_questions_urls = []
 
@@ -59,8 +68,7 @@ def get_cutoff_questions(forum_url: str) -> set[str]:
     """
     Retrieves a set of valid question URLs from a forum page.
 
-    Parameters:
-    - forum_url (str): The URL of the forum.
+    param forum_url (str): The URL of the forum.
     """
     page_number = 0
     base_url = f"{forum_url}?page="
@@ -81,10 +89,9 @@ def truncate_tokens(text: str, encoding_name: str, max_length: int = 8192) -> st
     """
     Truncates a text string based on the maximum number of tokens.
 
-    Parameters:
-    - string (str): The input text string to be truncated.
-    - encoding_name (str): The name of the encoding model.
-    - max_length (int): The maximum number of tokens allowed. Default is 8192.
+    param string (str): The input text string to be truncated.
+    param encoding_name (str): The name of the encoding model.
+    param max_length (int): The maximum number of tokens allowed. Default is 8192.
     """
     import tiktoken
 
@@ -102,7 +109,12 @@ def truncate_tokens(text: str, encoding_name: str, max_length: int = 8192) -> st
     return text
 
 
-def clean_content(row_content) -> str | None:
+def clean_content(row_content: str) -> str | None:
+    """
+    Cleans and extracts text content from HTML.
+
+    param row_content (str): The HTML content to be cleaned.
+    """
     soup = BeautifulSoup(row_content, "html.parser").find("body")
 
     if soup is None:
@@ -119,6 +131,11 @@ def clean_content(row_content) -> str | None:
 
 
 def fetch_url_content(url) -> str | None:
+    """
+    Fetches the content of a URL.
+
+    param url (str): The URL to fetch content from.
+    """
     try:
         response = requests.get(url)
         response.raise_for_status()  # Raise an HTTPError for bad responses
@@ -131,6 +148,7 @@ def fetch_url_content(url) -> str | None:
 def process_url(url: str, doc_source: str = "") -> dict | None:
     """
     Process a URL by fetching its content, cleaning it, and generating a unique identifier (SHA) based on the cleaned content.
+
     param url (str): The URL to be processed.
     """
     content = fetch_url_content(url)
@@ -143,6 +161,7 @@ def process_url(url: str, doc_source: str = "") -> dict | None:
 def url_to_df(urls: set[str], doc_source: str = "") -> pd.DataFrame:
     """
     Create a DataFrame from a list of URLs by processing each URL and organizing the results.
+
     param urls (list): A list of URLs to be processed.
     """
     df_data = [process_url(url, doc_source) for url in urls]
@@ -153,6 +172,9 @@ def url_to_df(urls: set[str], doc_source: str = "") -> pd.DataFrame:
 
 
 def get_forum_df() -> list[pd.DataFrame]:
+    """
+    Retrieves question links from a forum, converts them into a DataFrame, and returns a list containing the DataFrame.
+    """
     questions_links = get_cutoff_questions("https://forum.astronomer.io/latest")
     logger.info(questions_links)
     df = url_to_df(questions_links, "astro-forum")
