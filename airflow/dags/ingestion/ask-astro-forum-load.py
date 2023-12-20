@@ -1,6 +1,7 @@
 import datetime
 import os
 
+from include.tasks import split
 from include.tasks.extract.astro_forum_docs import get_forum_df
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
@@ -32,6 +33,8 @@ def get_astro_forum_content():
     default_args=default_args,
 )
 def ask_astro_load_astro_forum():
+    split_docs = task(split.split_html).expand(dfs=[get_astro_forum_content()])
+
     _import_data = (
         task(ask_astro_weaviate_hook.ingest_data, retries=10)
         .partial(
@@ -41,7 +44,7 @@ def ask_astro_load_astro_forum():
             batch_params={"batch_size": 1000},
             verbose=True,
         )
-        .expand(dfs=[get_astro_forum_content()])
+        .expand(dfs=[split_docs])
     )
 
 

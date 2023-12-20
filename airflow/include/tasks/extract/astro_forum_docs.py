@@ -55,7 +55,7 @@ def filter_cutoff_questions(questions_urls: list[str]) -> list[str]:
         soup = BeautifulSoup(html_content, "html.parser")
         reply = soup.find("div", itemprop="comment")
         if not reply:
-            logger.info("No reply, Ignoring it!")
+            logger.info(f"No response, Ignoring {question_url}")
             continue
 
         if get_publish_date(html_content) >= cutoff_date:
