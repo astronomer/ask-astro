@@ -16,11 +16,14 @@ slack_webhook_conn = os.environ.get("SLACK_WEBHOOK_CONN", "slack_webhook_default
 
 
 ingestion_dags = [
+    "ask_astro_load_airflow_docs",
+    "ask_astro_load_astro_cli_docs",
+    "ask_astro_load_astronomer_providers",
+    "ask_astro_load_astro_sdk" "ask_astro_load_blogs",
     "ask_astro_load_bulk",
-    "ask_astro_load_blogs",
     "ask_astro_load_github",
     "ask_astro_load_registry",
-    "ask_astro_load_slack",
+    # "ask_astro_load_slack",
     "ask_astro_load_stackoverflow",
 ]
 
