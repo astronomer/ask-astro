@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 
@@ -203,7 +204,7 @@ def extract_github_issues(repo_base: str, github_conn_id: str) -> pd.DataFrame:
     gh_hook = GithubHook(github_conn_id)
 
     repo = gh_hook.client.get_repo(repo_base)
-    issues = repo.get_issues(state="all")
+    issues = repo.get_issues(state="all", since=datetime(2022, 1, 1))
 
     issue_autoresponse_text = "Thanks for opening your first issue here!"
     pr_autoresponse_text = "Congratulations on your first Pull Request and welcome to the Apache Airflow community!"
