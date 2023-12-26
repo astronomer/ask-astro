@@ -1,13 +1,20 @@
 import { ASK_ASTRO_API_URL } from "$env/static/private";
-import { redirect } from "@sveltejs/kit";
+import {error, redirect} from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async () => {
   try {
     const requests = await fetch(`${ASK_ASTRO_API_URL}/requests`);
 
+    if (requests.status === 429) {
+      throw error(429, "Too many requests");
+    }
+
     return requests.json();
   } catch (err) {
+    if (err.status === 429) {
+      throw error(429, "Too many requests");
+    }
     console.error(err);
 
     return { requests: [] };
