@@ -55,7 +55,9 @@ def ask_astro_load_github():
     )
 
     issues_docs = (
-        task(github.extract_github_issues).partial(github_conn_id=_GITHUB_CONN_ID, cutoff_date=_GITHUB_ISSUE_CUTOFF_DATE).expand(repo_base=issues_docs_sources)
+        task(github.extract_github_issues)
+        .partial(github_conn_id=_GITHUB_CONN_ID, cutoff_date=_GITHUB_ISSUE_CUTOFF_DATE)
+        .expand(repo_base=issues_docs_sources)
     )
 
     code_samples = (
