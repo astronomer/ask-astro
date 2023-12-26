@@ -2,6 +2,8 @@
 import json
 import os
 
+INTERNAL_SLACK_APP_ID = os.environ.get("INTERNAL_SLACK_APP_ID")
+
 
 class FirestoreCollections:
     """Contains the names of the collections in the Firestore database."""
@@ -36,11 +38,19 @@ class ZendeskConfig:
 
 
 class SlackAppConfig:
-    "Contains the config variables for the Slack app."
+    """Contains the config variables for the Slack app."""
 
     client_id = os.environ.get("SLACK_CLIENT_ID")
     client_secret = os.environ.get("SLACK_CLIENT_SECRET")
     signing_secret = os.environ.get("SLACK_SIGNING_SECRET")
+
+
+class InternalSlackAppConfig:
+    """Contains the config variables for the Slack app."""
+
+    client_id = os.environ.get("INTERNAL_SLACK_CLIENT_ID")
+    client_secret = os.environ.get("INTERNAL_SLACK_CLIENT_SECRET")
+    signing_secret = os.environ.get("INTERNAL_SLACK_SIGNING_SECRET")
 
 
 class LangSmithConfig:
