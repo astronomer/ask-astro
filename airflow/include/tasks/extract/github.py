@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 
@@ -180,17 +181,18 @@ def extract_github_python(source: dict, github_conn_id: str) -> pd.DataFrame:
     return df
 
 
-def extract_github_issues(repo_base: str, github_conn_id: str) -> pd.DataFrame:
+def extract_github_issues(repo_base: str, github_conn_id: str, cutoff_date: str = "2022-1-1") -> pd.DataFrame:
     """
     This task downloads github issues as markdown documents in a pandas dataframe.  Text from templated
     auto responses for issues are removed while building a markdown document for each issue.
 
-    param repo_base: The name of of organization/repository (ie. "apache/airflow") from which to extract
+    param repo_base: The name of organization/repository (ie. "apache/airflow") from which to extract
     issues.
     type repo_base: str
 
     param github_conn_id: The connection ID to use with the GithubHook
     param github_conn_id: str
+    param cutoff_date: The cutoff date (format: Y-m-d) to extract issues
 
     The returned data includes the following fields:
     'docSource': ie. 'astronomer/docs/astro', 'astronomer/docs/learn', etc.
@@ -203,7 +205,7 @@ def extract_github_issues(repo_base: str, github_conn_id: str) -> pd.DataFrame:
     gh_hook = GithubHook(github_conn_id)
 
     repo = gh_hook.client.get_repo(repo_base)
-    issues = repo.get_issues(state="all")
+    issues = repo.get_issues(state="all", since=datetime.strptime(cutoff_date, "%Y-%m-%d"))
 
     issue_autoresponse_text = "Thanks for opening your first issue here!"
     pr_autoresponse_text = "Congratulations on your first Pull Request and welcome to the Apache Airflow community!"
