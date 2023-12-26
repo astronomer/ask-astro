@@ -192,6 +192,7 @@ def extract_github_issues(repo_base: str, github_conn_id: str, cutoff_date: str 
 
     param github_conn_id: The connection ID to use with the GithubHook
     param github_conn_id: str
+    param cutoff_date: The cutoff date (format: Y-m-d) to extract issues
 
     The returned data includes the following fields:
     'docSource': ie. 'astronomer/docs/astro', 'astronomer/docs/learn', etc.
