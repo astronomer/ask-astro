@@ -12,6 +12,7 @@ ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 _GITHUB_CONN_ID = "github_ro"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
+_GITHUB_ISSUE_CUTOFF_DATE = os.environ.get("GITHUB_ISSUE_CUTOFF_DATE", "2022-1-1")
 
 ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
 
@@ -54,7 +55,7 @@ def ask_astro_load_github():
     )
 
     issues_docs = (
-        task(github.extract_github_issues).partial(github_conn_id=_GITHUB_CONN_ID).expand(repo_base=issues_docs_sources)
+        task(github.extract_github_issues).partial(github_conn_id=_GITHUB_CONN_ID, cutoff_date=_GITHUB_ISSUE_CUTOFF_DATE).expand(repo_base=issues_docs_sources)
     )
 
     code_samples = (
