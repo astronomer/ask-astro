@@ -7,13 +7,13 @@ export const load: PageServerLoad = async () => {
     const requests = await fetch(`${ASK_ASTRO_API_URL}/requests`);
 
     if (requests.status === 429) {
-      throw error(429, "Too many requests");
+      throw error(429, "You have made too many requests and exceeded the rate limit. Please wait for some time before trying again.");
     }
 
     return requests.json();
   } catch (err) {
     if (err.status === 429) {
-      throw error(429, "Too many requests");
+      throw error(429, "You have made too many requests and exceeded the rate limit. Please wait for some time before trying again.");
     }
     console.error(err);
 
@@ -50,7 +50,7 @@ export const actions = {
 
 
     if (response.status === 429) {
-      throw error(429, "Too many requests");
+      throw error(429, "You have made too many requests and exceeded the rate limit. Please wait for some time before trying again.");
     }
 
     const json = await response.json();
