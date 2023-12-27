@@ -14,10 +14,6 @@ export const load: PageServerLoad = async ({ params, depends }) => {
     throw error(404, "Request not found");
   }
 
-  if (request.status === 429) {
-    throw error(429, "Too many requests");
-  }
-
   return await request.json();
 };
 

@@ -48,6 +48,11 @@ export const actions = {
       },
     });
 
+
+    if (response.status === 429) {
+      throw error(429, "Too many requests");
+    }
+
     const json = await response.json();
     throw redirect(302, `/requests/${json.request_uuid}`);
   },
