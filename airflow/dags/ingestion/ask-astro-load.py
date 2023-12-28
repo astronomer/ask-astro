@@ -32,9 +32,7 @@ markdown_docs_sources = [
     {"doc_dir": "", "repo_base": "OpenLineage/docs"},
     {"doc_dir": "", "repo_base": "OpenLineage/OpenLineage"},
 ]
-# code_samples_sources = [
-#     {"doc_dir": "code-samples", "repo_base": "astronomer/docs"},
-# ]
+
 issues_docs_sources = [
     "apache/airflow",
 ]
@@ -146,7 +144,6 @@ def ask_astro_load_bulk():
                 "extract_astro_registry_cell_types",
                 "extract_github_issues",
                 "extract_astro_blogs",
-                "extract_github_python",
                 "extract_astro_registry_dags",
                 "extract_astro_cli_docs",
                 "extract_astro_sdk_doc",
@@ -166,21 +163,6 @@ def ask_astro_load_bulk():
                 raise Exception("Parquet file exists locally but is not readable.")
         else:
             df = github.extract_github_markdown(source, github_conn_id=_GITHUB_CONN_ID)
-            df.to_parquet(parquet_file)
-
-        return df
-
-    @task(trigger_rule="none_failed")
-    def extract_github_python(source: dict):
-        parquet_file = f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet"
-
-        if os.path.isfile(parquet_file):
-            if os.access(parquet_file, os.R_OK):
-                df = pd.read_parquet(parquet_file)
-            else:
-                raise Exception("Parquet file exists locally but is not readable.")
-        else:
-            df = github.extract_github_python(source, _GITHUB_CONN_ID)
             df.to_parquet(parquet_file)
 
         return df
