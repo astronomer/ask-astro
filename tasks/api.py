@@ -1,3 +1,4 @@
+import sqlite3
 from pathlib import Path
 
 from invoke import task
@@ -75,3 +76,50 @@ def test(ctx: Context) -> None:
     with ctx.cd(api_root):
         print("Run ask-astro API tests")
         ctx.run("poetry run ../tests || poetry run pytest --last-failed ../tests")
+
+
+def _initialize_request_table(con):
+    """Initialize request table"""
+
+    cur = con.cursor()
+    create_request_table_sql = """
+    CREATE TABLE IF NOT EXISTS request(
+        uuid TEXT PRIMARY KEY,
+        score INTEGER DEFAULT 0,
+        success INTEGER,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+    """
+    cur.execute(create_request_table_sql)
+    con.commit()
+
+
+def _initialize_request_summary_view(con):
+    """Initialize request summary view"""
+
+    cur = con.cursor()
+    create_request_summary_view_sql = """
+    CREATE VIEW IF NOT EXISTS request_summary AS
+    SELECT
+        created_at_day, success, avg(score),count(*)
+    FROM (
+        SELECT
+            success,
+            score,
+            strftime("%Y-%m-%d", created_at) as 'created_at_day'
+        FROM request
+    )
+    GROUP BY
+        created_at_day, success;
+    """
+    cur.execute(create_request_summary_view_sql)
+    con.commit()
+
+
+@task
+def initialize_metrics_track_db(ctx: Context) -> None:
+    """Initialize table and view for metrics tracking"""
+    with ctx.cd(api_root):
+        conn = sqlite3.connect("temp.db")
+        _initialize_request_table(conn)
+        _initialize_request_summary_view(conn)
