@@ -7,7 +7,7 @@ import pandas as pd
 import pytz
 import requests
 from bs4 import BeautifulSoup
-from html_utils import fetch_page_content, urls_to_dataframe
+from include.tasks.extract.utils.html_utils import fetch_page_content, urls_to_dataframe
 
 cutoff_date = datetime(2022, 1, 1, tzinfo=pytz.UTC)
 
@@ -78,8 +78,6 @@ def get_cutoff_questions(forum_url: str) -> set[str]:
         logger.info(page_url)
         page_number = page_number + 1
         html_content = fetch_page_content(page_url)
-        if not html_content:
-            continue
         questions_urls = get_questions_urls(html_content)
         if not questions_urls:  # reached at the end of page
             return set(all_valid_url)

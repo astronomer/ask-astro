@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from include.tasks.extract.utils.htmm_utils import get_internal_links, urls_to_dataframe
+from include.tasks.extract.utils.html_utils import get_internal_links, urls_to_dataframe
 
 
 def extract_provider_docs() -> list[pd.DataFrame]:
