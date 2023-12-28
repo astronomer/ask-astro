@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import logging
-import pandas as pd
 from urllib.parse import urljoin, urlparse
+
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from weaviate.util import generate_uuid5
@@ -100,10 +101,10 @@ def get_page_links(url: str, exclude_literal: list[str]) -> set[str]:
         parsed_href = urlparse(href)
         href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
         if (
-                not is_valid_url(href)
-                or href in internal_urls
-                or domain_name not in href
-                or exclude_url(href, exclude_literal)
+            not is_valid_url(href)
+            or href in internal_urls
+            or domain_name not in href
+            or exclude_url(href, exclude_literal)
         ):
             continue
         urls.add(href)
