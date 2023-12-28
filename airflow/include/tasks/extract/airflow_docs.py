@@ -8,7 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 from weaviate.util import generate_uuid5
 
-from include.tasks.extract.utils.html_helpers import get_all_links
+from include.tasks.extract.utils.html_utils import get_internal_links
 
 
 def extract_airflow_docs(docs_base_url: str) -> list[pd.DataFrame]:
@@ -52,7 +52,7 @@ def extract_airflow_docs(docs_base_url: str) -> list[pd.DataFrame]:
     docs_url_base = f"{docs_url_parts.scheme}://{docs_url_parts.netloc}"
 
     all_links = {docs_base_url}
-    get_all_links(url=list(all_links)[0], all_links=all_links, exclude_docs=exclude_docs)
+    get_internal_links(url=list(all_links)[0], all_links=all_links, exclude_docs=exclude_docs)
 
     # make sure we didn't accidentally pickup any unrelated links in recursion
     non_doc_links = {link if docs_url_base not in link else "" for link in all_links}
