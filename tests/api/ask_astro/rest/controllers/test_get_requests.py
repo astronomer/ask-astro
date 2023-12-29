@@ -8,7 +8,7 @@ import pytest
 @pytest.mark.parametrize(
     "mock_exists, mock_data, expected_status, expected_response",
     [
-        (True, {"title": "Sample Question"}, 200, {"title": "Sample Question"}),
+        (True, {"title": "Sample Question", "response": "abc"}, 200, {"title": "Sample Question", "response": "abc"}),
         (False, None, 404, {"error": "Question not found"}),
         (None, None, 500, {"error": "Internal Server Error"}),
     ],
