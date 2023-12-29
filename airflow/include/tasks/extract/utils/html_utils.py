@@ -24,7 +24,7 @@ def is_valid_url(url: str) -> bool:
     return bool(parsed.netloc) and bool(parsed.scheme)
 
 
-def fetch_page_content(url: str) -> str | None:
+def fetch_page_content(url: str) -> str:
     try:
         response = requests.get(url)
         response.raise_for_status()  # Raise an HTTPError for bad responses
@@ -34,7 +34,7 @@ def fetch_page_content(url: str) -> str | None:
         return ""
 
 
-def exclude_url(url: str, exclude_literal: list[str]):
+def exclude_url(url: str, exclude_literal: list[str]) -> bool:
     url_path = urlparse(url).path
     return any(literal in url_path for literal in exclude_literal)
 
