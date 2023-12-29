@@ -3,8 +3,9 @@ from datetime import datetime
 
 from include.tasks import split
 from include.tasks.extract import airflow_docs
-from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 from include.tasks.extract.utils.html_utils import urls_to_dataframe
+from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
+
 from airflow.decorators import dag, task
 
 ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
@@ -51,14 +52,14 @@ def ask_astro_load_airflow_docs():
 
     _import_data = (
         task(ask_astro_weaviate_hook.ingest_data, retries=10)
-            .partial(
+        .partial(
             class_name=WEAVIATE_CLASS,
             existing="upsert",
             doc_key="docLink",
             batch_params={"batch_size": 1000},
             verbose=True,
         )
-            .expand(dfs=split_docs(extracted_airflow_docs, chunk_size=100))
+        .expand(dfs=split_docs(extracted_airflow_docs, chunk_size=100))
     )
 
 

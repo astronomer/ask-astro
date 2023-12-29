@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from include.tasks.extract.utils.html_utils import get_internal_links, urls_to_dataframe
+from include.tasks.extract.utils.html_utils import get_internal_links
 
 
 def extract_airflow_docs(docs_base_url: str) -> list[pd.DataFrame]:

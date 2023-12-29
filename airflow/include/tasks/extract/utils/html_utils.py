@@ -144,7 +144,9 @@ def process_url(url, doc_source="", clean_tag: bool = True, truncate_text: bool 
         return None
 
 
-def urls_to_dataframe(urls: set[str], doc_source: str = "", clean_tag: bool = True, truncate_text: bool = True) -> pd.DataFrame:
+def urls_to_dataframe(
+    urls: set[str], doc_source: str = "", clean_tag: bool = True, truncate_text: bool = True
+) -> pd.DataFrame:
     """
     Create a DataFrame from a list of URLs by processing each URL and organizing the results.
 

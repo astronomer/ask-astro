@@ -7,6 +7,7 @@ import pandas as pd
 import pytz
 import requests
 from bs4 import BeautifulSoup
+
 from include.tasks.extract.utils.html_utils import fetch_page_content, urls_to_dataframe
 
 cutoff_date = datetime(2022, 1, 1, tzinfo=pytz.UTC)
