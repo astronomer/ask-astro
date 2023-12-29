@@ -4,7 +4,7 @@ from datetime import datetime
 from include.tasks import split
 from include.tasks.extract import airflow_docs
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
-
+from include.tasks.extract.utils.html_utils import urls_to_dataframe
 from airflow.decorators import dag, task
 
 ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
@@ -19,6 +19,16 @@ airflow_docs_base_url = "https://airflow.apache.org/docs/"
 default_args = {"retries": 3, "retry_delay": 30}
 
 schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
+
+
+@task
+def split_docs(urls, chunk_size=100):
+    chunked_urls = split.split_list(list(urls), chunk_size=chunk_size)
+    df_data = []
+    for chunk_url in chunked_urls:
+        data = urls_to_dataframe(chunk_url)
+        df_data.append([data])
+    return df_data
 
 
 @dag(
@@ -37,18 +47,18 @@ def ask_astro_load_airflow_docs():
 
     extracted_airflow_docs = task(airflow_docs.extract_airflow_docs)(docs_base_url=airflow_docs_base_url)
 
-    split_md_docs = task(split.split_html).expand(dfs=[extracted_airflow_docs])
+    # split_docs = task(split.split_list)(urls=extracted_airflow_docs, chunk_size=2)
 
     _import_data = (
         task(ask_astro_weaviate_hook.ingest_data, retries=10)
-        .partial(
+            .partial(
             class_name=WEAVIATE_CLASS,
             existing="upsert",
             doc_key="docLink",
             batch_params={"batch_size": 1000},
             verbose=True,
         )
-        .expand(dfs=[split_md_docs])
+            .expand(dfs=split_docs(extracted_airflow_docs, chunk_size=100))
     )
 
 

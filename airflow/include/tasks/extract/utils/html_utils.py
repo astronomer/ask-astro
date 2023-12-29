@@ -31,7 +31,7 @@ def fetch_page_content(url: str) -> str | None:
         return response.content
     except requests.RequestException:
         logger.info("Error fetching content for %s: %s", url, url)
-        return None
+        return ""
 
 
 def exclude_url(url: str, exclude_literal: list[str]):
@@ -59,7 +59,7 @@ def remove_tags(text_content: str) -> str | None:
     return text
 
 
-def truncate_tokens(text: str, encoding_name: str = "gpt-3.5-turbo", max_length: int = 8192) -> str:
+def truncate_tokens(text: str, encoding_name: str = "gpt-3.5-turbo", max_length: int = 8192) -> str | None:
     """
     Truncates a text string based on the maximum number of tokens.
 
@@ -71,16 +71,16 @@ def truncate_tokens(text: str, encoding_name: str = "gpt-3.5-turbo", max_length:
 
     try:
         encoding = tiktoken.encoding_for_model(encoding_name)
-    except ValueError as e:
-        raise ValueError(f"Invalid encoding_name: {e}")
+        encoded_string = encoding.encode(text, disallowed_special=())
 
-    encoded_string = encoding.encode(text)
-    num_tokens = len(encoded_string)
+        num_tokens = len(encoded_string)
 
-    if num_tokens > max_length:
-        text = encoding.decode(encoded_string[:max_length])
-
-    return text
+        if num_tokens > max_length:
+            text = encoding.decode(encoded_string[:max_length])
+        return text
+    except Exception as e:
+        logger.info("Unable to encode text %s", text)
+        logger.info(e)
 
 
 def get_page_links(url: str, exclude_literal: list[str]) -> set[str]:
@@ -126,29 +126,35 @@ def get_internal_links(base_url: str, exclude_literal: list[str] = None) -> set[
     return internal_urls
 
 
-def process_url(url, doc_source=""):
+def process_url(url, doc_source="", clean_tag: bool = True, truncate_text: bool = True) -> dict | None:
     """
     Process a URL by fetching its content, cleaning it, and generating a unique identifier (SHA) based on the cleaned content.
 
     param url (str): The URL to be processed.
     """
     html_text = fetch_page_content(url)
-    if html_text is not None:
-        clean_content = truncate_tokens(remove_tags(html_text))
-        sha = generate_uuid5(clean_content)
-        return {"docSource": doc_source, "sha": sha, "content": clean_content, "docLink": url}
+    if html_text:
+        if clean_tag:
+            html_text = remove_tags(html_text)
+        if truncate_text:
+            html_text = truncate_tokens(html_text)
+        sha = generate_uuid5(html_text)
+        return {"docSource": doc_source, "sha": sha, "content": html_text, "docLink": url}
     else:
         return None
 
 
-def urls_to_dataframe(urls: set[str], doc_source: str = "") -> pd.DataFrame:
+def urls_to_dataframe(urls: set[str], doc_source: str = "", clean_tag: bool = True, truncate_text: bool = True) -> pd.DataFrame:
     """
     Create a DataFrame from a list of URLs by processing each URL and organizing the results.
 
     param urls (list): A list of URLs to be processed.
     """
-    df_data = [process_url(url, doc_source) for url in urls]
-    df_data = [entry for entry in df_data if entry is not None]  # Remove failed entries
-    df = pd.DataFrame(df_data)
+    content_list = []
+    for url in urls:
+        data = process_url(url, doc_source, clean_tag, truncate_text)
+        if data:
+            content_list.append(data)
+    df = pd.DataFrame(content_list)
     df = df[["docSource", "sha", "content", "docLink"]]  # Reorder columns if needed
     return df
