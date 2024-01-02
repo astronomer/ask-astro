@@ -2,15 +2,14 @@ import datetime
 import os
 
 from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
-from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
+from airflow.providers.weaviate.operators.weaviate import WeaviateDocumentIngestOperator
 
 ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
-ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
 
 blog_cutoff_date = datetime.date(2023, 1, 19)
 
@@ -39,17 +38,15 @@ def ask_astro_load_astronomer_providers():
     any existing documents that have been updated will be removed and re-added.
     """
 
-    _import_data = (
-        task(ask_astro_weaviate_hook.ingest_data, retries=10)
-        .partial(
-            class_name=WEAVIATE_CLASS,
-            existing="upsert",
-            doc_key="docLink",
-            batch_params={"batch_size": 1000},
-            verbose=True,
-        )
-        .expand(dfs=[get_provider_content()])
-    )
+    _import_data = WeaviateDocumentIngestOperator.partial(
+        class_name=WEAVIATE_CLASS,
+        existing="replace",
+        document_column="docLink",
+        batch_config_params={"batch_size": 1000},
+        verbose=True,
+        conn_id=_WEAVIATE_CONN_ID,
+        task_id="WeaviateDocumentIngestOperator",
+    ).expand(input_data=[get_provider_content()])
 
 
 ask_astro_load_astronomer_providers()

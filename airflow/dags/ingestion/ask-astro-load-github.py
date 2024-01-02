@@ -3,9 +3,9 @@ import os
 
 from include.tasks import split
 from include.tasks.extract import github
-from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
+from airflow.providers.weaviate.operators.weaviate import WeaviateDocumentIngestOperator
 
 ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 
@@ -13,8 +13,6 @@ _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 _GITHUB_CONN_ID = "github_ro"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
 _GITHUB_ISSUE_CUTOFF_DATE = os.environ.get("GITHUB_ISSUE_CUTOFF_DATE", "2022-1-1")
-
-ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
 
 markdown_docs_sources = [
     {"doc_dir": "", "repo_base": "OpenLineage/docs"},
@@ -58,17 +56,15 @@ def ask_astro_load_github():
 
     split_md_docs = task(split.split_markdown).expand(dfs=[md_docs, issues_docs])
 
-    _import_data = (
-        task(ask_astro_weaviate_hook.ingest_data, retries=10)
-        .partial(
-            class_name=WEAVIATE_CLASS,
-            existing="upsert",
-            doc_key="docLink",
-            batch_params={"batch_size": 1000},
-            verbose=True,
-        )
-        .expand(dfs=[split_md_docs])
-    )
+    _import_data = WeaviateDocumentIngestOperator.partial(
+        class_name=WEAVIATE_CLASS,
+        existing="replace",
+        document_column="docLink",
+        batch_config_params={"batch_size": 1000},
+        verbose=True,
+        conn_id=_WEAVIATE_CONN_ID,
+        task_id="WeaviateDocumentIngestOperator",
+    ).expand(input_data=[split_md_docs])
 
 
 ask_astro_load_github()
