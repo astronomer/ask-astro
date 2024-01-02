@@ -27,6 +27,7 @@ pydantic = "^2.3.0"
 gunicorn = "^21.2.0"
 uvicorn = "^0.23.2"
 tenacity = "^8.2.3"
+cohere = "==4.39"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"

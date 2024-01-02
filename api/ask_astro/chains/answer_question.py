@@ -11,10 +11,13 @@ from langchain.prompts import (
     MessagesPlaceholder,
     SystemMessagePromptTemplate,
 )
-from langchain.retrievers import MultiQueryRetriever
+from langchain.prompts.prompt import PromptTemplate
+from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
+from langchain.retrievers.document_compressors import CohereRerank
+from langchain.retrievers.weaviate_hybrid_search import WeaviateHybridSearchRetriever
 
-from ask_astro.clients.weaviate_ import docsearch
-from ask_astro.config import AzureOpenAIParams
+from ask_astro.clients.weaviate_ import client
+from ask_astro.config import AzureOpenAIParams, WeaviateConfig
 from ask_astro.settings import (
     CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_DEPLOYMENT_NAME,
     CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_TEMPERATURE,
@@ -32,19 +35,51 @@ with open("ask_astro/templates/combine_docs_chat_prompt.txt") as system_prompt_f
         HumanMessagePromptTemplate.from_template("{question}"),
     ]
 
+hybrid_retriever = WeaviateHybridSearchRetriever(
+    client=client,
+    index_name=WeaviateConfig.index_name,
+    text_key=WeaviateConfig.text_key,
+    attributes=WeaviateConfig.attributes,
+    create_schema_if_missing="false",
+    k=100,
+    alpha=0.5,
+)
+
+compressor = CohereRerank(user_agent="langchain", top_n=4)
+compression_retriever = ContextualCompressionRetriever(base_compressor=compressor, base_retriever=hybrid_retriever)
+
+user_question_rewroding_prompt_template = PromptTemplate(
+    input_variables=["question"],
+    template="""You are an AI language model assistant. Your task is
+    to generate 2 different versions of the given user
+    question to retrieve relevant documents from a vector database.
+    By rewording the original question, expanding on abbreviated words if there are any,
+    and generating multiple perspectives on the user question,
+    your goal is to help the user overcome some of the limitations
+    of distance-based similarity search. Provide these alternative
+    questions separated by newlines. Original question: {question}""",
+)
+
 # Initialize a MultiQueryRetriever using AzureChatOpenAI and Weaviate.
-retriever = MultiQueryRetriever.from_llm(
+multi_query_retriever = MultiQueryRetriever.from_llm(
     llm=AzureChatOpenAI(
         **AzureOpenAIParams.us_east,
         deployment_name=MULTI_QUERY_RETRIEVER_DEPLOYMENT_NAME,
         temperature=MULTI_QUERY_RETRIEVER_TEMPERATURE,
     ),
-    retriever=docsearch.as_retriever(),
+    include_original=True,
+    prompt=user_question_rewroding_prompt_template,
+    retriever=compression_retriever,
+)
+final_compressor = CohereRerank(user_agent="langchain", top_n=8)
+
+final_compression_retriever = ContextualCompressionRetriever(
+    base_compressor=final_compressor, base_retriever=multi_query_retriever
 )
 
 # Set up a ConversationalRetrievalChain to generate answers using the retriever.
 answer_question_chain = ConversationalRetrievalChain(
-    retriever=retriever,
+    retriever=final_compression_retriever,
     return_source_documents=True,
     question_generator=LLMChain(
         llm=AzureChatOpenAI(
