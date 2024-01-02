@@ -45,7 +45,7 @@ def extract_links(soup: BeautifulSoup, base_url: str) -> list[str]:
     return links
 
 
-def scrape_page(url: str, visited_urls: set, docs_data: list):
+def scrape_page(url: str, visited_urls: set, docs_data: list) -> None:
     """
     Recursively scrapes a webpage and its subpages.
 
