@@ -1,9 +1,6 @@
 import os
 from datetime import datetime
 
-from include.tasks import split
-from include.tasks.extract import slack
-
 from airflow.decorators import dag, task
 from airflow.providers.weaviate.operators.weaviate import WeaviateDocumentIngestOperator
 
@@ -40,6 +37,8 @@ def ask_astro_load_slack():
     DAG should run nightly to capture threads between archive periods. By using the upsert logic of the
     weaviate_import decorator any existing documents that have been updated will be removed and re-added.
     """
+    from include.tasks import split
+    from include.tasks.extract import slack
 
     slack_docs = task(slack.extract_slack).expand(source=slack_channel_sources)
 

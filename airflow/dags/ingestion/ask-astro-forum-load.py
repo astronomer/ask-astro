@@ -1,9 +1,6 @@
 import datetime
 import os
 
-from include.tasks import split
-from include.tasks.extract.astro_forum_docs import get_forum_df
-
 from airflow.decorators import dag, task
 from airflow.providers.weaviate.operators.weaviate import WeaviateDocumentIngestOperator
 
@@ -21,6 +18,8 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 
 @task
 def get_astro_forum_content():
+    from include.tasks.extract.astro_forum_docs import get_forum_df
+
     return get_forum_df()
 
 
@@ -32,6 +31,8 @@ def get_astro_forum_content():
     default_args=default_args,
 )
 def ask_astro_load_astro_forum():
+    from include.tasks import split
+
     split_docs = task(split.split_html).expand(dfs=[get_astro_forum_content()])
 
     _import_data = WeaviateDocumentIngestOperator.partial(

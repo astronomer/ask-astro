@@ -1,8 +1,6 @@
 import datetime
 import os
 
-from include.tasks.extract.astro_sdk_docs import extract_astro_sdk_docs
-
 from airflow.decorators import dag, task
 from airflow.providers.weaviate.operators.weaviate import WeaviateDocumentIngestOperator
 
@@ -20,6 +18,8 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 
 @task
 def get_astro_sdk_content():
+    from include.tasks.extract.astro_sdk_docs import extract_astro_sdk_docs
+
     dfs = extract_astro_sdk_docs()
     return dfs
 

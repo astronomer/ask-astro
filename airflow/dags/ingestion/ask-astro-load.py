@@ -7,16 +7,9 @@ import os
 from pathlib import Path
 
 import pandas as pd
-from include.tasks import split
-from include.tasks.extract import airflow_docs, astro_cli_docs, blogs, github, registry, stack_overflow
-from include.tasks.extract.astro_docs import extract_astro_docs
-from include.tasks.extract.astro_forum_docs import get_forum_df
-from include.tasks.extract.astro_sdk_docs import extract_astro_sdk_docs
-from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
 
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowException
-from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
 from airflow.providers.weaviate.operators.weaviate import WeaviateDocumentIngestOperator
 
 seed_baseline_url = None
@@ -77,6 +70,8 @@ def ask_astro_load_bulk():
 
     """
 
+    from include.tasks import split
+
     @task
     def get_schema_and_process(schema_file: str) -> list:
         """
@@ -112,6 +107,8 @@ def ask_astro_load_bulk():
 
         :param class_objects: Class objects to be checked against the current schema.
         """
+        from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
+
         ask_astro_weaviate_hook = WeaviateHook(conn_id=_WEAVIATE_CONN_ID)
         return (
             ["check_seed_baseline"]
@@ -127,6 +124,8 @@ def ask_astro_load_bulk():
         :param class_objects: A list of class objects for schema creation or update.
         :param existing: Strategy to handle existing classes ('ignore' or 'replace'). Defaults to 'ignore'.
         """
+        from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
+
         ask_astro_weaviate_hook = WeaviateHook(conn_id=_WEAVIATE_CONN_ID)
         ask_astro_weaviate_hook.create_or_replace_classes(
             schema_json={cls["class"]: cls for cls in class_objects}, existing=existing
@@ -158,6 +157,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_github_markdown(source: dict):
+        from include.tasks.extract import github
+
         parquet_file = f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet"
 
         if os.path.isfile(parquet_file):
@@ -172,7 +173,26 @@ def ask_astro_load_bulk():
         return df
 
     @task(trigger_rule="none_failed")
+    def extract_github_python(source: dict):
+        from include.tasks.extract import github
+
+        parquet_file = f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet"
+
+        if os.path.isfile(parquet_file):
+            if os.access(parquet_file, os.R_OK):
+                df = pd.read_parquet(parquet_file)
+            else:
+                raise Exception("Parquet file exists locally but is not readable.")
+        else:
+            df = github.extract_github_python(source, _GITHUB_CONN_ID)
+            df.to_parquet(parquet_file)
+
+        return df
+
+    @task(trigger_rule="none_failed")
     def extract_airflow_docs():
+        from include.tasks.extract import airflow_docs
+
         parquet_file = "include/data/apache/airflow/docs.parquet"
 
         if os.path.isfile(parquet_file):
@@ -188,6 +208,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_cli_docs():
+        from include.tasks.extract import astro_cli_docs
+
         astro_cli_parquet_path = "include/data/astronomer/docs/astro-cli.parquet"
         try:
             df = pd.read_parquet(astro_cli_parquet_path)
@@ -199,6 +221,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_sdk_doc():
+        from include.tasks.extract.astro_sdk_docs import extract_astro_sdk_docs
+
         astro_sdk_parquet_path = "include/data/astronomer/docs/astro-sdk.parquet"
         try:
             df = pd.read_parquet(astro_sdk_parquet_path)
@@ -210,6 +234,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_provider_doc():
+        from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
+
         astro_provider_parquet_path = "include/data/astronomer/docs/astro-provider.parquet"
         try:
             df = pd.read_parquet(astro_provider_parquet_path)
@@ -221,6 +247,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_stack_overflow(tag: str, stackoverflow_cutoff_date: str = stackoverflow_cutoff_date):
+        from include.tasks.extract import stack_overflow
+
         try:
             df = pd.read_parquet("include/data/stack_overflow/base.parquet")
         except Exception:
@@ -231,6 +259,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_forum_doc():
+        from include.tasks.extract.astro_forum_docs import get_forum_df
+
         astro_forum_parquet_path = "include/data/astronomer/docs/astro-forum.parquet"
         try:
             df = pd.read_parquet(astro_forum_parquet_path)
@@ -242,6 +272,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_github_issues(repo_base: str):
+        from include.tasks.extract import github
+
         parquet_file = f"include/data/{repo_base}/issues.parquet"
 
         if os.path.isfile(parquet_file):
@@ -257,6 +289,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_registry_cell_types():
+        from include.tasks.extract import registry
+
         parquet_file = "include/data/astronomer/registry/registry_cells.parquet"
 
         if os.path.isfile(parquet_file):
@@ -272,6 +306,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_registry_dags():
+        from include.tasks.extract import registry
+
         parquet_file = "include/data/astronomer/registry/registry_dags.parquet"
 
         if os.path.isfile(parquet_file):
@@ -287,6 +323,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_blogs():
+        from include.tasks.extract import blogs
+
         parquet_file = "include/data/astronomer/blogs/astro_blogs.parquet"
 
         if os.path.isfile(parquet_file):
@@ -325,6 +363,8 @@ def ask_astro_load_bulk():
         batch_config_params: dict | None = None,
         verbose: bool = True,
     ):
+        from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
+
         ask_astro_weaviate_hook = WeaviateHook(conn_id=_WEAVIATE_CONN_ID)
         seed_filename = f"include/data/{seed_baseline_url.split('/')[-1]}"
 

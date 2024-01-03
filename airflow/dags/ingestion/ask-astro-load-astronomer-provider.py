@@ -1,8 +1,6 @@
 import datetime
 import os
 
-from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
-
 from airflow.decorators import dag, task
 from airflow.providers.weaviate.operators.weaviate import WeaviateDocumentIngestOperator
 
@@ -20,6 +18,8 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 
 @task
 def get_provider_content():
+    from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
+
     dfs = extract_provider_docs()
     return dfs
 
