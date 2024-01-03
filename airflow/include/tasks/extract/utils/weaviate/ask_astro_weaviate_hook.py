@@ -460,12 +460,12 @@ class AskAstroWeaviateHook(WeaviateHook):
                 )
                 if removal_errors:
                     self.logger.error("Errors encountered during removal.")
-                    self.logger.error("\n".join(removal_errors))
+                    self.logger.info(removal_errors)
                     raise AirflowException("Errors encountered during removal.")
 
         if self.batch_errors:
             self.logger.error("Errors encountered during ingest.")
-            self.logger.error("\n".join(self.batch_errors))
+            self.logger.info(self.batch_errors)
             raise AirflowException("Errors encountered during ingest.")
 
     def _query_objects(self, value: Any, doc_key: str, class_name: str, uuid_column: str) -> set:

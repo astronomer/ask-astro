@@ -23,6 +23,7 @@ ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 _GITHUB_CONN_ID = "github_ro"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
+_GITHUB_ISSUE_CUTOFF_DATE = os.environ.get("GITHUB_ISSUE_CUTOFF_DATE", "2022-1-1")
 
 ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
 
@@ -263,7 +264,7 @@ def ask_astro_load_bulk():
             else:
                 raise Exception("Parquet file exists locally but is not readable.")
         else:
-            df = github.extract_github_issues(repo_base, _GITHUB_CONN_ID)
+            df = github.extract_github_issues(repo_base, _GITHUB_CONN_ID, _GITHUB_ISSUE_CUTOFF_DATE)
             df.to_parquet(parquet_file)
 
         return df
