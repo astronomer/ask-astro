@@ -105,7 +105,7 @@ def split_html(dfs: list[pd.DataFrame]) -> pd.DataFrame:
     return df
 
 
-def split_list(urls: list, chunk_size: 0):
+def split_list(urls: list[str], chunk_size: int = 0) -> list[list]:
     new_list = []
     for i in range(0, len(urls), chunk_size):
         new_list.append(urls[i : i + chunk_size])

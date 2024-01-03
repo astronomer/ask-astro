@@ -34,7 +34,7 @@ def fetch_page_content(url: str) -> str:
         return ""
 
 
-def exclude_url(url: str, exclude_literal: list[str]) -> bool:
+def is_excluded_url(url: str, exclude_literal: list[str]) -> bool:
     url_path = urlparse(url).path
     return any(literal in url_path for literal in exclude_literal)
 

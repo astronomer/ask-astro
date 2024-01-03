@@ -25,11 +25,10 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 @task
 def split_docs(urls, chunk_size=100) -> list[list]:
     chunked_urls = split.split_list(list(urls), chunk_size=chunk_size)
-    df_data = []
-    for chunk_url in chunked_urls:
-        data = urls_to_dataframe(chunk_url)
-        df_data.append([data])
-    return df_data
+    return [
+        [urls_to_dataframe(chunk_url)]
+        for chunk_url in chunked_urls
+    ]
 
 
 @dag(
@@ -47,8 +46,6 @@ def ask_astro_load_airflow_docs():
     """
 
     extracted_airflow_docs = task(airflow_docs.extract_airflow_docs)(docs_base_url=airflow_docs_base_url)
-
-    # split_docs = task(split.split_list)(urls=extracted_airflow_docs, chunk_size=2)
 
     _import_data = (
         task(ask_astro_weaviate_hook.ingest_data, retries=10)
