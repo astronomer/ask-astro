@@ -318,7 +318,7 @@ def ask_astro_load_bulk():
     def import_baseline(
         document_column: str,
         class_name: str,
-        seed_baseline_url: str = None,
+        seed_baseline_url: str | None = None,
         existing: str = "error",
         uuid_column: str | None = None,
         vector_column: str = "Vector",
