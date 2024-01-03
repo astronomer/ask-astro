@@ -301,10 +301,9 @@ def ask_astro_load_bulk():
         parquet_file = "include/data/astronomer/blogs/astro_docs.parquet"
 
         if os.path.isfile(parquet_file):
-            if os.access(parquet_file, os.R_OK):
-                df = pd.read_parquet(parquet_file)
-            else:
-                raise Exception("Parquet file exists locally but is not readable.")
+            if not os.access(parquet_file, os.R_OK):
+                raise AirflowException("Parquet file exists locally but is not readable.")
+            df = pd.read_parquet(parquet_file)
         else:
             df = extract_astro_docs()[0]
             df.to_parquet(parquet_file)
