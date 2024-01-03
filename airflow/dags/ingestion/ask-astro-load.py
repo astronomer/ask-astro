@@ -16,6 +16,7 @@ from include.tasks.extract.astronomer_providers_docs import extract_provider_doc
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
+from airflow.exceptions import AirflowException
 
 seed_baseline_url = None
 stackoverflow_cutoff_date = "2021-09-01"
