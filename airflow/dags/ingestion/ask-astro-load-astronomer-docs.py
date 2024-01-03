@@ -1,9 +1,6 @@
 import datetime
 import os
 
-from include.tasks import split
-from include.tasks.extract.astro_docs import extract_astro_docs
-
 from airflow.decorators import dag, task
 
 ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
@@ -28,6 +25,8 @@ def ask_astro_load_astronomer_docs():
     """
     This DAG performs incremental load for any new docs in astronomer docs.
     """
+    from include.tasks import split
+    from include.tasks.extract.astro_docs import extract_astro_docs
     from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
     ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
