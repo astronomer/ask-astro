@@ -329,10 +329,9 @@ def ask_astro_load_bulk():
         seed_filename = f"include/data/{seed_baseline_url.split('/')[-1]}"
 
         if os.path.isfile(seed_filename):
-            if os.access(seed_filename, os.R_OK):
-                df = pd.read_parquet(seed_filename)
-            else:
+            if not os.access(seed_filename, os.R_OK):
                 raise AirflowException("Baseline file exists locally but is not readable.")
+            df = pd.read_parquet(seed_filename)
         else:
             df = pd.read_parquet(seed_baseline_url)
             df.to_parquet(seed_filename)
