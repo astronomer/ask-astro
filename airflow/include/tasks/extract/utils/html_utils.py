@@ -116,7 +116,7 @@ def get_page_links(url: str, exclude_literal: list[str]) -> set[str]:
     return urls
 
 
-def get_internal_links(base_url: str, exclude_literal: list[str] = None) -> set[str]:
+def get_internal_links(base_url: str, exclude_literal: list[str] | None = None) -> set[str]:
     if exclude_literal is None:
         exclude_literal = []
 
