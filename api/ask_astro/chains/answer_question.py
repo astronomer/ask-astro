@@ -13,11 +13,11 @@ from langchain.prompts import (
 )
 from langchain.prompts.prompt import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
-from langchain.retrievers.document_compressors import CohereRerank
+from langchain.retrievers.document_compressors import CohereRerank, LLMChainFilter
 from langchain.retrievers.weaviate_hybrid_search import WeaviateHybridSearchRetriever
 
 from ask_astro.clients.weaviate_ import client
-from ask_astro.config import AzureOpenAIParams, WeaviateConfig
+from ask_astro.config import AzureOpenAIParams, CohereConfig, WeaviateConfig
 from ask_astro.settings import (
     CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_DEPLOYMENT_NAME,
     CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_TEMPERATURE,
@@ -40,15 +40,12 @@ hybrid_retriever = WeaviateHybridSearchRetriever(
     index_name=WeaviateConfig.index_name,
     text_key=WeaviateConfig.text_key,
     attributes=WeaviateConfig.attributes,
-    create_schema_if_missing="false",
-    k=100,
-    alpha=0.5,
+    k=WeaviateConfig.k,
+    alpha=WeaviateConfig.alpha,
 )
 
-compressor = CohereRerank(user_agent="langchain", top_n=4)
-compression_retriever = ContextualCompressionRetriever(base_compressor=compressor, base_retriever=hybrid_retriever)
-
-user_question_rewroding_prompt_template = PromptTemplate(
+# Initialize a MultiQueryRetriever using AzureChatOpenAI and Weaviate.
+user_question_rewording_prompt_template = PromptTemplate(
     input_variables=["question"],
     template="""You are an AI language model assistant. Your task is
     to generate 2 different versions of the given user
@@ -59,8 +56,6 @@ user_question_rewroding_prompt_template = PromptTemplate(
     of distance-based similarity search. Provide these alternative
     questions separated by newlines. Original question: {question}""",
 )
-
-# Initialize a MultiQueryRetriever using AzureChatOpenAI and Weaviate.
 multi_query_retriever = MultiQueryRetriever.from_llm(
     llm=AzureChatOpenAI(
         **AzureOpenAIParams.us_east,
@@ -68,18 +63,31 @@ multi_query_retriever = MultiQueryRetriever.from_llm(
         temperature=MULTI_QUERY_RETRIEVER_TEMPERATURE,
     ),
     include_original=True,
-    prompt=user_question_rewroding_prompt_template,
-    retriever=compression_retriever,
+    prompt=user_question_rewording_prompt_template,
+    retriever=hybrid_retriever,
 )
-final_compressor = CohereRerank(user_agent="langchain", top_n=8)
 
-final_compression_retriever = ContextualCompressionRetriever(
-    base_compressor=final_compressor, base_retriever=multi_query_retriever
+# Rerank
+cohere_reranker_compressor = CohereRerank(user_agent="langchain", top_n=CohereConfig.rerank_top_n)
+reranker_retriever = ContextualCompressionRetriever(
+    base_compressor=cohere_reranker_compressor, base_retriever=multi_query_retriever
+)
+
+# GPT-3.5 to check over relevancy of the remaining documents
+llm_chain_filter = LLMChainFilter.from_llm(
+    AzureChatOpenAI(
+        **AzureOpenAIParams.us_east,
+        deployment_name=CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_DEPLOYMENT_NAME,
+        temperature=0.0,
+    )
+)
+llm_chain_filter_compression_retriever = ContextualCompressionRetriever(
+    base_compressor=llm_chain_filter, base_retriever=reranker_retriever
 )
 
 # Set up a ConversationalRetrievalChain to generate answers using the retriever.
 answer_question_chain = ConversationalRetrievalChain(
-    retriever=final_compression_retriever,
+    retriever=llm_chain_filter_compression_retriever,
     return_source_documents=True,
     question_generator=LLMChain(
         llm=AzureChatOpenAI(
