@@ -104,7 +104,7 @@ def get_page_links(url: str, exclude_literal: list[str]) -> set[str]:
             not is_valid_url(href)
             or href in internal_urls
             or domain_name not in href
-            or exclude_url(href, exclude_literal)
+            or is_excluded_url(href, exclude_literal)
         ):
             continue
         urls.add(href)
