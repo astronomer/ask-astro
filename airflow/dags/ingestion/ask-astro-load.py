@@ -9,12 +9,14 @@ from pathlib import Path
 import pandas as pd
 from include.tasks import split
 from include.tasks.extract import airflow_docs, astro_cli_docs, blogs, github, registry, stack_overflow
+from include.tasks.extract.astro_docs import extract_astro_docs
 from include.tasks.extract.astro_forum_docs import get_forum_df
 from include.tasks.extract.astro_sdk_docs import extract_astro_sdk_docs
 from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
+from airflow.exceptions import AirflowException
 
 seed_baseline_url = None
 stackoverflow_cutoff_date = "2021-09-01"
@@ -28,14 +30,10 @@ _GITHUB_ISSUE_CUTOFF_DATE = os.environ.get("GITHUB_ISSUE_CUTOFF_DATE", "2022-1-1
 ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
 
 markdown_docs_sources = [
-    {"doc_dir": "learn", "repo_base": "astronomer/docs"},
-    {"doc_dir": "astro", "repo_base": "astronomer/docs"},
     {"doc_dir": "", "repo_base": "OpenLineage/docs"},
     {"doc_dir": "", "repo_base": "OpenLineage/OpenLineage"},
 ]
-code_samples_sources = [
-    {"doc_dir": "code-samples", "repo_base": "astronomer/docs"},
-]
+
 issues_docs_sources = [
     "apache/airflow",
 ]
@@ -147,12 +145,12 @@ def ask_astro_load_bulk():
                 "extract_astro_registry_cell_types",
                 "extract_github_issues",
                 "extract_astro_blogs",
-                "extract_github_python",
                 "extract_astro_registry_dags",
                 "extract_astro_cli_docs",
                 "extract_astro_sdk_doc",
                 "extract_astro_provider_doc",
                 "extract_astro_forum_doc",
+                "extract_astronomer_docs",
             }
 
     @task(trigger_rule="none_failed")
@@ -166,21 +164,6 @@ def ask_astro_load_bulk():
                 raise Exception("Parquet file exists locally but is not readable.")
         else:
             df = github.extract_github_markdown(source, github_conn_id=_GITHUB_CONN_ID)
-            df.to_parquet(parquet_file)
-
-        return df
-
-    @task(trigger_rule="none_failed")
-    def extract_github_python(source: dict):
-        parquet_file = f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet"
-
-        if os.path.isfile(parquet_file):
-            if os.access(parquet_file, os.R_OK):
-                df = pd.read_parquet(parquet_file)
-            else:
-                raise Exception("Parquet file exists locally but is not readable.")
-        else:
-            df = github.extract_github_python(source, _GITHUB_CONN_ID)
             df.to_parquet(parquet_file)
 
         return df
@@ -314,13 +297,27 @@ def ask_astro_load_bulk():
 
         return [df]
 
+    @task(trigger_rule="none_failed")
+    def extract_astronomer_docs():
+        parquet_file = "include/data/astronomer/blogs/astro_docs.parquet"
+
+        if os.path.isfile(parquet_file):
+            if not os.access(parquet_file, os.R_OK):
+                raise AirflowException("Parquet file exists locally but is not readable.")
+            df = pd.read_parquet(parquet_file)
+        else:
+            df = extract_astro_docs()[0]
+            df.to_parquet(parquet_file)
+
+        return [df]
+
     md_docs = extract_github_markdown.expand(source=markdown_docs_sources)
     issues_docs = extract_github_issues.expand(repo_base=issues_docs_sources)
     stackoverflow_docs = extract_stack_overflow.expand(tag=stackoverflow_tags)
     registry_cells_docs = extract_astro_registry_cell_types()
     blogs_docs = extract_astro_blogs()
     registry_dags_docs = extract_astro_registry_dags()
-    code_samples = extract_github_python.expand(source=code_samples_sources)
+    _astro_docs = extract_astronomer_docs()
     _airflow_docs = extract_airflow_docs()
     _astro_cli_docs = extract_astro_cli_docs()
     _extract_astro_sdk_docs = extract_astro_sdk_doc()
@@ -346,9 +343,10 @@ def ask_astro_load_bulk():
         _extract_astro_sdk_docs,
         _extract_astro_providers_docs,
         _astro_forum_docs,
+        _astro_docs,
     ]
 
-    python_code_tasks = [registry_dags_docs, code_samples]
+    python_code_tasks = [registry_dags_docs]
 
     split_md_docs = task(split.split_markdown).expand(dfs=markdown_tasks)
 

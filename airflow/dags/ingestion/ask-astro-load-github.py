@@ -17,14 +17,10 @@ _GITHUB_ISSUE_CUTOFF_DATE = os.environ.get("GITHUB_ISSUE_CUTOFF_DATE", "2022-1-1
 ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
 
 markdown_docs_sources = [
-    {"doc_dir": "learn", "repo_base": "astronomer/docs"},
-    {"doc_dir": "astro", "repo_base": "astronomer/docs"},
     {"doc_dir": "", "repo_base": "OpenLineage/docs"},
     {"doc_dir": "", "repo_base": "OpenLineage/OpenLineage"},
 ]
-code_samples_sources = [
-    {"doc_dir": "code-samples", "repo_base": "astronomer/docs"},
-]
+
 issues_docs_sources = [
     "apache/airflow",
 ]
@@ -60,13 +56,7 @@ def ask_astro_load_github():
         .expand(repo_base=issues_docs_sources)
     )
 
-    code_samples = (
-        task(github.extract_github_python).partial(github_conn_id=_GITHUB_CONN_ID).expand(source=code_samples_sources)
-    )
-
     split_md_docs = task(split.split_markdown).expand(dfs=[md_docs, issues_docs])
-
-    split_code_docs = task(split.split_python).expand(dfs=[code_samples])
 
     _import_data = (
         task(ask_astro_weaviate_hook.ingest_data, retries=10)
@@ -77,7 +67,7 @@ def ask_astro_load_github():
             batch_params={"batch_size": 1000},
             verbose=True,
         )
-        .expand(dfs=[split_md_docs, split_code_docs])
+        .expand(dfs=[split_md_docs])
     )
 
 
