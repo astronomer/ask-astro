@@ -16,6 +16,7 @@ from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetri
 from langchain.retrievers.document_compressors import CohereRerank, LLMChainFilter
 from langchain.retrievers.weaviate_hybrid_search import WeaviateHybridSearchRetriever
 
+from ask_astro.chains.custom_llm_filter_prompt import custom_llm_chain_filter_prompt_template
 from ask_astro.clients.weaviate_ import client
 from ask_astro.config import AzureOpenAIParams, CohereConfig, WeaviateConfig
 from ask_astro.settings import (
@@ -79,7 +80,8 @@ llm_chain_filter = LLMChainFilter.from_llm(
         **AzureOpenAIParams.us_east,
         deployment_name=CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_DEPLOYMENT_NAME,
         temperature=0.0,
-    )
+    ),
+    custom_llm_chain_filter_prompt_template,
 )
 llm_chain_filter_compression_retriever = ContextualCompressionRetriever(
     base_compressor=llm_chain_filter, base_retriever=reranker_retriever
