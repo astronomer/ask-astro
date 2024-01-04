@@ -1,8 +1,10 @@
 import os
 from datetime import datetime
 
+import pandas as pd
 from include.tasks import split
 from include.tasks.extract import airflow_docs
+from include.tasks.extract.utils.html_utils import urls_to_dataframe
 from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
@@ -21,6 +23,12 @@ default_args = {"retries": 3, "retry_delay": 30}
 schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 
 
+@task
+def split_docs(urls, chunk_size=100) -> list[list[pd.Dataframe]]:
+    chunked_urls = split.split_list(list(urls), chunk_size=chunk_size)
+    return [[urls_to_dataframe(chunk_url)] for chunk_url in chunked_urls]
+
+
 @dag(
     schedule_interval=schedule_interval,
     start_date=datetime(2023, 9, 27),
@@ -37,8 +45,6 @@ def ask_astro_load_airflow_docs():
 
     extracted_airflow_docs = task(airflow_docs.extract_airflow_docs)(docs_base_url=airflow_docs_base_url)
 
-    split_md_docs = task(split.split_html).expand(dfs=[extracted_airflow_docs])
-
     _import_data = (
         task(ask_astro_weaviate_hook.ingest_data, retries=10)
         .partial(
@@ -48,7 +54,7 @@ def ask_astro_load_airflow_docs():
             batch_params={"batch_size": 1000},
             verbose=True,
         )
-        .expand(dfs=[split_md_docs])
+        .expand(dfs=split_docs(extracted_airflow_docs, chunk_size=100))
     )
 
 
