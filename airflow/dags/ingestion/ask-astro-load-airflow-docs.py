@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-
+import pandas as pd
 from include.tasks import split
 from include.tasks.extract import airflow_docs
 from include.tasks.extract.utils.html_utils import urls_to_dataframe
@@ -23,7 +23,7 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 
 
 @task
-def split_docs(urls, chunk_size=100) -> list[list]:
+def split_docs(urls, chunk_size=100) -> list[list[pd.Dataframe]]:
     chunked_urls = split.split_list(list(urls), chunk_size=chunk_size)
     return [[urls_to_dataframe(chunk_url)] for chunk_url in chunked_urls]
 

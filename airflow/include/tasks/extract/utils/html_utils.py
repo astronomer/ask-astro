@@ -39,18 +39,20 @@ def is_excluded_url(url: str, exclude_literal: list[str]) -> bool:
     return any(literal in url_path for literal in exclude_literal)
 
 
-def remove_tags(text_content: str) -> str | None:
+def clean_tags(text_content: str, tags: list[str] | None) -> str | None:
     """
     Clean the HTML content by removing script and style tags, collapsing whitespaces, and extracting text.
 
     param text_content (str): The HTML content to be cleaned.
     """
+    if tags is None:
+        tags = ["script", "style"]
     soup = BeautifulSoup(text_content, "html.parser").find("body")
 
     if soup is None:
         return
     # Remove script and style tags
-    for script_or_style in soup(["script", "style"]):
+    for script_or_style in soup(tags):
         script_or_style.extract()
 
     # Get text and handle whitespaces
@@ -135,7 +137,7 @@ def process_url(url, doc_source="", clean_tag: bool = True, truncate_text: bool 
     html_text = fetch_page_content(url)
     if html_text:
         if clean_tag:
-            html_text = remove_tags(html_text)
+            html_text = clean_tags(html_text)
         if truncate_text:
             html_text = truncate_tokens(html_text)
         sha = generate_uuid5(html_text)
