@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 import pandas as pd
+from include.utils.slack import send_failure_notification
 
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowException
@@ -55,6 +56,9 @@ logger = logging.getLogger("airflow.task")
     catchup=False,
     is_paused_upon_creation=True,
     default_args=default_args,
+    on_failure_callback=send_failure_notification(
+        dag_id="{{ dag.dag_id }}", execution_date="{{ dag_run.execution_date }}"
+    ),
 )
 def ask_astro_load_bulk():
     """

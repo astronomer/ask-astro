@@ -9,6 +9,7 @@ from typing import Any
 
 import firebase_admin
 import requests
+from include.utils.slack import send_failure_notification
 
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowException
@@ -300,7 +301,13 @@ def monitor_apis(**context) -> None:
 
 
 @dag(
-    schedule_interval=monitoring_interval, start_date=datetime(2023, 9, 27), catchup=False, is_paused_upon_creation=True
+    schedule_interval=monitoring_interval,
+    start_date=datetime(2023, 9, 27),
+    catchup=False,
+    is_paused_upon_creation=True,
+    on_failure_callback=send_failure_notification(
+        dag_id="{{ dag.dag_id }}", execution_date="{{ dag_run.execution_date }}"
+    ),
 )
 def monitoring_dag():
     [check_ui_status(), check_weaviate_status(), check_firestore_status(), monitor_apis()] >> slack_status()
