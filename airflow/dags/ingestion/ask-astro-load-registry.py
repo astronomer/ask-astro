@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
 
+from include.utils.slack import send_failure_notification
+
 from airflow.decorators import dag, task
 from airflow.providers.weaviate.operators.weaviate import WeaviateDocumentIngestOperator
 
@@ -20,6 +22,9 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
     catchup=False,
     is_paused_upon_creation=True,
     default_args=default_args,
+    on_failure_callback=send_failure_notification(
+        dag_id="{{ dag.dag_id }}", execution_date="{{ dag_run.execution_date }}"
+    ),
 )
 def ask_astro_load_registry():
     """
