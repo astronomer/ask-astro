@@ -32,6 +32,7 @@ class CustomBooleanOutputParser(BaseOutputParser[bool]):
         return "custom_boolean_output_parser"
 
 
+#
 custom_llm_chain_filter_prompt_template = PromptTemplate(
     template=prompt_template,
     input_variables=["question", "context"],
