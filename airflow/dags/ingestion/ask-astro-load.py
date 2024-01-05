@@ -7,16 +7,10 @@ import os
 from pathlib import Path
 
 import pandas as pd
-from include.tasks import split
-from include.tasks.extract import airflow_docs, astro_cli_docs, blogs, github, registry, stack_overflow
-from include.tasks.extract.astro_docs import extract_astro_docs
-from include.tasks.extract.astro_forum_docs import get_forum_df
-from include.tasks.extract.astro_sdk_docs import extract_astro_sdk_docs
-from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
-from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowException
+from airflow.providers.weaviate.operators.weaviate import WeaviateDocumentIngestOperator
 
 seed_baseline_url = None
 stackoverflow_cutoff_date = "2021-09-01"
@@ -26,8 +20,6 @@ _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 _GITHUB_CONN_ID = "github_ro"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
 _GITHUB_ISSUE_CUTOFF_DATE = os.environ.get("GITHUB_ISSUE_CUTOFF_DATE", "2022-1-1")
-
-ask_astro_weaviate_hook = AskAstroWeaviateHook(_WEAVIATE_CONN_ID)
 
 markdown_docs_sources = [
     {"doc_dir": "", "repo_base": "OpenLineage/docs"},
@@ -78,6 +70,8 @@ def ask_astro_load_bulk():
 
     """
 
+    from include.tasks import split
+
     @task
     def get_schema_and_process(schema_file: str) -> list:
         """
@@ -113,9 +107,12 @@ def ask_astro_load_bulk():
 
         :param class_objects: Class objects to be checked against the current schema.
         """
+        from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
+
+        ask_astro_weaviate_hook = WeaviateHook(conn_id=_WEAVIATE_CONN_ID)
         return (
             ["check_seed_baseline"]
-            if ask_astro_weaviate_hook.check_schema(class_objects=class_objects)
+            if ask_astro_weaviate_hook.check_subset_of_schema(classes_objects=class_objects)
             else ["create_schema"]
         )
 
@@ -127,7 +124,12 @@ def ask_astro_load_bulk():
         :param class_objects: A list of class objects for schema creation or update.
         :param existing: Strategy to handle existing classes ('ignore' or 'replace'). Defaults to 'ignore'.
         """
-        ask_astro_weaviate_hook.create_schema(class_objects=class_objects, existing=existing)
+        from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
+
+        ask_astro_weaviate_hook = WeaviateHook(conn_id=_WEAVIATE_CONN_ID)
+        ask_astro_weaviate_hook.create_or_replace_classes(
+            schema_json={cls["class"]: cls for cls in class_objects}, existing=existing
+        )
 
     @task.branch(trigger_rule="none_failed")
     def check_seed_baseline(seed_baseline_url: str = None) -> str | set:
@@ -155,6 +157,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_github_markdown(source: dict):
+        from include.tasks.extract import github
+
         parquet_file = f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet"
 
         if os.path.isfile(parquet_file):
@@ -169,7 +173,26 @@ def ask_astro_load_bulk():
         return df
 
     @task(trigger_rule="none_failed")
+    def extract_github_python(source: dict):
+        from include.tasks.extract import github
+
+        parquet_file = f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet"
+
+        if os.path.isfile(parquet_file):
+            if os.access(parquet_file, os.R_OK):
+                df = pd.read_parquet(parquet_file)
+            else:
+                raise Exception("Parquet file exists locally but is not readable.")
+        else:
+            df = github.extract_github_python(source, _GITHUB_CONN_ID)
+            df.to_parquet(parquet_file)
+
+        return df
+
+    @task(trigger_rule="none_failed")
     def extract_airflow_docs():
+        from include.tasks.extract import airflow_docs
+
         parquet_file = "include/data/apache/airflow/docs.parquet"
 
         if os.path.isfile(parquet_file):
@@ -185,6 +208,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_cli_docs():
+        from include.tasks.extract import astro_cli_docs
+
         astro_cli_parquet_path = "include/data/astronomer/docs/astro-cli.parquet"
         try:
             df = pd.read_parquet(astro_cli_parquet_path)
@@ -196,6 +221,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_sdk_doc():
+        from include.tasks.extract.astro_sdk_docs import extract_astro_sdk_docs
+
         astro_sdk_parquet_path = "include/data/astronomer/docs/astro-sdk.parquet"
         try:
             df = pd.read_parquet(astro_sdk_parquet_path)
@@ -207,6 +234,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_provider_doc():
+        from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
+
         astro_provider_parquet_path = "include/data/astronomer/docs/astro-provider.parquet"
         try:
             df = pd.read_parquet(astro_provider_parquet_path)
@@ -218,6 +247,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_stack_overflow(tag: str, stackoverflow_cutoff_date: str = stackoverflow_cutoff_date):
+        from include.tasks.extract import stack_overflow
+
         try:
             df = pd.read_parquet("include/data/stack_overflow/base.parquet")
         except Exception:
@@ -228,6 +259,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_forum_doc():
+        from include.tasks.extract.astro_forum_docs import get_forum_df
+
         astro_forum_parquet_path = "include/data/astronomer/docs/astro-forum.parquet"
         try:
             df = pd.read_parquet(astro_forum_parquet_path)
@@ -239,6 +272,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_github_issues(repo_base: str):
+        from include.tasks.extract import github
+
         parquet_file = f"include/data/{repo_base}/issues.parquet"
 
         if os.path.isfile(parquet_file):
@@ -254,6 +289,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_registry_cell_types():
+        from include.tasks.extract import registry
+
         parquet_file = "include/data/astronomer/registry/registry_cells.parquet"
 
         if os.path.isfile(parquet_file):
@@ -269,6 +306,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_registry_dags():
+        from include.tasks.extract import registry
+
         parquet_file = "include/data/astronomer/registry/registry_dags.parquet"
 
         if os.path.isfile(parquet_file):
@@ -284,6 +323,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astro_blogs():
+        from include.tasks.extract import blogs
+
         parquet_file = "include/data/astronomer/blogs/astro_blogs.parquet"
 
         if os.path.isfile(parquet_file):
@@ -299,6 +340,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astronomer_docs():
+        from include.tasks.extract.astro_docs import extract_astro_docs
+
         parquet_file = "include/data/astronomer/blogs/astro_docs.parquet"
 
         if os.path.isfile(parquet_file):
@@ -310,6 +353,41 @@ def ask_astro_load_bulk():
             df.to_parquet(parquet_file)
 
         return [df]
+
+    @task(trigger_rule="none_failed")
+    def import_baseline(
+        document_column: str,
+        class_name: str,
+        seed_baseline_url: str | None = None,
+        existing: str = "error",
+        uuid_column: str | None = None,
+        vector_column: str = "Vector",
+        batch_config_params: dict | None = None,
+        verbose: bool = True,
+    ):
+        from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
+
+        ask_astro_weaviate_hook = WeaviateHook(conn_id=_WEAVIATE_CONN_ID)
+        seed_filename = f"include/data/{seed_baseline_url.split('/')[-1]}"
+
+        if os.path.isfile(seed_filename):
+            if not os.access(seed_filename, os.R_OK):
+                raise AirflowException("Baseline file exists locally but is not readable.")
+            df = pd.read_parquet(seed_filename)
+        else:
+            df = pd.read_parquet(seed_baseline_url)
+            df.to_parquet(seed_filename)
+
+        return ask_astro_weaviate_hook.create_or_replace_document_objects(
+            data=df,
+            class_name=class_name,
+            existing=existing,
+            document_column=document_column,
+            uuid_column=uuid_column,
+            vector_column=vector_column,
+            verbose=verbose,
+            batch_config_params=batch_config_params,
+        )
 
     md_docs = extract_github_markdown.expand(source=markdown_docs_sources)
     issues_docs = extract_github_issues.expand(repo_base=issues_docs_sources)
@@ -354,26 +432,24 @@ def ask_astro_load_bulk():
 
     split_html_docs = task(split.split_html).expand(dfs=html_tasks)
 
-    _import_data = (
-        task(ask_astro_weaviate_hook.ingest_data, retries=10)
-        .partial(
-            class_name=WEAVIATE_CLASS,
-            existing="skip",
-            doc_key="docLink",
-            batch_params={"batch_size": 1000},
-            verbose=True,
-        )
-        .expand(dfs=[split_md_docs, split_code_docs, split_html_docs])
-    )
+    _import_data = WeaviateDocumentIngestOperator.partial(
+        class_name=WEAVIATE_CLASS,
+        existing="replace",
+        document_column="docLink",
+        batch_config_params={"batch_size": 1000},
+        verbose=True,
+        conn_id=_WEAVIATE_CONN_ID,
+        task_id="WeaviateDocumentIngestOperator",
+    ).expand(input_data=[split_md_docs, split_code_docs, split_html_docs])
 
-    _import_baseline = task(ask_astro_weaviate_hook.import_baseline, trigger_rule="none_failed")(
+    _import_baseline = import_baseline(
         seed_baseline_url=seed_baseline_url,
         class_name=WEAVIATE_CLASS,
         existing="error",
-        doc_key="docLink",
+        document_column="docLink",
         uuid_column="id",
         vector_column="vector",
-        batch_params={"batch_size": 1000},
+        batch_config_params={"batch_size": 1000},
         verbose=True,
     )
 
