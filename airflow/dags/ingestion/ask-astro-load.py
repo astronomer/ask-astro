@@ -340,6 +340,8 @@ def ask_astro_load_bulk():
 
     @task(trigger_rule="none_failed")
     def extract_astronomer_docs():
+        from include.tasks.extract.astro_docs import extract_astro_docs
+
         parquet_file = "include/data/astronomer/blogs/astro_docs.parquet"
 
         if os.path.isfile(parquet_file):
