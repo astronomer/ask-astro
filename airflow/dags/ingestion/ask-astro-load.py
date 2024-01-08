@@ -153,7 +153,7 @@ def ask_astro_load_bulk():
                 "extract_astro_blogs",
                 "extract_astro_registry_dags",
                 "extract_astro_cli_docs",
-                "extract_astro_sdk_doc",
+                # "extract_astro_sdk_doc",
                 "extract_astro_provider_doc",
                 "extract_astro_forum_doc",
                 "extract_astronomer_docs",
@@ -223,18 +223,18 @@ def ask_astro_load_bulk():
 
         return [df]
 
-    @task(trigger_rule="none_failed")
-    def extract_astro_sdk_doc():
-        from include.tasks.extract.astro_sdk_docs import extract_astro_sdk_docs
-
-        astro_sdk_parquet_path = "include/data/astronomer/docs/astro-sdk.parquet"
-        try:
-            df = pd.read_parquet(astro_sdk_parquet_path)
-        except Exception:
-            df = extract_astro_sdk_docs()[0]
-            df.to_parquet(astro_sdk_parquet_path)
-
-        return [df]
+    # @task(trigger_rule="none_failed")
+    # def extract_astro_sdk_doc():
+    #     from include.tasks.extract.astro_sdk_docs import extract_astro_sdk_docs
+    #
+    #     astro_sdk_parquet_path = "include/data/astronomer/docs/astro-sdk.parquet"
+    #     try:
+    #         df = pd.read_parquet(astro_sdk_parquet_path)
+    #     except Exception:
+    #         df = extract_astro_sdk_docs()[0]
+    #         df.to_parquet(astro_sdk_parquet_path)
+    #
+    #     return [df]
 
     @task(trigger_rule="none_failed")
     def extract_astro_provider_doc():
@@ -402,7 +402,7 @@ def ask_astro_load_bulk():
     _astro_docs = extract_astronomer_docs()
     _airflow_docs = extract_airflow_docs()
     _astro_cli_docs = extract_astro_cli_docs()
-    _extract_astro_sdk_docs = extract_astro_sdk_doc()
+    # _extract_astro_sdk_docs = extract_astro_sdk_doc()
     _extract_astro_providers_docs = extract_astro_provider_doc()
     _astro_forum_docs = extract_astro_forum_doc()
 
@@ -422,7 +422,7 @@ def ask_astro_load_bulk():
     html_tasks = [
         _airflow_docs,
         _astro_cli_docs,
-        _extract_astro_sdk_docs,
+        # _extract_astro_sdk_docs,
         _extract_astro_providers_docs,
         _astro_forum_docs,
         _astro_docs,
