@@ -1,4 +1,3 @@
-import sqlite3
 from pathlib import Path
 
 from invoke import task
@@ -78,48 +77,58 @@ def test(ctx: Context) -> None:
         ctx.run("poetry run ../tests || poetry run pytest --last-failed ../tests")
 
 
-def _initialize_request_table(con):
+def _initialize_request_table(conn, database, schema):
     """Initialize request table"""
 
-    cur = con.cursor()
-    create_request_table_sql = """
-    CREATE TABLE IF NOT EXISTS request(
-        uuid TEXT PRIMARY KEY,
-        score INTEGER DEFAULT 0,
-        success INTEGER,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    );
+    create_request_table_sql = f"""
+        CREATE TABLE IF NOT EXISTS {database}.{schema}.request(
+            uuid TEXT,
+            score INT DEFAULT 0,
+            success BOOLEAN,
+            created_at timestamp default current_timestamp(),
+            PRIMARY KEY (uuid)
+        );
     """
-    cur.execute(create_request_table_sql)
-    con.commit()
+    print(create_request_table_sql)
+    conn.cursor().execute(create_request_table_sql)
 
 
-def _initialize_request_summary_view(con):
+def _initialize_request_summary_view(conn, database, schema):
     """Initialize request summary view"""
 
-    cur = con.cursor()
-    create_request_summary_view_sql = """
-    CREATE VIEW IF NOT EXISTS request_summary AS
-    SELECT
-        created_at_day, success, avg(score),count(*)
-    FROM (
+    create_request_summary_view_sql = f"""
+        CREATE VIEW IF NOT EXISTS {database}.{schema}.request_summary AS
         SELECT
+            created_at_day,
             success,
-            score,
-            strftime("%Y-%m-%d", created_at) as 'created_at_day'
-        FROM request
-    )
-    GROUP BY
-        created_at_day, success;
+            avg(score) as avg_score,
+            count(*) as request_count
+        FROM (
+            SELECT
+                success,
+                score,
+                date_trunc('DAY',created_at) as created_at_day
+            FROM
+                {database}.{schema}.request
+        )
+        GROUP BY
+            created_at_day, success;
     """
-    cur.execute(create_request_summary_view_sql)
-    con.commit()
+    print(create_request_summary_view_sql)
+    conn.cursor().execute(create_request_summary_view_sql)
 
 
 @task
-def initialize_metrics_track_db(ctx: Context) -> None:
+def initialize_metrics_track_db(
+    ctx: Context, user: str, password: str, account: str, database: str, schema: str
+) -> None:
     """Initialize table and view for metrics tracking"""
+    import snowflake.connector
+
     with ctx.cd(api_root):
-        conn = sqlite3.connect("temp.db")
-        _initialize_request_table(conn)
-        _initialize_request_summary_view(conn)
+        conn = snowflake.connector.connect(
+            user=user, password=password, account=account, database=database, schema=schema
+        )
+
+        _initialize_request_table(conn, database, schema)
+        _initialize_request_summary_view(conn, database, schema)

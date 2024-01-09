@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-import sqlite3
 from logging import getLogger
 from typing import Any
 
 from ask_astro.clients.firestore import firestore_client
 from ask_astro.clients.langsmith_ import langsmith_client
-from ask_astro.config import FirestoreCollections
+from ask_astro.config import FirestoreCollections, MetricsDBConfig
 
 logger = getLogger(__name__)
 
@@ -18,18 +17,24 @@ class FeedbackSubmissionError(Exception):
 
 
 def _update_metrics_db(request_id: str, score: int) -> None:
-    logger.info("Update metrics db")
-    con = sqlite3.connect("temp.db")
-    cur = con.cursor()
-    cur.execute(
-        f"""
-        UPDATE request
+    import snowflake.connector
+
+    update_sql = f"""
+        UPDATE {MetricsDBConfig.database}.{MetricsDBConfig.schema}.request
         SET score={score}
         WHERE
             uuid = '{request_id}'
-        """
+    """
+    logger.info(f"Update metrics db with {update_sql}")
+
+    conn = snowflake.connector.connect(
+        user=MetricsDBConfig.user,
+        password=MetricsDBConfig.password,
+        account=MetricsDBConfig.account,
+        database=MetricsDBConfig.database,
+        schema=MetricsDBConfig.schema,
     )
-    con.commit()
+    conn.cursor().execute(update_sql)
 
 
 async def submit_feedback(request_id: str, correct: bool, source_info: dict[str, Any] | None) -> None:

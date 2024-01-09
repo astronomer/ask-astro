@@ -2,14 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-import sqlite3
 import time
 from logging import getLogger
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ask_astro.clients.firestore import firestore_client
-from ask_astro.config import FirestoreCollections
+from ask_astro.config import FirestoreCollections, MetricsDBConfig
 from ask_astro.models.request import AskAstroRequest, Source
 
 logger = getLogger(__name__)
@@ -29,20 +28,25 @@ async def _update_firestore_request(request: AskAstroRequest) -> None:
 
 
 def _update_metrics_db(request: AskAstroRequest, success: bool) -> None:
-    logger.info("Update metrics db")
-    con = sqlite3.connect("temp.db")
-    cur = con.cursor()
-    score = request.score or 0
-    success_bool_str = "TRUE" if success else "FALSE"
-    cur.execute(
-        f"""
-        INSERT OR REPLACE INTO
-            request(uuid, score, success)
+    import snowflake.connector
+
+    score = request.score if request.score else 0
+    insert_sql = f"""
+        INSERT INTO
+            {MetricsDBConfig.database}.{MetricsDBConfig.schema}.request(uuid, score, success)
         VALUES
-            ("{request.uuid}", {score}, "{success_bool_str}");
-        """
+            ('{request.uuid}', {score}, {success});
+    """
+    logger.info(f"Update metrics db with {insert_sql}")
+
+    conn = snowflake.connector.connect(
+        user=MetricsDBConfig.user,
+        password=MetricsDBConfig.password,
+        account=MetricsDBConfig.account,
+        database=MetricsDBConfig.database,
+        schema=MetricsDBConfig.schema,
     )
-    con.commit()
+    conn.cursor().execute(insert_sql)
 
 
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, max=10))
