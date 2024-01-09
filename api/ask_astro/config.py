@@ -63,6 +63,7 @@ class WeaviateConfig:
     attributes = os.environ.get("WEAVIATE_ATTRIBUTES", "").split(",")
     k = os.environ.get("WEAVIATE_HYBRID_SEARCH_TOP_K", 100)
     alpha = os.environ.get("WEAVIATE_HYBRID_SEARCH_ALPHA", 0.5)
+    create_schema_if_missing = bool(os.environ.get("WEAVIATE_CREATE_SCHEMA_IF_MISSING", "").lower() == "true")
 
 
 class CohereConfig:
