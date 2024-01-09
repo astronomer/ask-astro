@@ -8,7 +8,7 @@ from logging import getLogger
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ask_astro.clients.firestore import firestore_client
-from ask_astro.config import FirestoreCollections, MetricsDBConfig
+from ask_astro.config import FirestoreCollections, MetricsSnowflakeDBConfig
 from ask_astro.models.request import AskAstroRequest, Source
 
 logger = getLogger(__name__)
@@ -33,18 +33,18 @@ def _update_metrics_db(request: AskAstroRequest, success: bool) -> None:
     score = request.score if request.score else 0
     insert_sql = f"""
         INSERT INTO
-            {MetricsDBConfig.database}.{MetricsDBConfig.schema}.request(uuid, score, success)
+            {MetricsSnowflakeDBConfig.database}.{MetricsSnowflakeDBConfig.schema}.request(uuid, score, success)
         VALUES
             ('{request.uuid}', {score}, {success});
     """
     logger.info(f"Update metrics db with {insert_sql}")
 
     conn = snowflake.connector.connect(
-        user=MetricsDBConfig.user,
-        password=MetricsDBConfig.password,
-        account=MetricsDBConfig.account,
-        database=MetricsDBConfig.database,
-        schema=MetricsDBConfig.schema,
+        user=MetricsSnowflakeDBConfig.user,
+        password=MetricsSnowflakeDBConfig.password,
+        account=MetricsSnowflakeDBConfig.account,
+        database=MetricsSnowflakeDBConfig.database,
+        schema=MetricsSnowflakeDBConfig.schema,
     )
     conn.cursor().execute(insert_sql)
 
