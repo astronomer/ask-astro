@@ -43,6 +43,7 @@ hybrid_retriever = WeaviateHybridSearchRetriever(
     attributes=WeaviateConfig.attributes,
     k=WeaviateConfig.k,
     alpha=WeaviateConfig.alpha,
+    create_schema_if_missing=WeaviateConfig.create_schema_if_missing,
 )
 
 # Initialize a MultiQueryRetriever using AzureChatOpenAI and Weaviate.
