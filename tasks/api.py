@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from invoke import task
@@ -89,7 +90,7 @@ def _initialize_request_table(conn, database, schema):
             PRIMARY KEY (uuid)
         );
     """
-    print(create_request_table_sql)
+    logging.info(create_request_table_sql)
     conn.cursor().execute(create_request_table_sql)
 
 
@@ -114,7 +115,7 @@ def _initialize_request_summary_view(conn, database, schema):
         GROUP BY
             created_at_day, success;
     """
-    print(create_request_summary_view_sql)
+    logging.info(create_request_summary_view_sql)
     conn.cursor().execute(create_request_summary_view_sql)
 
 
