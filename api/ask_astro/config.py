@@ -63,11 +63,11 @@ class WeaviateConfig:
     attributes = os.environ.get("WEAVIATE_ATTRIBUTES", "").split(",")
 
 
-class MetricsDBConfig:
-    """Containers the config variables for Metrics DB"""
+class MetricsSnowflakeDBConfig:
+    """Containers the config variables for Metrics Snowflake DB"""
 
-    user = os.environ.get("METRICS_DB_USER")
-    password = os.environ.get("METRICS_DB_PASSWORD")
-    account = os.environ.get("METRICS_DB_ACCOUNT")
-    database = os.environ.get("METRICS_DB_DATABASE")
-    schema = os.environ.get("METRICS_DB_SCHEMA")
+    user = os.environ.get("METRICS_SNOWFLAKE_DB_USER")
+    password = os.environ.get("METRICS_SNOWFLAKE_DB_PASSWORD")
+    account = os.environ.get("METRICS_SNOWFLAKE_DB_ACCOUNT")
+    database = os.environ.get("METRICS_SNOWFLAKE_DB_DATABASE")
+    schema = os.environ.get("METRICS_SNOWFLAKE_DB_SCHEMA")
