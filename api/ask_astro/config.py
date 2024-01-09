@@ -61,3 +61,13 @@ class WeaviateConfig:
     index_name = os.environ.get("WEAVIATE_INDEX_NAME")
     text_key = os.environ.get("WEAVIATE_TEXT_KEY")
     attributes = os.environ.get("WEAVIATE_ATTRIBUTES", "").split(",")
+
+
+class MetricsDBConfig:
+    """Containers the config variables for Metrics DB"""
+
+    user = os.environ.get("METRICS_DB_USER")
+    password = os.environ.get("METRICS_DB_PASSWORD")
+    account = os.environ.get("METRICS_DB_ACCOUNT")
+    database = os.environ.get("METRICS_DB_DATABASE")
+    schema = os.environ.get("METRICS_DB_SCHEMA")
