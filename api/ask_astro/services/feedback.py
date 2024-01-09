@@ -7,13 +7,34 @@ from typing import Any
 
 from ask_astro.clients.firestore import firestore_client
 from ask_astro.clients.langsmith_ import langsmith_client
-from ask_astro.config import FirestoreCollections
+from ask_astro.config import FirestoreCollections, MetricsSnowflakeDBConfig
 
 logger = getLogger(__name__)
 
 
 class FeedbackSubmissionError(Exception):
     """Exception raised when there's an error submitting feedback."""
+
+
+def _update_metrics_db(request_id: str, score: int) -> None:
+    import snowflake.connector
+
+    update_sql = f"""
+        UPDATE {MetricsSnowflakeDBConfig.database}.{MetricsSnowflakeDBConfig.schema}.request
+        SET score={score}
+        WHERE
+            uuid = '{request_id}'
+    """
+    logger.info(f"Update metrics db with {update_sql}")
+
+    conn = snowflake.connector.connect(
+        user=MetricsSnowflakeDBConfig.user,
+        password=MetricsSnowflakeDBConfig.password,
+        account=MetricsSnowflakeDBConfig.account,
+        database=MetricsSnowflakeDBConfig.database,
+        schema=MetricsSnowflakeDBConfig.schema,
+    )
+    conn.cursor().execute(update_sql)
 
 
 async def submit_feedback(request_id: str, correct: bool, source_info: dict[str, Any] | None) -> None:
@@ -38,12 +59,11 @@ async def submit_feedback(request_id: str, correct: bool, source_info: dict[str,
             raise ValueError("Request %s does not have a langchain run id", request_id)
 
         # update the db and langsmith
+        score = 1 if correct else 0
         async with asyncio.TaskGroup() as tg:
             # update just the score field
             tg.create_task(
-                firestore_client.collection(FirestoreCollections.requests)
-                .document(request_id)
-                .update({"score": 1 if correct else 0})
+                firestore_client.collection(FirestoreCollections.requests).document(request_id).update({"score": score})
             )
 
             tg.create_task(
@@ -51,11 +71,13 @@ async def submit_feedback(request_id: str, correct: bool, source_info: dict[str,
                     lambda: langsmith_client.create_feedback(
                         key="correctness",
                         run_id=langchain_run_id,
-                        score=1 if correct else 0,
+                        score=score,
                         source_info=source_info,
                     )
                 )
             )
+
+        _update_metrics_db(request_id, score)
     except Exception as e:
         logger.error("Error occurred while processing feedback for request %s: %s", request_id, e)
         raise FeedbackSubmissionError("Failed to submit feedback for request %s.", request_id) from e

@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from invoke import task
@@ -75,3 +76,60 @@ def test(ctx: Context) -> None:
     with ctx.cd(api_root):
         print("Run ask-astro API tests")
         ctx.run("poetry run ../tests || poetry run pytest --last-failed ../tests")
+
+
+def _initialize_request_table(conn, database, schema):
+    """Initialize request table"""
+
+    create_request_table_sql = f"""
+        CREATE TABLE IF NOT EXISTS {database}.{schema}.request(
+            uuid TEXT,
+            score INT DEFAULT 0,
+            success BOOLEAN,
+            created_at timestamp default current_timestamp(),
+            PRIMARY KEY (uuid)
+        );
+    """
+    logging.info(create_request_table_sql)
+    conn.cursor().execute(create_request_table_sql)
+
+
+def _initialize_request_summary_view(conn, database, schema):
+    """Initialize request summary view"""
+
+    create_request_summary_view_sql = f"""
+        CREATE VIEW IF NOT EXISTS {database}.{schema}.request_summary AS
+        SELECT
+            created_at_day,
+            success,
+            avg(score) as avg_score,
+            count(*) as request_count
+        FROM (
+            SELECT
+                success,
+                score,
+                date_trunc('DAY',created_at) as created_at_day
+            FROM
+                {database}.{schema}.request
+        )
+        GROUP BY
+            created_at_day, success;
+    """
+    logging.info(create_request_summary_view_sql)
+    conn.cursor().execute(create_request_summary_view_sql)
+
+
+@task
+def initialize_metrics_track_db(
+    ctx: Context, user: str, password: str, account: str, database: str, schema: str
+) -> None:
+    """Initialize table and view for metrics tracking"""
+    import snowflake.connector
+
+    with ctx.cd(api_root):
+        conn = snowflake.connector.connect(
+            user=user, password=password, account=account, database=database, schema=schema
+        )
+
+        _initialize_request_table(conn, database, schema)
+        _initialize_request_summary_view(conn, database, schema)

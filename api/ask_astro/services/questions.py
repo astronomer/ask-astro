@@ -8,7 +8,7 @@ from logging import getLogger
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from ask_astro.clients.firestore import firestore_client
-from ask_astro.config import FirestoreCollections
+from ask_astro.config import FirestoreCollections, MetricsSnowflakeDBConfig
 from ask_astro.models.request import AskAstroRequest, Source
 
 logger = getLogger(__name__)
@@ -25,6 +25,28 @@ async def _update_firestore_request(request: AskAstroRequest) -> None:
         .document(str(request.uuid))
         .set(request.to_firestore())
     )
+
+
+def _update_metrics_db(request: AskAstroRequest, success: bool) -> None:
+    import snowflake.connector
+
+    score = request.score if request.score else 0
+    insert_sql = f"""
+        INSERT INTO
+            {MetricsSnowflakeDBConfig.database}.{MetricsSnowflakeDBConfig.schema}.request(uuid, score, success)
+        VALUES
+            ('{request.uuid}', {score}, {success});
+    """
+    logger.info(f"Update metrics db with {insert_sql}")
+
+    conn = snowflake.connector.connect(
+        user=MetricsSnowflakeDBConfig.user,
+        password=MetricsSnowflakeDBConfig.password,
+        account=MetricsSnowflakeDBConfig.account,
+        database=MetricsSnowflakeDBConfig.database,
+        schema=MetricsSnowflakeDBConfig.schema,
+    )
+    conn.cursor().execute(insert_sql)
 
 
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, max=10))
@@ -68,13 +90,14 @@ async def answer_question(request: AskAstroRequest) -> None:
             for doc in result.get("source_documents", [])
             if doc.metadata.get("docLink", "").startswith("https://")
         ]
-
+        _update_metrics_db(request, True)
         await _update_firestore_request(request)
-
     except Exception as e:
         # If there's an error, mark the request as errored and add it to the database
         request.status = "error"
         request.response = "Sorry, something went wrong. Please try again later."
+
+        _update_metrics_db(request, False)
         await _update_firestore_request(request)
 
         # Propagate the error
