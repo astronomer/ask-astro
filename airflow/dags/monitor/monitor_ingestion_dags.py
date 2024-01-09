@@ -5,6 +5,8 @@ import os
 from datetime import datetime
 from typing import Any
 
+from include.utils.slack import send_failure_notification
+
 from airflow.decorators import dag, task
 from airflow.models import DagBag
 from airflow.providers.slack.operators.slack_webhook import SlackWebhookOperator
@@ -19,12 +21,14 @@ ingestion_dags = [
     "ask_astro_load_airflow_docs",
     "ask_astro_load_astro_cli_docs",
     "ask_astro_load_astronomer_providers",
-    "ask_astro_load_astro_sdk" "ask_astro_load_blogs",
+    "ask_astro_load_astro_sdk",
+    "ask_astro_load_blogs",
     "ask_astro_load_bulk",
     "ask_astro_load_github",
     "ask_astro_load_registry",
     # "ask_astro_load_slack",
     "ask_astro_load_stackoverflow",
+    "ask_astro_load_astronomer_docs",
 ]
 
 
@@ -55,7 +59,15 @@ def check_ingestion_dags(**context: Any):
         ).execute(context=context)
 
 
-@dag(schedule_interval="@daily", start_date=datetime(2023, 9, 27), catchup=False, is_paused_upon_creation=True)
+@dag(
+    schedule_interval="@daily",
+    start_date=datetime(2023, 9, 27),
+    catchup=False,
+    is_paused_upon_creation=True,
+    on_failure_callback=send_failure_notification(
+        dag_id="{{ dag.dag_id }}", execution_date="{{ dag_run.execution_date }}"
+    ),
+)
 def monitor_ingestion_dags():
     check_ingestion_dags()
 

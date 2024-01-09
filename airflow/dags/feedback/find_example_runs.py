@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Any
 
 from google.cloud import firestore
+from include.utils.slack import send_failure_notification
 from langchain.evaluation import StringEvaluator, load_evaluator
 from langchain.evaluation.schema import EvaluatorType
 from langsmith import Client
@@ -119,6 +120,9 @@ def process_run(run: dict[str, Any]):
     start_date=datetime(2023, 1, 1),
     default_args=default_args,
     catchup=False,
+    on_failure_callback=send_failure_notification(
+        dag_id="{{ dag.dag_id }}", execution_date="{{ dag_run.execution_date }}"
+    ),
 )
 def find_example_runs():
     begin = EmptyOperator(task_id="begin")
