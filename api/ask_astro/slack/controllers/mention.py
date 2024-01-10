@@ -51,13 +51,7 @@ async def send_answer(request: AskAstroRequest, say: AsyncSay, ts: str):
     """
     response = markdown_to_slack(request.response)
 
-    source_links = ", ".join(
-        f"<{link}|[{n_}]>"
-        for n_, link in enumerate(
-            {*[s.name for s in request.sources if s.name]},
-            start=1,
-        )
-    )
+    source_links = ", ".join(f"<{s.name}|[{n_}]>" for n_, s in enumerate(request.sources, start=1) if s.name)
 
     resp = get_blocks(
         "message.jinja2",
