@@ -5,7 +5,6 @@ from include.utils.slack import send_failure_notification
 
 from airflow.decorators import dag, task
 from airflow.providers.weaviate.operators.weaviate import WeaviateDocumentIngestOperator
-from typing import List
 
 ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 
@@ -21,7 +20,7 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 
 
 @task
-def split_docs(urls, chunk_size=100) -> List[list]:
+def split_docs(urls, chunk_size=100) -> list[list]:
     from include.tasks import split
     from include.tasks.extract.utils.html_utils import urls_to_dataframe
 

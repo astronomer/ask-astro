@@ -25,6 +25,11 @@ def is_valid_url(url: str) -> bool:
 
 
 def fetch_page_content(url: str) -> str:
+    """
+    Fetch the content of a html page
+
+    param url: The url of a page
+    """
     try:
         response = requests.get(url)
         response.raise_for_status()  # Raise an HTTPError for bad responses
@@ -35,6 +40,12 @@ def fetch_page_content(url: str) -> str:
 
 
 def is_excluded_url(url: str, exclude_literal: list[str]) -> bool:
+    """
+    Check if url can be excluded
+
+    param url: URL which we want to check
+    param exclude_literal: Exclude URL that contain pattern from this list
+    """
     url_path = urlparse(url).path
     return any(literal in url_path for literal in exclude_literal)
 
@@ -118,6 +129,12 @@ def get_page_links(url: str, exclude_literal: list[str]) -> set[str]:
 
 
 def get_internal_links(base_url: str, exclude_literal: list[str] | None = None) -> set[str]:
+    """
+    Extract the internal links of website
+
+    param base_url: The base URL of site
+    param exclude_literal: Exclude URL that contain pattern from this list
+    """
     if exclude_literal is None:
         exclude_literal = []
 
@@ -133,7 +150,9 @@ def process_url(url, doc_source="", clean_tag: bool = True, truncate_text: bool 
     """
     Process a URL by fetching its content, cleaning it, and generating a unique identifier (SHA) based on the cleaned content.
 
-    param url (str): The URL to be processed.
+    param url: The URL to be processed.
+    param clean_tag: Clean HTML tags or not
+    param truncate_text: Truncate text if text is bigger for given embedding model
     """
     html_text = fetch_page_content(url)
     if html_text:
@@ -153,7 +172,10 @@ def urls_to_dataframe(
     """
     Create a DataFrame from a list of URLs by processing each URL and organizing the results.
 
-    param urls (list): A list of URLs to be processed.
+    param urls: A list of URLs to be processed.
+    param doc_source: A document source
+    param clean_tag: Clean HTML tags or not
+    param truncate_text: Truncate text if text is bigger for given embedding model
     """
     content_list = []
     for url in urls:
