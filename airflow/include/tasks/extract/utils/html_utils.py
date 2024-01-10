@@ -39,11 +39,12 @@ def is_excluded_url(url: str, exclude_literal: list[str]) -> bool:
     return any(literal in url_path for literal in exclude_literal)
 
 
-def clean_tags(text_content: str, tags: list[str] | None) -> str | None:
+def clean_tags(text_content: str, tags: list[str] | None = None) -> str | None:
     """
     Clean the HTML content by removing script and style tags, collapsing whitespaces, and extracting text.
 
     param text_content (str): The HTML content to be cleaned.
+    param tags: List of html tag want to clean
     """
     if tags is None:
         tags = ["script", "style"]
