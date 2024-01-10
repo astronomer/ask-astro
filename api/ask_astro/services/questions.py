@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import sqlite3
 import time
 from logging import getLogger
 
@@ -26,23 +25,6 @@ async def _update_firestore_request(request: AskAstroRequest) -> None:
         .document(str(request.uuid))
         .set(request.to_firestore())
     )
-
-
-def _update_metrics_db(request: AskAstroRequest, success: bool) -> None:
-    logger.info("Update metrics db")
-    con = sqlite3.connect("temp.db")
-    cur = con.cursor()
-    score = request.score or 0
-    success_bool_str = "TRUE" if success else "FALSE"
-    cur.execute(
-        f"""
-        INSERT OR REPLACE INTO
-            request(uuid, score, success)
-        VALUES
-            ("{request.uuid}", {score}, "{success_bool_str}");
-        """
-    )
-    con.commit()
 
 
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, max=10))
@@ -86,14 +68,13 @@ async def answer_question(request: AskAstroRequest) -> None:
             for doc in result.get("source_documents", [])
             if doc.metadata.get("docLink", "").startswith("https://")
         ]
-        _update_metrics_db(request, True)
+
         await _update_firestore_request(request)
+
     except Exception as e:
         # If there's an error, mark the request as errored and add it to the database
         request.status = "error"
         request.response = "Sorry, something went wrong. Please try again later."
-
-        _update_metrics_db(request, False)
         await _update_firestore_request(request)
 
         # Propagate the error

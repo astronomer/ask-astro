@@ -29,7 +29,6 @@ uvicorn = "^0.23.2"
 tenacity = "^8.2.3"
 cohere = "==4.39"
 sanic_limiter = { git = "https://github.com/Omegastick/sanic-limiter.git"}
-snowflake-connector-python = "^3.6.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
