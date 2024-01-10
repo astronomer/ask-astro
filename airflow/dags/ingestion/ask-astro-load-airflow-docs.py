@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+import pandas as pd
 from include.utils.slack import send_failure_notification
 
 from airflow.decorators import dag, task
@@ -20,7 +21,13 @@ schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
 
 
 @task
-def split_docs(urls, chunk_size=100) -> list[list]:
+def split_docs(urls: str, chunk_size: int = 100) -> list[list[pd.DataFrame]]:
+    """
+    Split the URLs in chunk and get dataframe for the content
+
+    param urls: List for HTTP URL
+    param chunk_size: Max number of document in split chunk
+    """
     from include.tasks import split
     from include.tasks.extract.utils.html_utils import urls_to_dataframe
 
