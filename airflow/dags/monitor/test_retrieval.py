@@ -14,21 +14,21 @@ from include.tasks.extract.utils.retrieval_tests import (
     weaviate_search,
     weaviate_search_multiquery_retriever,
 )
-from include.tasks.extract.utils.weaviate.ask_astro_weaviate_hook import AskAstroWeaviateHook
 
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowException
 from airflow.models.param import Param
 from airflow.providers.google.suite.hooks.drive import GoogleDriveHook
 from airflow.providers.google.suite.hooks.sheets import GSheetsHook
+from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
 
 ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 test_questions_sheet_id = os.environ.get("TEST_QUESTIONS_SHEET_ID")
 askastro_endpoint_url = os.environ.get("ASK_ASTRO_ENDPOINT_URL")
 langchain_org_id = os.environ.get("LANGCHAIN_ORG")
 langchain_project_id = os.environ.get(f"LANGCHAIN_PROJECT_ID_{ask_astro_env.upper()}", None)
-azure_endpoint = os.environ["AZURE_OPENAI_USEAST_PARAMS"]
-google_domain_id = os.environ["GOOGLE_DOMAIN_ID"]
+azure_endpoint = os.environ.get("AZURE_OPENAI_USEAST_PARAMS")
+google_domain_id = os.environ.get("GOOGLE_DOMAIN_ID")
 
 drive_folder = f"ask_astro/tests_{ask_astro_env}"
 
@@ -142,13 +142,13 @@ def test_retrieval(question_number_subset: str):
         represented in the current schema.
         """
 
-        if AskAstroWeaviateHook(_WEAVIATE_CONN_ID).check_schema(class_objects=class_objects):
+        if WeaviateHook(_WEAVIATE_CONN_ID).check_subset_of_schema(classes_objects=class_objects):
             return True
 
         raise AirflowException(
             """
             Class does not exist in current schema. Create it with
-            'AskAstroWeaviateHook(_WEAVIATE_CONN_ID).create_schema(class_objects=class_objects, existing="error")'
+            'WeaviateHook(_WEAVIATE_CONN_ID).check_subset_of_schema(class_objects=class_objects)'
             """
         )
 
@@ -190,7 +190,7 @@ def test_retrieval(question_number_subset: str):
             "langsmith_link",
         ]
 
-        weaviate_client = AskAstroWeaviateHook(_WEAVIATE_CONN_ID).client
+        weaviate_client = WeaviateHook(_WEAVIATE_CONN_ID).get_conn()
 
         questions_df = pd.read_csv(test_question_template_path)
 
