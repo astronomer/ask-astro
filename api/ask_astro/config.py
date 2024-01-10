@@ -74,11 +74,11 @@ class CohereConfig:
     rerank_top_n = int(os.environ.get("COHERE_RERANK_TOP_N", 10))
 
 
-class MetricsSnowflakeDBConfig:
-    """Containers the config variables for Metrics Snowflake DB"""
+class MetricsDBConfig:
+    """Containers the config variables for Metrics DB"""
 
-    user = os.environ.get("METRICS_SNOWFLAKE_DB_USER")
-    password = os.environ.get("METRICS_SNOWFLAKE_DB_PASSWORD")
-    account = os.environ.get("METRICS_SNOWFLAKE_DB_ACCOUNT")
-    database = os.environ.get("METRICS_SNOWFLAKE_DB_DATABASE")
-    schema = os.environ.get("METRICS_SNOWFLAKE_DB_SCHEMA")
+    user = os.environ.get("METRICS_DB_USER")
+    password = os.environ.get("METRICS_DB_PASSWORD")
+    account = os.environ.get("METRICS_DB_ACCOUNT")
+    database = os.environ.get("METRICS_DB_DATABASE")
+    schema = os.environ.get("METRICS_DB_SCHEMA")
