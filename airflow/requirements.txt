@@ -14,3 +14,4 @@ bs4==0.0.1
 lxml==4.9.3
 tiktoken==0.5.1
 firebase-admin==6.2.0
+snowflake-connector-python==3.6.0
