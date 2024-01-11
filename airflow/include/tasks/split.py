@@ -103,3 +103,13 @@ def split_html(dfs: list[pd.DataFrame]) -> pd.DataFrame:
     df.reset_index(inplace=True, drop=True)
 
     return df
+
+
+def split_list(urls: list[str], chunk_size: int = 0) -> list[list[str]]:
+    """
+    split the list of string into chunk of list of string
+
+    param urls: URL list we want to chunk
+    param chunk_size: Max size of chunked list
+    """
+    return [urls[i : i + chunk_size] for i in range(0, len(urls), chunk_size)]
