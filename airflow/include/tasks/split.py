@@ -112,4 +112,4 @@ def split_list(urls: list[str], chunk_size: int = 0) -> list[list[str]]:
     param urls: URL list we want to chunk
     param chunk_size: Max size of chunked list
     """
-    return [urls[i: i + chunk_size] for i in range(0, len(urls), chunk_size)]
+    return [urls[i : i + chunk_size] for i in range(0, len(urls), chunk_size)]
