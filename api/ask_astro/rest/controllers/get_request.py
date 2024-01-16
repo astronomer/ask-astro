@@ -43,7 +43,8 @@ async def on_get_request(request: Request, request_id: UUID) -> json:
             return json({"error": "Question not found"}, status=404)
 
         request_dict = request.to_dict()
-        request_dict["response"] = replace_single_newline_pattern_with_double_newline(request_dict["response"])
+        if request_dict and "response" in request_dict and request_dict["response"] is not None:
+            request_dict["response"] = replace_single_newline_pattern_with_double_newline(request_dict["response"])
         return json(request_dict, status=200)
     except Exception as e:
         logger.error("Error fetching data for request %s: %s", request_id, e)
