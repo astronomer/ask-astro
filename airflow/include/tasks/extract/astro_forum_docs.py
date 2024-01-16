@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from datetime import datetime
 
 import pandas as pd
@@ -49,6 +50,7 @@ def filter_cutoff_questions(questions_urls: list[str]) -> list[str]:
     for question_url in questions_urls:
         try:
             html_content = requests.get(question_url).content
+            time.sleep(1)
         except requests.RequestException as e:
             logger.error(f"Error fetching content for {question_url}: {e}")
             continue  # Move on to the next iteration
@@ -75,6 +77,7 @@ def get_cutoff_questions(forum_url: str) -> set[str]:
     base_url = f"{forum_url}?page="
     all_valid_url = []
     while True:
+        time.sleep(1)
         page_url = f"{base_url}{page_number}"
         logger.info(page_url)
         page_number = page_number + 1
