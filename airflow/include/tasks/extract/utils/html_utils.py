@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from urllib.parse import urljoin, urlparse
 
 import pandas as pd
@@ -31,7 +32,7 @@ def fetch_page_content(url: str) -> str:
     param url: The url of a page
     """
     try:
-        response = requests.get(url)
+        response = requests.get(url, headers={"User-agent": "Ask Astro"})
         response.raise_for_status()  # Raise an HTTPError for bad responses
         return response.content
     except requests.RequestException:
@@ -179,6 +180,7 @@ def urls_to_dataframe(
     """
     content_list = []
     for url in urls:
+        time.sleep(1)
         data = process_url(url, doc_source, clean_tag, truncate_text)
         if data:
             content_list.append(data)
