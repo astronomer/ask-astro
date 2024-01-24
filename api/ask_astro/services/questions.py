@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 import time
 from logging import getLogger
 
@@ -27,6 +28,20 @@ async def _update_firestore_request(request: AskAstroRequest) -> None:
     )
 
 
+def _preprocess_request(request: AskAstroRequest) -> None:
+    if len(request.prompt) > 20000:
+        error_msg = "Question text is too long. Please try making a new thread and shortening your question."
+        request.response = error_msg
+        raise Exception(error_msg)
+    if len(request.prompt) == 0:
+        error_msg = "Question text cannot be empty. Please try again with a different question."
+        request.response = error_msg
+        raise Exception(error_msg)
+    if len(request.messages) > 10:
+        request.messages = request.messages[-10:]
+    request.prompt = re.sub(r"(?<!\\)\\(?!\\)", "", request.prompt)
+
+
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, max=10))
 async def answer_question(request: AskAstroRequest) -> None:
     """
@@ -42,6 +57,9 @@ async def answer_question(request: AskAstroRequest) -> None:
         # First, mark the request as in_progress and add it to the database
         request.status = "in_progress"
         await _update_firestore_request(request)
+
+        # Preprocess request
+        _preprocess_request(request=request)
 
         # Run the question answering chain
         with callbacks.collect_runs() as cb:
@@ -74,7 +92,9 @@ async def answer_question(request: AskAstroRequest) -> None:
     except Exception as e:
         # If there's an error, mark the request as errored and add it to the database
         request.status = "error"
-        request.response = "Sorry, something went wrong. Please try again later."
+        if request.response == "":
+            request.response = "Sorry, something went wrong. Please try again later."
+
         await _update_firestore_request(request)
 
         # Propagate the error
