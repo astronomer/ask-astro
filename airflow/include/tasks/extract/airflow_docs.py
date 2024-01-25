@@ -25,6 +25,6 @@ def extract_airflow_docs(docs_base_url: str) -> list[pd.DataFrame]:
         "cli-and-env-variables-ref.html",
     ]
 
-    all_links = get_internal_links(docs_base_url, exclude_literal=exclude_docs)
+    all_links = list(get_internal_links(docs_base_url, exclude_literal=exclude_docs))
 
     return all_links
