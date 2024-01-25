@@ -1,11 +1,12 @@
 from __future__ import annotations
-from bs4 import BeautifulSoup
+
+import re
+import urllib.parse
 
 import pandas as pd
 import requests
-import urllib.parse
+from bs4 import BeautifulSoup
 from weaviate.util import generate_uuid5
-import re
 
 from include.tasks.extract.utils.html_utils import get_internal_links
 
@@ -31,7 +32,7 @@ def extract_airflow_docs(docs_base_url: str) -> list[pd.DataFrame]:
     ]
 
     all_links = get_internal_links(docs_base_url, exclude_literal=exclude_docs)
-    
+
     docs_url_parts = urllib.parse.urlsplit(docs_base_url)
     docs_url_base = f"{docs_url_parts.scheme}://{docs_url_parts.netloc}"
     # make sure we didn't accidentally pickup any unrelated links in recursion
