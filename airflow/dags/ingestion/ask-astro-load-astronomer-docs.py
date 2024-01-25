@@ -14,7 +14,7 @@ WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
 
 default_args = {"retries": 3, "retry_delay": 30}
 
-schedule_interval = "0 5 * * *" if ask_astro_env == "prod" else None
+schedule_interval = os.environ.get("INGESTION_SCHEDULE", "0 5 * * 2") if ask_astro_env == "prod" else None
 
 
 @dag(
