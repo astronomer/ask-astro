@@ -41,7 +41,7 @@ def _preprocess_request(request: AskAstroRequest) -> None:
         error_msg = "Question text is too long. Please try making a new thread and shortening your question."
         request.response = error_msg
         raise InvalidRequestPromptError(error_msg)
-    if len(request.prompt) == 0:
+    if not request.prompt:
         error_msg = "Question text cannot be empty. Please try again with a different question."
         request.response = error_msg
         raise InvalidRequestPromptError(error_msg)
