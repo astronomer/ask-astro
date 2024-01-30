@@ -17,6 +17,7 @@ from langchain.retrievers.document_compressors import CohereRerank, LLMChainFilt
 from langchain.retrievers.weaviate_hybrid_search import WeaviateHybridSearchRetriever
 
 from ask_astro.chains.custom_llm_filter_prompt import custom_llm_chain_filter_prompt_template
+from ask_astro.chains.custom_llm_output_lines_parser import CustomLineListOutputParser
 from ask_astro.clients.weaviate_ import client
 from ask_astro.config import AzureOpenAIParams, CohereConfig, WeaviateConfig
 from ask_astro.settings import (
@@ -68,6 +69,8 @@ multi_query_retriever = MultiQueryRetriever.from_llm(
     prompt=user_question_rewording_prompt_template,
     retriever=hybrid_retriever,
 )
+# Override the default LineListOutputParser from LangChain
+multi_query_retriever.llm_chain.output_parser = CustomLineListOutputParser(max_lines=2)
 
 # Rerank
 cohere_reranker_compressor = CohereRerank(user_agent="langchain", top_n=CohereConfig.rerank_top_n)
