@@ -70,3 +70,10 @@ class CohereConfig:
     """Contains the config variables for the Cohere API."""
 
     rerank_top_n = int(os.environ.get("COHERE_RERANK_TOP_N", 10))
+
+
+class PromptPreprocessingConfig:
+    """Contains the config variables for user prompt's preprocessing function."""
+
+    max_char = int(os.environ.get("PROMPT_PREPROCESSING_MAX_CHAR", 20000))
+    max_chat_history_len = int(os.environ.get("PROMPT_PREPROCESSING_MAX_CHAT_HISTORY_LEN", 10))
