@@ -61,7 +61,7 @@ user_question_rewording_prompt_template = PromptTemplate(
 )
 multi_query_retriever = MultiQueryRetriever.from_llm(
     llm=AzureChatOpenAI(
-        **AzureOpenAIParams.us_east,
+        **AzureOpenAIParams.us_east2,
         deployment_name=MULTI_QUERY_RETRIEVER_DEPLOYMENT_NAME,
         temperature=MULTI_QUERY_RETRIEVER_TEMPERATURE,
     ),
@@ -81,7 +81,7 @@ reranker_retriever = ContextualCompressionRetriever(
 # GPT-3.5 to check over relevancy of the remaining documents
 llm_chain_filter = LLMChainFilter.from_llm(
     AzureChatOpenAI(
-        **AzureOpenAIParams.us_east,
+        **AzureOpenAIParams.us_east2,
         deployment_name=CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_DEPLOYMENT_NAME,
         temperature=0.0,
     ),
@@ -97,7 +97,7 @@ answer_question_chain = ConversationalRetrievalChain(
     return_source_documents=True,
     question_generator=LLMChain(
         llm=AzureChatOpenAI(
-            **AzureOpenAIParams.us_east,
+            **AzureOpenAIParams.us_east2,
             deployment_name=CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_DEPLOYMENT_NAME,
             temperature=CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_TEMPERATURE,
         ),

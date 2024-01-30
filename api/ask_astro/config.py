@@ -21,9 +21,6 @@ class FirestoreCollections:
 class AzureOpenAIParams:
     """Contains the parameters for the Azure OpenAI API."""
 
-    us_east_raw = os.environ.get("AZURE_OPENAI_USEAST_PARAMS")
-    us_east = json.loads(us_east_raw) if us_east_raw else {}
-
     us_east2_raw = os.environ.get("AZURE_OPENAI_USEAST2_PARAMS")
     us_east2 = json.loads(us_east2_raw) if us_east2_raw else {}
 
