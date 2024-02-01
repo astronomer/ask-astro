@@ -156,6 +156,7 @@ def ask_astro_load_bulk():
                 "extract_astro_provider_doc",
                 "extract_astro_forum_doc",
                 "extract_astronomer_docs",
+                "extract_cosmos_docs",
             }
 
     @task(trigger_rule="none_failed")
