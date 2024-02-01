@@ -37,7 +37,7 @@ def ask_astro_load_cosmos_docs():
     from include.tasks import split
     from include.tasks.extract import cosmos_docs
 
-    split_docs = task(split.split_html).expand(dfs=[cosmos_docs.extract_cosmos_docs()])
+    split_docs = task(split.split_html).expand(dfs=[task(cosmos_docs.extract_cosmos_docs())])
 
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,
