@@ -329,6 +329,20 @@ def ask_astro_load_bulk():
         return [df]
 
     @task(trigger_rule="none_failed")
+    def extract_cosmos_docs():
+        from include.tasks.extract import cosmos_docs
+
+        parquet_file_path = "include/data/astronomer/cosmos/cosmos_docs.parquet"
+
+        try:
+            df = pd.read_parquet(parquet_file_path)
+        except Exception:
+            df = cosmos_docs.extract_cosmos_docs()[0]
+            df.to_parquet(parquet_file_path)
+
+        return [df]
+
+    @task(trigger_rule="none_failed")
     def extract_astronomer_docs():
         from include.tasks.extract.astro_docs import extract_astro_docs
 
@@ -390,6 +404,7 @@ def ask_astro_load_bulk():
     _astro_cli_docs = extract_astro_cli_docs()
     _extract_astro_providers_docs = extract_astro_provider_doc()
     _astro_forum_docs = extract_astro_forum_doc()
+    _cosmos_docs = extract_cosmos_docs()
 
     _get_schema = get_schema_and_process(schema_file="include/data/schema.json")
     _check_schema = check_schema(class_objects=_get_schema)
@@ -410,6 +425,7 @@ def ask_astro_load_bulk():
         _extract_astro_providers_docs,
         _astro_forum_docs,
         _astro_docs,
+        _cosmos_docs,
     ]
 
     python_code_tasks = [registry_dags_docs]
