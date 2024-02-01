@@ -17,6 +17,13 @@ default_args = {"retries": 3, "retry_delay": 30}
 schedule_interval = os.environ.get("INGESTION_SCHEDULE", "0 5 * * 2") if ask_astro_env == "prod" else None
 
 
+@task
+def get_cosmos_docs_content():
+    from include.tasks.extract.cosmos_docs import extract_cosmos_docs
+
+    return extract_cosmos_docs()
+
+
 @dag(
     schedule_interval=schedule_interval,
     start_date=datetime(2023, 9, 27),
@@ -35,9 +42,8 @@ def ask_astro_load_cosmos_docs():
     """
 
     from include.tasks import split
-    from include.tasks.extract import cosmos_docs
 
-    split_docs = task(split.split_html).expand(dfs=[task(cosmos_docs.extract_cosmos_docs())])
+    split_docs = task(split.split_html).expand(dfs=[get_cosmos_docs_content()])
 
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,
