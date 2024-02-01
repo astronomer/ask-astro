@@ -27,7 +27,7 @@ schedule_interval = os.environ.get("INGESTION_SCHEDULE", "0 5 * * 2") if ask_ast
         dag_id="{{ dag.dag_id }}", execution_date="{{ dag_run.execution_date }}"
     ),
 )
-def ask_astro_load_airflow_docs():
+def ask_astro_load_cosmos_docs():
     """
     This DAG performs incremental load for any new Cosmos docs. Initial load via ask_astro_load_bulk imported
     data from a point-in-time data capture. By using the upsert logic of the weaviate_import decorator
@@ -50,4 +50,4 @@ def ask_astro_load_airflow_docs():
     ).expand(input_data=[split_docs])
 
 
-ask_astro_load_airflow_docs()
+ask_astro_load_cosmos_docs()
