@@ -3,10 +3,10 @@ from __future__ import annotations
 import pandas as pd
 from langchain.schema import Document
 from langchain.text_splitter import (
-    HTMLHeaderTextSplitter,
     Language,
     RecursiveCharacterTextSplitter,
 )
+from langchain_community.document_transformers import Html2TextTransformer
 
 
 def split_markdown(dfs: list[pd.DataFrame]) -> pd.DataFrame:
@@ -86,18 +86,33 @@ def split_html(dfs: list[pd.DataFrame]) -> pd.DataFrame:
     'content': Chunked content in markdown format.
 
     """
-
-    headers_to_split_on = [
-        ("h2", "h2"),
+    separators = [
+        "<h1",
+        "<h2",
+        "<code" " " "",
     ]
 
     df = pd.concat(dfs, axis=0, ignore_index=True)
 
-    splitter = HTMLHeaderTextSplitter(headers_to_split_on)
+    splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        # cl100k_base is used for text ada 002 and later embedding models
+        encoding_name="cl100k_base",
+        chunk_size=4000,
+        chunk_overlap=200,
+        separators=separators,
+    )
 
+    # Split by chunking first
     df["doc_chunks"] = df["content"].apply(lambda x: splitter.split_text(text=x))
     df = df.explode("doc_chunks", ignore_index=True)
-    df["content"] = df["doc_chunks"].apply(lambda x: x.page_content)
+
+    # Remove HTML tags and transform HTML formatting to text
+    html2text = Html2TextTransformer()
+    df["content"] = df["doc_chunks"].apply(lambda x: html2text.transform_documents([Document(page_content=x)]))
+    df["content"] = df["content"].apply(lambda x: x[0].page_content)
+
+    # Remove blank doc chunks
+    df = df[~df["content"].apply(lambda x: x.isspace() or x == "")]
 
     df.drop(["doc_chunks"], inplace=True, axis=1)
     df.reset_index(inplace=True, drop=True)
