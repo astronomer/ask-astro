@@ -23,16 +23,24 @@ const limiter = new RateLimiter({
 
 export const load: PageServerLoad = async (event) => {
   await limiter.cookieLimiter?.preflight(event);
+  const publicServiceAnnouncement = "Public Service Announcement: Ask Astro is currently experiencing " +
+      "downtime. Our team is actively investigating the issue and will provide updates as soon as it is resolved.";
+
   try {
     const requests = await fetch(`${ASK_ASTRO_API_URL}/requests`);
-
-    return requests.json();
+    return {
+      requests: await requests.json(),
+      publicServiceAnnouncement
+    };
   } catch (err) {
     console.error(err);
-
-    return { requests: [] };
+    return {
+      requests: [],
+      publicServiceAnnouncement
+    };
   }
 };
+
 
 export const actions = {
   submitPrompt: async (event: RequestEvent) => {
