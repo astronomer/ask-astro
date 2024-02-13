@@ -7,9 +7,11 @@ import requests
 from bs4 import BeautifulSoup
 from weaviate.util import generate_uuid5
 
+from airflow.decorators import task
 from include.tasks.extract.utils.html_utils import get_internal_links
 
 
+@task
 def extract_cosmos_docs(docs_base_url: str = "https://astronomer.github.io/astronomer-cosmos/") -> list[pd.DataFrame]:
     """
     This task return a dataframe containing the extracted data for cosmos docs.

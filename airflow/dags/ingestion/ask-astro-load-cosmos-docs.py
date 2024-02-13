@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+from include.tasks.extract.cosmos_docs import extract_cosmos_docs
 from include.utils.slack import send_failure_notification
 
 from airflow.decorators import dag, task
@@ -12,24 +13,22 @@ _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
 
 
-default_args = {"retries": 3, "retry_delay": 30}
-
 schedule_interval = os.environ.get("INGESTION_SCHEDULE", "0 5 * * 2") if ask_astro_env == "prod" else None
 
 
-@task
-def get_cosmos_docs_content():
-    from include.tasks.extract.cosmos_docs import extract_cosmos_docs
+# @task
+# def get_cosmos_docs_content():
+#     from include.tasks.extract.cosmos_docs import extract_cosmos_docs
 
-    return extract_cosmos_docs()
+#     return extract_cosmos_docs()
 
 
 @dag(
-    schedule_interval=schedule_interval,
+    schedule=schedule_interval,
     start_date=datetime(2023, 9, 27),
     catchup=False,
     is_paused_upon_creation=True,
-    default_args=default_args,
+    default_args={"retries": 3, "retry_delay": 30},
     on_failure_callback=send_failure_notification(
         dag_id="{{ dag.dag_id }}", execution_date="{{ dag_run.execution_date }}"
     ),
@@ -43,7 +42,7 @@ def ask_astro_load_cosmos_docs():
 
     from include.tasks import split
 
-    split_docs = task(split.split_html).expand(dfs=[get_cosmos_docs_content()])
+    split_docs = task(split.split_html).expand(dfs=[extract_cosmos_docs()])
 
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,
@@ -52,7 +51,7 @@ def ask_astro_load_cosmos_docs():
         batch_config_params={"batch_size": 1000},
         verbose=True,
         conn_id=_WEAVIATE_CONN_ID,
-        task_id="WeaviateDocumentIngestOperator",
+        task_id="load_cosmos_docs_to_weaviate",
     ).expand(input_data=[split_docs])
 
 
