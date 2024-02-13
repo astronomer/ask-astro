@@ -157,7 +157,7 @@ def ask_astro_load_bulk():
                 "extract_astro_provider_doc",
                 "extract_astro_forum_doc",
                 "extract_astronomer_docs",
-                "extract_cosmos_docs",
+                "get_cached_or_extract_cosmos_docs",
             }
 
     @task(trigger_rule=TriggerRule.NONE_FAILED)
@@ -339,7 +339,7 @@ def ask_astro_load_bulk():
         try:
             df = pd.read_parquet(parquet_file_path)
         except Exception:
-            df = cosmos_docs.extract_cosmos_docs()[0]
+            df = cosmos_docs.extract_cosmos_docs.function()[0]
             df.to_parquet(parquet_file_path)
 
         return [df]
