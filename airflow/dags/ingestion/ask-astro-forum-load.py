@@ -26,7 +26,7 @@ def get_astro_forum_content():
 
 
 @dag(
-    schedule=schedule_interval,
+    schedule_interval=schedule_interval,
     start_date=datetime.datetime(2023, 9, 27),
     catchup=False,
     is_paused_upon_creation=True,

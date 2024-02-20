@@ -16,8 +16,6 @@ WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
 schedule_interval = os.environ.get("INGESTION_SCHEDULE", "0 5 * * 2") if ask_astro_env == "prod" else None
 
 
-
-
 @dag(
     schedule=schedule_interval,
     start_date=datetime(2023, 9, 27),

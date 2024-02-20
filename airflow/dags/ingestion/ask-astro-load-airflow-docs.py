@@ -36,7 +36,7 @@ def split_docs(urls: str, chunk_size: int = 100) -> list[list[pd.DataFrame]]:
 
 
 @dag(
-    schedule=schedule_interval,
+    schedule_interval=schedule_interval,
     start_date=datetime(2023, 9, 27),
     catchup=False,
     is_paused_upon_creation=True,

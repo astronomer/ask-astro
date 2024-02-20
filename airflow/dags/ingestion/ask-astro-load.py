@@ -338,7 +338,7 @@ def ask_astro_load_bulk():
 
         try:
             df = pd.read_parquet(parquet_file_path)
-        except Exception:
+        except FileNotFoundError:
             df = cosmos_docs.extract_cosmos_docs.function()[0]
             df.to_parquet(parquet_file_path)
 
