@@ -16,11 +16,6 @@ WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
 schedule_interval = os.environ.get("INGESTION_SCHEDULE", "0 5 * * 2") if ask_astro_env == "prod" else None
 
 
-# @task
-# def get_cosmos_docs_content():
-#     from include.tasks.extract.cosmos_docs import extract_cosmos_docs
-
-#     return extract_cosmos_docs()
 
 
 @dag(
