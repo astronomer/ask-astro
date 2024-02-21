@@ -84,6 +84,3 @@ def extract_astro_docs(base_url: str = base_url) -> list[pd.DataFrame]:
 
     df = df[["docSource", "sha", "content", "docLink"]]
     return [df]
-
-
-extract_astro_docs()
