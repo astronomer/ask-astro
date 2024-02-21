@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import json
 import logging
 import os
@@ -12,7 +13,6 @@ from include.tasks.extract.utils.retrieval_tests import (
     generate_answer,
     get_or_create_drive_folder,
     weaviate_search,
-    weaviate_search_multiquery_retriever,
 )
 
 from airflow.decorators import dag, task
@@ -175,7 +175,7 @@ def test_retrieval(question_number_subset: str):
         question_number_subset = context["params"]["question_number_subset"]
 
         if question_number_subset:
-            question_number_subset = json.loads(question_number_subset)
+            question_number_subset = ast.literal_eval(question_number_subset)
 
         results_file = f"include/data/test_questions_{ts_nodash}.csv"
 
@@ -184,7 +184,6 @@ def test_retrieval(question_number_subset: str):
             "question",
             "expected_references",
             "weaviate_search_references",
-            "weaviate_mqr_references",
             "askastro_answer",
             "askastro_references",
             "langsmith_link",
@@ -199,12 +198,6 @@ def test_retrieval(question_number_subset: str):
 
         questions_df["weaviate_search_references"] = questions_df.question.apply(
             lambda x: weaviate_search(weaviate_client=weaviate_client, question=x, class_name=WEAVIATE_CLASS)
-        )
-
-        questions_df["weaviate_mqr_references"] = questions_df.question.apply(
-            lambda x: weaviate_search_multiquery_retriever(
-                weaviate_client=weaviate_client, question=x, class_name=WEAVIATE_CLASS, azure_endpoint=azure_endpoint
-            )
         )
 
         questions_df[["askastro_answer", "askastro_references", "langsmith_link"]] = questions_df.question.apply(

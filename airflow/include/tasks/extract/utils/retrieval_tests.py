@@ -1,14 +1,10 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 
 import aiohttp
 import backoff
-from langchain.chat_models import AzureChatOpenAI
-from langchain.retrievers import MultiQueryRetriever
-from langchain.vectorstores import Weaviate as WeaviateVectorStore
 from weaviate.client import Client as WeaviateClient
 
 from airflow.providers.google.suite.hooks.drive import GoogleDriveHook
@@ -79,7 +75,7 @@ def generate_answer(
         assert response.get("status") == "complete"
 
         answer = response.get("response")
-        references = {source["name"] for source in response.get("sources")}
+        references = [source["name"] for source in response.get("sources")]
         references = "\n".join(references)
         langsmith_link = langsmith_link_template.format(
             org=langchain_org_id, project=langchain_project_id, run_id=response.get("langchain_run_id")
@@ -114,7 +110,7 @@ def weaviate_search(weaviate_client: WeaviateClient, question: str, class_name: 
                     "concepts": question,
                 }
             )
-            .with_limit(5)
+            .with_limit(8)
             .with_additional(["id", "certainty"])
             .do()["data"]["Get"][class_name]
         )
@@ -122,49 +118,6 @@ def weaviate_search(weaviate_client: WeaviateClient, question: str, class_name: 
         references = "\n".join(
             [f"{result['docLink']} [{round(result['_additional']['certainty'], 3)}]" for result in results]
         )
-
-    except Exception as e:
-        logger.info(e)
-        references = []
-
-    return references
-
-
-def weaviate_search_multiquery_retriever(
-    weaviate_client: WeaviateClient, question: str, class_name: str, azure_endpoint: str
-) -> str:
-    """
-    This function uses LangChain's
-    [MultiQueryRetriever](https://api.python.langchain.com/en/latest/retrievers/langchain.retrievers.multi_query.MultiQueryRetriever.html)
-    to retrieve a set of documents based on a question.
-
-    :param weaviate_client: An instantiated weaviate client to use for the search.
-    :param question: A question.
-    :param class_name: The name of the class to search.
-    :param azure_gpt35_endpoint: Azure OpenAI endpoint to use for multi-query retrieval
-    """
-
-    docsearch = WeaviateVectorStore(
-        client=weaviate_client,
-        index_name=class_name,
-        text_key="content",
-        attributes=["docLink"],
-    )
-
-    retriever = MultiQueryRetriever.from_llm(
-        llm=AzureChatOpenAI(
-            **json.loads(azure_endpoint),
-            deployment_name="gpt-35-turbo",
-            temperature="0.0",
-        ),
-        retriever=docsearch.as_retriever(),
-    )
-
-    try:
-        results = retriever.get_relevant_documents(query=question)
-
-        references = {result.metadata["docLink"] for result in results}
-        references = "\n".join(references)
 
     except Exception as e:
         logger.info(e)
