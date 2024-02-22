@@ -36,17 +36,17 @@ def ask_astro_load_astronomer_docs():
 
     astro_docs = task(extract_astro_docs)()
 
-    split_md_docs = task(split.split_markdown).expand(dfs=[astro_docs])
+    split_html_docs = task(split.split_html).expand(dfs=[astro_docs])
 
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,
         existing="replace",
         document_column="docLink",
-        batch_config_params={"batch_size": 1000},
+        batch_config_params={"batch_size": 6, "dynamic": False},
         verbose=True,
         conn_id=_WEAVIATE_CONN_ID,
         task_id="WeaviateDocumentIngestOperator",
-    ).expand(input_data=[split_md_docs])
+    ).expand(input_data=[split_html_docs])
 
 
 ask_astro_load_astronomer_docs()

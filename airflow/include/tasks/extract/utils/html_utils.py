@@ -12,7 +12,7 @@ from weaviate.util import generate_uuid5
 
 logger = logging.getLogger("airflow.task")
 
-
+attempted_urls = set()
 internal_urls = set()
 internal_page_hashset = set()
 
@@ -134,10 +134,12 @@ def get_page_links(url: str, current_page_content: bytes, exclude_literal: list[
             not is_valid_url(href)
             or not href.startswith("https")
             or href in internal_urls
+            or href in attempted_urls
             or domain_name not in href
             or is_excluded_url(href, exclude_literal)
         ):
             continue
+        attempted_urls.add(href)
         new_page_content = fetch_page_content(href)
         if (not new_page_content) or generate_uuid5(new_page_content) in page_content_hash:
             continue
@@ -158,6 +160,7 @@ def get_internal_links(base_url: str, exclude_literal: list[str] | None = None) 
 
     page_content = fetch_page_content(base_url)
     get_page_links(base_url, page_content, exclude_literal)
+    internal_urls.add(base_url)
 
     return internal_urls
 

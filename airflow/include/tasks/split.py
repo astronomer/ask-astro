@@ -97,7 +97,7 @@ def split_html(dfs: list[pd.DataFrame]) -> pd.DataFrame:
     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         # cl100k_base is used for text ada 002 and later embedding models
         encoding_name="cl100k_base",
-        chunk_size=4000,
+        chunk_size=2000,
         chunk_overlap=200,
         separators=separators,
     )

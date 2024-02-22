@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 
-import pandas as pd
 from include.utils.slack import send_failure_notification
 
 from airflow.decorators import dag, task
@@ -20,21 +19,6 @@ default_args = {"retries": 3, "retry_delay": 30}
 schedule_interval = os.environ.get("INGESTION_SCHEDULE", "0 5 * * 2") if ask_astro_env == "prod" else None
 
 
-@task
-def split_docs(urls: str, chunk_size: int = 100) -> list[list[pd.DataFrame]]:
-    """
-    Split the URLs in chunk and get dataframe for the content
-
-    param urls: List for HTTP URL
-    param chunk_size: Max number of document in split chunk
-    """
-    from include.tasks import split
-    from include.tasks.extract.utils.html_utils import urls_to_dataframe
-
-    chunked_urls = split.split_list(list(urls), chunk_size=chunk_size)
-    return [[urls_to_dataframe(chunk_url)] for chunk_url in chunked_urls]
-
-
 @dag(
     schedule_interval=schedule_interval,
     start_date=datetime(2023, 9, 27),
@@ -51,19 +35,22 @@ def ask_astro_load_airflow_docs():
     data from a point-in-time data capture. By using the upsert logic of the weaviate_import decorator
     any existing documents that have been updated will be removed and re-added.
     """
+    from include.tasks import split
     from include.tasks.extract import airflow_docs
 
-    extracted_airflow_docs = task(airflow_docs.extract_airflow_docs)(docs_base_url=airflow_docs_base_url)
+    extracted_airflow_docs = task(split.split_html).expand(
+        dfs=[airflow_docs.extract_airflow_docs(docs_base_url=airflow_docs_base_url)]
+    )
 
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,
         existing="replace",
         document_column="docLink",
-        batch_config_params={"batch_size": 1000},
+        batch_config_params={"batch_size": 6, "dynamic": False},
         verbose=True,
         conn_id=_WEAVIATE_CONN_ID,
         task_id="WeaviateDocumentIngestOperator",
-    ).expand(input_data=split_docs(extracted_airflow_docs, chunk_size=100))
+    ).expand(input_data=[extracted_airflow_docs])
 
 
 ask_astro_load_airflow_docs()
