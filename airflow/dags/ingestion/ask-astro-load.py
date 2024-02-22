@@ -12,6 +12,7 @@ from include.utils.slack import send_failure_notification
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowException
 from airflow.providers.weaviate.operators.weaviate import WeaviateDocumentIngestOperator
+from airflow.utils.trigger_rule import TriggerRule
 
 seed_baseline_url = None
 stackoverflow_cutoff_date = "2021-09-01"
@@ -120,7 +121,7 @@ def ask_astro_load_bulk():
             else ["create_schema"]
         )
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def create_schema(class_objects: list, existing: str = "ignore") -> None:
         """
         Creates or updates the schema in Weaviate based on the given class objects.
@@ -135,7 +136,7 @@ def ask_astro_load_bulk():
             schema_json={cls["class"]: cls for cls in class_objects}, existing=existing
         )
 
-    @task.branch(trigger_rule="none_failed")
+    @task.branch(trigger_rule=TriggerRule.NONE_FAILED)
     def check_seed_baseline(seed_baseline_url: str = None) -> str | set:
         """
         Check if we will ingest from pre-embedded baseline or extract each source.
@@ -156,9 +157,10 @@ def ask_astro_load_bulk():
                 "extract_astro_provider_doc",
                 "extract_astro_forum_doc",
                 "extract_astronomer_docs",
+                "get_cached_or_extract_cosmos_docs",
             }
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_github_markdown(source: dict):
         from include.tasks.extract import github
 
@@ -175,7 +177,7 @@ def ask_astro_load_bulk():
 
         return df
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_github_python(source: dict):
         from include.tasks.extract import github
 
@@ -192,7 +194,7 @@ def ask_astro_load_bulk():
 
         return df
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_airflow_docs():
         from include.tasks.extract import airflow_docs
 
@@ -209,7 +211,7 @@ def ask_astro_load_bulk():
 
         return [df]
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_astro_cli_docs():
         from include.tasks.extract import astro_cli_docs
 
@@ -222,7 +224,7 @@ def ask_astro_load_bulk():
 
         return [df]
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_astro_provider_doc():
         from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
 
@@ -235,7 +237,7 @@ def ask_astro_load_bulk():
 
         return [df]
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_stack_overflow(tag: str, stackoverflow_cutoff_date: str = stackoverflow_cutoff_date):
         from include.tasks.extract import stack_overflow
 
@@ -247,7 +249,7 @@ def ask_astro_load_bulk():
 
         return df
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_astro_forum_doc():
         from include.tasks.extract.astro_forum_docs import get_forum_df
 
@@ -260,7 +262,7 @@ def ask_astro_load_bulk():
 
         return [df]
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_github_issues(repo_base: str):
         from include.tasks.extract import github
 
@@ -277,7 +279,7 @@ def ask_astro_load_bulk():
 
         return df
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_astro_registry_cell_types():
         from include.tasks.extract import registry
 
@@ -294,7 +296,7 @@ def ask_astro_load_bulk():
 
         return [df]
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_astro_registry_dags():
         from include.tasks.extract import registry
 
@@ -311,7 +313,7 @@ def ask_astro_load_bulk():
 
         return [df]
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_astro_blogs():
         from include.tasks.extract import blogs
 
@@ -328,7 +330,21 @@ def ask_astro_load_bulk():
 
         return [df]
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def get_cached_or_extract_cosmos_docs():
+        from include.tasks.extract import cosmos_docs
+
+        parquet_file_path = "include/data/astronomer/cosmos/cosmos_docs.parquet"
+
+        try:
+            df = pd.read_parquet(parquet_file_path)
+        except FileNotFoundError:
+            df = cosmos_docs.extract_cosmos_docs.function()[0]
+            df.to_parquet(parquet_file_path)
+
+        return [df]
+
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_astronomer_docs():
         from include.tasks.extract.astro_docs import extract_astro_docs
 
@@ -344,7 +360,7 @@ def ask_astro_load_bulk():
 
         return [df]
 
-    @task(trigger_rule="none_failed")
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
     def import_baseline(
         document_column: str,
         class_name: str,
@@ -390,6 +406,7 @@ def ask_astro_load_bulk():
     _astro_cli_docs = extract_astro_cli_docs()
     _extract_astro_providers_docs = extract_astro_provider_doc()
     _astro_forum_docs = extract_astro_forum_doc()
+    _cosmos_docs = get_cached_or_extract_cosmos_docs()
 
     _get_schema = get_schema_and_process(schema_file="include/data/schema.json")
     _check_schema = check_schema(class_objects=_get_schema)
@@ -410,6 +427,7 @@ def ask_astro_load_bulk():
         _extract_astro_providers_docs,
         _astro_forum_docs,
         _astro_docs,
+        _cosmos_docs,
     ]
 
     python_code_tasks = [registry_dags_docs]
