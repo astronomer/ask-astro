@@ -6,6 +6,7 @@ to snowflake.
 import os
 import time
 from datetime import date, datetime, timedelta
+from typing import Optional
 
 import snowflake.connector
 from google.cloud import firestore
@@ -54,7 +55,7 @@ def load_firestore_to_snowflake():
             .stream()
         )
 
-        rows: list[tuple[str, int, bool, int]] = []
+        rows: list[tuple[str, Optional[int], bool, datetime]] = []
         for doc in docs:
             doc_dict = doc.to_dict()
             uuid = doc_dict["uuid"]
