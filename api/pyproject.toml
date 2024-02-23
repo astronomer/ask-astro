@@ -3,7 +3,6 @@ name = "ask-astro"
 version = "0.1.0"
 description = ""
 authors = ["Philippe Gagnon <12717218+pgagnon@users.noreply.github.com>"]
-readme = "README.md"
 packages = [{include = "ask_astro"}]
 
 [tool.poetry.dependencies]
@@ -27,6 +26,15 @@ weaviate-client = "*"
 pydantic = "^2.3.0"
 gunicorn = "^21.2.0"
 uvicorn = "^0.23.2"
+tenacity = "^8.2.3"
+cohere = "==4.39"
+sanic_limiter = { git = "https://github.com/Omegastick/sanic-limiter.git"}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.2"
+pytest-asyncio = "^0.21.1"
+pytest-sanic = "^1.0.0"
+sanic-testing = "^23.5.0"
 
 [build-system]
 requires = ["poetry-core"]

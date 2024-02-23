@@ -3,6 +3,11 @@
   src: url("/fonts/Inter-VariableFont_slnt,wght.ttf") format("truetype");
 }
 
+@font-face {
+  font-family: IntelOneMono;
+  src: url("/fonts/IntelOneMono-Light.ttf") format("truetype");
+}
+
 :root {
   --font-heading: "Inter", sans-serif;
   --font-body: "Inter", sans-serif;
@@ -142,11 +147,11 @@ input:-webkit-autofill:focus {
 
 .human-card-root {
   border-radius: 30px;
-  border: 2px solid #716f6b;
+  border: 2px solid #2e85d4;
   background: linear-gradient(
     116deg,
-    rgba(163, 163, 163, 0.2) 34.6%,
-    rgba(75, 75, 75, 0.2) 71.11%
+    rgba(95, 155, 243, 0.2) 34.6%,
+    rgba(67, 118, 194, 0.2) 71.11%
   );
   backdrop-filter: blur(4px);
 }
@@ -169,4 +174,26 @@ input:-webkit-autofill:focus {
 
 .rendered-md p:last-child {
   margin-bottom: 0;
+}
+
+.rendered-md h1 {
+  font-size: 1rem;
+}
+
+.rendered-md pre {
+  background-color: transparent;
+  color: inherit;
+  margin-bottom: 1rem;
+}
+
+#consent-manager button:first-child {
+  background-color: rgb(71, 184, 129);
+}
+
+#consent-manager button:last-child {
+  background-color: rgb(255, 255, 255);
+}
+
+#consent-manager p > button {
+  background-color: transparent !important;
 }

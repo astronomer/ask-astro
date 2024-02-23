@@ -22,27 +22,38 @@
   class="p-2 card-root astro-card-root home-card"
   on:click={() => goto(`/requests/${uuid}`)}
 >
-  <Card.Content class="p-2 h-full flex flex-col">
+  <Card.Content class="p-4 h-full flex flex-col">
     <Card.Title class="pb-2 line-clamp-2 text-xl font-normal">
-      {strippedPrompt}
+      <span class="question">
+        {strippedPrompt}
+      </span>
     </Card.Title>
 
     <div class="flex-auto" />
 
     <Card.Footer class="flex gap-1 pt-4 text-sm font-light">
       <div>
-        <p>{sources.length} sources</p>
+        <p class="card-text">{sources.length} sources</p>
       </div>
       {#if messages.length > 0}
-        <div>•</div>
-        <div>
+        <div class="card-text">•</div>
+        <div class="card-text">
           <p>{messages.length} messages</p>
         </div>
       {/if}
       <div class="flex-auto" />
       <div>
-        <a href="/requests/{uuid}" class="no-underline">See more →</a>
+        <a href="/requests/{uuid}" class="no-underline card-text">See more ></a>
       </div>
     </Card.Footer>
   </Card.Content>
 </Card.Root>
+
+<style>
+  .question {
+    color: #cebefb;
+  }
+  .card-text {
+    color: #b18be8;
+  }
+</style>

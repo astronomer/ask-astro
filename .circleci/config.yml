@@ -1,0 +1,117 @@
+version: 2.1
+
+all_branches_and_version_tag: &all_branches_and_version_tag
+  filters:
+    tags:
+      only: /^\d+[.\d]+.*/
+
+executors:
+  docker-executor:
+    parameters:
+      python_version:
+        type: string
+        default: "3.11"
+    docker:
+      - image: cimg/python:<<parameters.python_version>>
+
+jobs:
+  test:
+    parameters:
+      python_version:
+        description: "Python Version"
+        type: string
+    description: Test Python-<<parameters.python_version>>
+    executor:
+      name: docker-executor
+      python_version: "<<parameters.python_version>>"
+    parallelism: 4
+    steps:
+      - checkout
+      - run:
+          name: Install poetry
+          command: python -m pip install poetry
+      - run:
+          name: Install dev tool dependency
+          command: python -m poetry install
+      - run:
+          name: Install backend API dependency
+          command: python -m poetry run inv api.init-poetry-env
+      - run:
+          name: Run tests
+          command: python -m poetry run inv api.test
+
+  precommit:
+    executor: docker-executor
+    steps:
+      - checkout
+      - run:
+          name: Install poetry
+          command: python -m pip install poetry
+      - run:
+          name: Install dev tool dependency
+          command: python -m poetry install --with pre-commit
+      - run:
+          name: Run tests
+          command: python -m poetry run inv run-pre-commit
+
+  build-docs:
+    description: "Build docs"
+    executor:
+      name: docker-executor
+    steps:
+      - checkout
+      - run:
+          name: Install poetry
+          command: python -m pip install poetry
+      - run:
+          name: Install build docs dependency
+          command: python -m poetry install --only=docs,dev
+      - run:
+          name: Run Sphinx
+          command: poetry run inv docs.build
+      - persist_to_workspace:
+          root: docs/_build
+          paths: [html]
+
+  deploy-docs:
+    docker:
+      - image: node:8.10.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: docs/_build
+      - run:
+          name: Disable jekyll builds
+          command: touch docs/_build/html/.nojekyll
+      - run:
+          name: Install and configure dependencies
+          command: |
+            npm install -g --silent gh-pages@2.0.1
+            git config user.email "airflow-oss-bot@astronomer.io"
+            git config user.name "airflow-oss-bot"
+      - add_ssh_keys:
+          fingerprints:
+            - 26:04:e6:0d:ce:4c:79:c4:e6:46:62:3f:fa:4e:d2:33
+      - run:
+          name: Deploy docs to gh-pages branch
+          command: gh-pages --dotfiles --message "[skip ci] Updates" --dist docs/_build/html
+
+workflows:
+  tests:
+    jobs:
+      - test:
+          name: test-python<< matrix.python_version >>
+          matrix:
+            parameters:
+              python_version: [ "3.11" ]
+          <<: *all_branches_and_version_tag
+      - precommit:
+          <<: *all_branches_and_version_tag
+      - build-docs:
+          <<: *all_branches_and_version_tag
+      - deploy-docs:
+          requires:
+            - build-docs
+          filters:
+            branches:
+              only: main

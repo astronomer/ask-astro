@@ -4,22 +4,19 @@ through LangSmith's evaluators. If something is correct, useful, and public,
 it marks it as an example to be shown to users.
 """
 
-import os
+from datetime import datetime
 from typing import Any
 
-from datetime import datetime
+from google.cloud import firestore
+from include.utils.slack import send_failure_notification
+from langchain.evaluation import StringEvaluator, load_evaluator
+from langchain.evaluation.schema import EvaluatorType
+from langsmith import Client
 
 from airflow.decorators import dag, task
 from airflow.operators.empty import EmptyOperator
 
-from langsmith import Client
-
-from airflow.providers.google.firebase.hooks.firestore import CloudFirestoreHook
-from google.cloud import firestore
-from google.oauth2 import service_account
-
-from langchain.evaluation import load_evaluator, StringEvaluator
-from langchain.evaluation.schema import EvaluatorType
+default_args = {"retries": 3, "retry_delay": 30}
 
 
 def get_firestore_client():
@@ -40,11 +37,7 @@ def get_unprocessed_runs():
     firestore_client = get_firestore_client()
 
     # get all requests that don't have a `is_example` field
-    unprocessed_runs = (
-        firestore_client.collection("ask-astro-dev-requests")
-        .where("is_processed", "==", False)
-        .get()
-    )
+    unprocessed_runs = firestore_client.collection("ask-astro-dev-requests").where("is_processed", "==", False).get()
 
     return [obj.to_dict() for obj in unprocessed_runs]
 
@@ -65,14 +58,17 @@ def process_run(run: dict[str, Any]):
     firestore_client = get_firestore_client()
 
     feedback = {}
+    on_topicness = (
+        "Is the prompt or answer related to Apache Airflow, Astronomer, or "
+        "Data Engineering? If yes, return Y. If no, return N."
+    )
+    publicness_txt = (
+        "Does the prompt or answer contain only public (non-private) info? If yes, return Y. If no, return N."
+    )
     for criteria in [
         "helpfulness",
-        {
-            "publicness": "Does the prompt or answer contain only public (non-private) info? If yes, return Y. If no, return N."
-        },
-        {
-            "on-topicness": "Is the prompt or answer related to Apache Airflow, Astronomer, or Data Engineering? If yes, return Y. If no, return N."
-        },
+        {"publicness": publicness_txt},
+        {"on-topicness": on_topicness},
     ]:
         evaluator = load_evaluator(
             EvaluatorType.CRITERIA,
@@ -110,13 +106,11 @@ def process_run(run: dict[str, Any]):
     # if all the evaluators agree that the response is correct, useful, and public,
     # mark it as an example and processed
     update_dict = {"is_processed": True}
-    if all([score > 0.9 for score in feedback.values()]):
+    if all(score > 0.9 for score in feedback.values()):
         update_dict["is_example"] = True
         print("Marking run as example")
 
-    firestore_client.collection("ask-astro-dev-requests").document(run["uuid"]).set(
-        update_dict, merge=True
-    )
+    firestore_client.collection("ask-astro-dev-requests").document(run["uuid"]).set(update_dict, merge=True)
 
     return feedback
 
@@ -124,7 +118,11 @@ def process_run(run: dict[str, Any]):
 @dag(
     schedule="@daily",
     start_date=datetime(2023, 1, 1),
+    default_args=default_args,
     catchup=False,
+    on_failure_callback=send_failure_notification(
+        dag_id="{{ dag.dag_id }}", execution_date="{{ dag_run.execution_date }}"
+    ),
 )
 def find_example_runs():
     begin = EmptyOperator(task_id="begin")

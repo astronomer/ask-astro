@@ -1,29 +1,13 @@
 version: '3.1'
 services:
-  triggerer:
-    networks:
-    - airflow
-    environment:
-      AIRFLOW_CONN_WEAVIATE_DEFAULT: '{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_WCS: '{"conn_type": "weaviate", "host": "${WCS_HOST}", "extra": {"token":"${WCS_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_TEST: '{"conn_type": "weaviate", "host": "${WCS_TEST_HOST}", "extra": {"token":"${WCS_TEST_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-  scheduler:
+  webserver:
     ports:
     - 8501:8501
     networks:
     - airflow
-    environment:
-      AIRFLOW_CONN_GITHUB_DEFAULT: '{"conn_type": "github", "password": "${GITHUB_PAT}"}'
-      AIRFLOW_CONN_SLACK_API_DEFAULT: '{"conn_type": "slack", "password": "${SLACK_TOKEN_PGDEV}"}'
-      AIRFLOW_CONN_WEAVIATE_DEFAULT: '{"conn_type": "weaviate", "host": "http://weaviate:8081", "extra": {"X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_WCS: '{"conn_type": "weaviate", "host": "${WCS_HOST}", "extra": {"token":"${WCS_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
-      AIRFLOW_CONN_WEAVIATE_TEST: '{"conn_type": "weaviate", "host": "${WCS_TEST_HOST}", "extra": {"token":"${WCS_TEST_APIKEY}","X-OpenAI-Api-Key": "${OPENAI_APIKEY}","X-Azure-Api-Key": "${ASK_ASTRO_OPENAI_KEY}"}}'
   weaviate:
     image: semitechnologies/weaviate:1.21.0
-    # platform: linux/amd64
     command: "--host 0.0.0.0 --port '8081' --scheme http"
-    ports:
-    - 8081:8081
     volumes:
     - ${PWD}/include/weaviate/backup:/var/lib/weaviate/backup
     environment:
@@ -31,8 +15,10 @@ services:
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
       DEFAULT_VECTORIZER_MODULE: 'text2vec-openai'
-      ENABLE_MODULES: 'text2vec-openai, backup-filesystem, qna-openai, generative-openai'
+      ENABLE_MODULES: 'text2vec-openai, backup-filesystem, qna-openai, generative-openai, text2vec-cohere, reranker-cohere'
       BACKUP_FILESYSTEM_PATH: '/var/lib/weaviate/backup'
       CLUSTER_HOSTNAME: 'node1'
+    ports:
+    - 8081:8081
     networks:
     - airflow

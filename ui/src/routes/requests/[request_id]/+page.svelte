@@ -38,6 +38,11 @@
 
         return 0;
       }) || [];
+
+    sortedMessages.reverse().forEach(function(item ,index){
+      item.id = index;
+    })
+    sortedMessages.reverse();
   }
 
   $: {
@@ -74,6 +79,7 @@
       requestUuid={$page.params.request_id}
       additional_kwargs={{
         ts: $page.data.response_received_at,
+        status: $page.data.status,
       }}
       showFeedback
     />
@@ -86,18 +92,38 @@
     />
   {/if}
 
-  {#each sortedMessages as message}
+  {#each sortedMessages as message (message.id)}
     <MessageCard {...message} />
   {/each}
 
-  <div class="text-white text-xl font-bold">Sources</div>
-  {#if loading}
-    <SourceCard loading />
-    <SourceCard loading />
-    <SourceCard loading />
-  {:else}
-    {#each $page.data.sources as source}
-      <SourceCard {...source} />
-    {/each}
-  {/if}
+  <div class="sources mt-8">
+    <h2 class="sources-heading">Sources</h2>
+    {#if loading}
+      <SourceCard loading />
+      <SourceCard loading />
+      <SourceCard loading />
+    {:else}
+      {#each $page.data.sources as source}
+        <div class="mb-4">
+          <SourceCard {...source} />
+        </div>
+      {/each}
+    {/if}
+  </div>
 </div>
+
+<style>
+  .sources {
+    border-top: 1px solid #59498a;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .sources-heading {
+    color: #8c80b0;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 22px;
+  }
+</style>

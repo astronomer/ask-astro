@@ -1,8 +1,7 @@
 <script lang="ts">
-  import * as Card from "$lib/components/ui/card";
   import { Skeleton } from "$lib/components/ui/skeleton";
   import SvelteMarkdown from "svelte-markdown";
-  import { ChevronDown, ChevronUp, Link2 } from "radix-icons-svelte";
+  import { ChevronDown, ChevronUp } from "radix-icons-svelte";
 
   export let name: string | undefined = undefined;
   export let snippet: string | undefined = undefined;
@@ -24,60 +23,71 @@
   let expanded = false;
 </script>
 
-<Card.Root class="p-2 astro-card-root">
-  <Card.Content class="p-2">
-    <Card.Title class="flex items-center">
-      <Link2 class="w-4 h-4 mr-1 flex-shrink-0" />
+<div class="w-full flex gap-2 pb-1">
+  <p class="truncate font-normal w-full source-link">
+    {#if loading || !translatedUrl}
+      <Skeleton class="w-full h-4" />
+    {:else}
+      <a href={translatedUrl} target="_blank">{translatedUrl}</a>
+    {/if}
+  </p>
 
-      <p class="truncate font-normal w-full">
-        {#if loading || !translatedUrl}
-          <Skeleton class="w-full h-4" />
-        {:else}
-          From <a href={translatedUrl} target="_blank">{translatedUrl}</a>:
-        {/if}
-      </p>
+  <div class="flex-auto" />
 
-      <div class="pr-20 flex-auto" />
+  <button
+    class="cursor-pointer"
+    on:click={() => {
+      expanded = !expanded;
+    }}
+  >
+    {#if expanded}
+      <ChevronUp class="w-4 h-4" color="#edd7ff" />
+    {:else}
+      <ChevronDown class="w-4 h-4" color="#edd7ff" />
+    {/if}
+  </button>
+</div>
 
-      <button
-        class="cursor-pointer"
-        on:click={() => {
-          expanded = !expanded;
-        }}
-      >
-        {#if expanded}
-          <ChevronUp class="w-4 h-4" />
-        {:else}
-          <ChevronDown class="w-4 h-4" />
-        {/if}
-      </button>
-    </Card.Title>
-
-    <Card.Description>
-      {#if expanded}
-        {#if loading}
-          <div class="flex flex-col gap-2 pt-4">
-            <Skeleton class="w-full h-4" />
-            <Skeleton class="w-full h-4" />
-            <Skeleton class="w-full h-4" />
-          </div>
-        {:else}
-          <SvelteMarkdown source={snippet} />
-        {/if}
-      {:else if loading}
-        <Skeleton class="w-full h-4 mt-4" />
-      {:else}
-        <div class="line-clamp-1 collapsed">
-          <SvelteMarkdown source={snippet} />
-        </div>
-      {/if}
-    </Card.Description>
-  </Card.Content>
-</Card.Root>
+<div class="source-content">
+  {#if expanded}
+    {#if loading}
+      <div class="flex flex-col gap-2 pt-4">
+        <Skeleton class="w-full h-4" />
+        <Skeleton class="w-full h-4" />
+        <Skeleton class="w-full h-4" />
+      </div>
+    {:else}
+      <div class="rendered-md">
+        <SvelteMarkdown source={snippet} />
+      </div>
+    {/if}
+  {:else if loading}
+    <Skeleton class="w-full h-4 mt-4" />
+  {:else}
+    <div class="line-clamp-1 collapsed rendered-md">
+      <SvelteMarkdown source={snippet} />
+    </div>
+  {/if}
+</div>
 
 <style>
   .collapsed {
     max-height: 2rem;
     line-height: 1rem;
   }
+
+  .source-link {
+    color: #edd7ff;
+    font-size: 17px;
+  }
+
+  .source-content {
+    color: #8c80b0;
+    font-size: 15px;
+  }
+
+  div.rendered-md :global(h1) {
+    text-align: left;
+  }
+
 </style>

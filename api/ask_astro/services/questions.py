@@ -1,31 +1,81 @@
-"Handles app mention events from Slack"
+"""Handles app mention events from Slack"""
+from __future__ import annotations
+
 import asyncio
+import re
 import time
-
-from langchain import callbacks
-
-from ask_astro.config import FirestoreCollections
-from ask_astro.clients.firestore import firestore_client
-from ask_astro.models.request import AskAstroRequest, Source
-from ask_astro.chains.answer_question import answer_question_chain
-
 from logging import getLogger
+
+from tenacity import retry, retry_if_not_exception_type, stop_after_attempt, wait_exponential
+
+from ask_astro.clients.firestore import firestore_client
+from ask_astro.config import FirestoreCollections, PromptPreprocessingConfig
+from ask_astro.models.request import AskAstroRequest, Source
 
 logger = getLogger(__name__)
 
 
-async def answer_question(request: AskAstroRequest):
+class InvalidRequestPromptError(Exception):
+    """Exception raised when the prompt string in the request object is invalid"""
+
+
+class QuestionAnsweringError(Exception):
+    """Exception raised when an error occurs during question answering"""
+
+
+async def _update_firestore_request(request: AskAstroRequest) -> None:
     """
-    Performs the actual question answering logic. Writes to the request object.
+    Update the Firestore database with the given request.
+
+    :param request: The AskAstroRequest object to update in Firestore.
+    """
+    await (
+        firestore_client.collection(FirestoreCollections.requests)
+        .document(str(request.uuid))
+        .set(request.to_firestore())
+    )
+
+
+def _preprocess_request(request: AskAstroRequest) -> None:
+    if len(request.prompt) > PromptPreprocessingConfig.max_char:
+        error_msg = "Question text is too long. Please try making a new thread and shortening your question."
+        request.response = error_msg
+        raise InvalidRequestPromptError(error_msg)
+    if not request.prompt:
+        error_msg = "Question text cannot be empty. Please try again with a different question."
+        request.response = error_msg
+        raise InvalidRequestPromptError(error_msg)
+    # take the most recent 10 question and answers in the history
+    if len(request.messages) > PromptPreprocessingConfig.max_chat_history_len:
+        request.messages = request.messages[-10:]
+    # parse out backslack escape character to prevent hybrid search erroring out with invalid syntax string
+    request.prompt = re.sub(r"(?<!\\)\\(?!\\)", "", request.prompt)
+
+
+@retry(
+    retry=retry_if_not_exception_type(InvalidRequestPromptError),
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, max=10),
+)
+async def answer_question(request: AskAstroRequest) -> None:
+    """
+    Performs the actual question answering logic and updates the request object.
+
+    :param request: The request to answer the question.
     """
     try:
-        # first, mark the request as in_progress and add it to the database
-        request.status = "in_progress"
-        await firestore_client.collection(FirestoreCollections.requests).document(
-            str(request.uuid)
-        ).set(request.to_firestore())
+        from langchain import callbacks
 
-        # then, run the question answering chain
+        from ask_astro.chains.answer_question import answer_question_chain
+
+        # First, mark the request as in_progress and add it to the database
+        request.status = "in_progress"
+        await _update_firestore_request(request)
+
+        # Preprocess request
+        _preprocess_request(request=request)
+
+        # Run the question answering chain
         with callbacks.collect_runs() as cb:
             result = await asyncio.to_thread(
                 lambda: answer_question_chain(
@@ -41,30 +91,24 @@ async def answer_question(request: AskAstroRequest):
 
         logger.info("Question answering chain finished with result %s", result)
 
-        # update the request in the database
+        # Update the request in the database
         request.status = "complete"
         request.response = result["answer"]
         request.response_received_at = int(time.time())
         request.sources = [
-            Source(
-                name=doc.metadata.get("docLink"),
-                snippet=doc.page_content,
-            )
+            Source(name=doc.metadata.get("docLink"), snippet=doc.page_content)
             for doc in result.get("source_documents", [])
             if doc.metadata.get("docLink", "").startswith("https://")
         ]
 
-        await firestore_client.collection(FirestoreCollections.requests).document(
-            str(request.uuid)
-        ).set(request.to_firestore())
-
     except Exception as e:
-        # if there's an error, mark the request as errored and add it to the database
+        # If there's an error, mark the request as errored and add it to the database
         request.status = "error"
-        request.response = "Sorry, something went wrong. Please try again later."
-        await firestore_client.collection(FirestoreCollections.requests).document(
-            str(request.uuid)
-        ).set(request.to_firestore())
+        if not isinstance(e, InvalidRequestPromptError):
+            request.response = "Sorry, something went wrong. Please try again later."
+            raise QuestionAnsweringError("An error occurred during question answering.") from e
+        else:
+            raise e
 
-        # then propogate the error
-        raise e
+    finally:
+        await _update_firestore_request(request)

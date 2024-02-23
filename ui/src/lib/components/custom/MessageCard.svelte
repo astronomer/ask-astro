@@ -67,7 +67,7 @@
       {/if}
     </Card.Title>
 
-    <div class="pt-4 overflow-x-scroll">
+    <div class="pt-4 overflow-x-auto">
       {#if isLoading}
         <div class="flex flex-col gap-2">
           <Skeleton class="w-full h-4" />
@@ -78,10 +78,19 @@
         <div class="rendered-md">
           <SvelteMarkdown source={translatedContent} />
         </div>
+
+        {#if type === "ai"}
+          <div class="float-right pt-2">
+            Not the answer you were looking for or need more help? <a
+              href="https://www.astronomer.io/contact?utm_source=askastro&utm_medium=chat&utm_campaign=askastro"
+              target="_blank">Contact us!</a
+            >
+          </div>
+        {/if}
       {/if}
     </div>
 
-    {#if showFeedback && requestUuid && hasReacted !== undefined}
+    {#if showFeedback && requestUuid && hasReacted !== undefined && additional_kwargs.status != 'error'}
       <Card.Footer>
         {#if hasReacted === false}
           <div class="flex gap-2 items-center w-full mt-4">

@@ -1,686 +1,469 @@
-from datetime import datetime 
-from stackapi import StackAPI
+from __future__ import annotations
+
+import datetime
+import json
+import logging
+import os
 from pathlib import Path
+
 import pandas as pd
-import pypandoc
-import html2text
-import re
-import requests
+from include.utils.slack import send_failure_notification
 
-from typing import List
-
-from airflow.decorators import dag, task, task_group
+from airflow.decorators import dag, task
 from airflow.exceptions import AirflowException
-from airflow.providers.github.hooks.github import GithubHook
-from airflow.providers.slack.operators.slack import SlackAPIPostOperator
-from airflow.providers.slack.hooks.slack import SlackHook
-from weaviate_provider.hooks.weaviate import WeaviateHook
-from weaviate_provider.operators.weaviate import (
-    WeaviateCreateSchemaOperator,
-    WeaviateCheckSchemaOperator,
-    WeaviateImportDataOperator,
-    )
-from weaviate.util import generate_uuid5
-from langchain.text_splitter import (
-    MarkdownHeaderTextSplitter, 
-    RecursiveCharacterTextSplitter,
-)
-from langchain.schema import Document
+from airflow.providers.weaviate.operators.weaviate import WeaviateDocumentIngestOperator
+from airflow.utils.trigger_rule import TriggerRule
 
-_WEAVIATE_CONN_ID = 'weaviate_test'
-_GITHUB_CONN_ID = 'github_default'
-_SLACK_CONN_ID = 'slack_api_default'
+seed_baseline_url = None
+stackoverflow_cutoff_date = "2021-09-01"
+ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 
-# doc_dir:baseurl pairs for dynamic tasks
+_WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
+_GITHUB_CONN_ID = "github_ro"
+WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
+_GITHUB_ISSUE_CUTOFF_DATE = os.environ.get("GITHUB_ISSUE_CUTOFF_DATE", "2022-1-1")
+
 markdown_docs_sources = [
-    {'doc_dir': 'learn', 'repo_base': 'astronomer/docs'}, 
-    {'doc_dir': 'astro', 'repo_base': 'astronomer/docs'}
-    ]
-rst_docs_sources = [
-    {'doc_dir': 'docs', 'repo_base': 'apache/airflow'},
-    ]
-code_samples_sources = [
-    {'doc_dir': 'code-samples', 'repo_base': 'astronomer/docs'},
-    ]
+    {"doc_dir": "", "repo_base": "OpenLineage/docs"},
+    {"doc_dir": "", "repo_base": "OpenLineage/OpenLineage"},
+]
+
 issues_docs_sources = [
-    {'doc_dir': 'issues', 'repo_base': 'apache/airflow'}
+    "apache/airflow",
 ]
 slack_channel_sources = [
-    {'channel_name': 'troubleshooting', 
-      'channel_id': 'CCQ7EGB1P', 
-      'team_id': 'TCQ18L22Z', 
-      'team_name' : 'Airflow Slack Community',
-      'slack_api_conn_id' : 'TBD'}
-]
-http_json_sources = [
-    {'name': 'registry_cell_types',
-     'base_url': 'https://api.astronomer.io/registryV2/v1alpha1/organizations/public/modules?limit=1000',
-     'headers': {},
-     'count_field': 'totalCount'}
-]
-
-rst_exclude_docs = ['changelog.rst', 'commits.rst']
-
-stackoverflow_cutoff_date = '2021-09-01'
-stackoverflow_tags = [
-    'airflow',
-]
-
-weaviate_doc_count = {
-    'Docs': 7307,
-}
-
-default_args = {
-    "retries": 3,
+    {
+        "channel_name": "troubleshooting",
+        "channel_id": "CCQ7EGB1P",
+        "team_id": "TCQ18L22Z",
+        "team_name": "Airflow Slack Community",
+        "slack_api_conn_id": "slack_api_ro",
     }
+]
 
-@dag(schedule_interval=None, start_date=datetime(2023, 8, 1), catchup=False, default_args=default_args)
+blog_cutoff_date = datetime.date(2023, 1, 19)
+
+stackoverflow_tags = [{"airflow": "2021-09-01"}]
+
+airflow_docs_base_url = "https://airflow.apache.org/docs/"
+
+default_args = {"retries": 3, "retry_delay": 30}
+logger = logging.getLogger("airflow.task")
+
+
+@dag(
+    schedule_interval=None,
+    start_date=datetime.datetime(2023, 9, 27),
+    catchup=False,
+    is_paused_upon_creation=True,
+    default_args=default_args,
+    on_failure_callback=send_failure_notification(
+        dag_id="{{ dag.dag_id }}", execution_date="{{ dag_run.execution_date }}"
+    ),
+)
 def ask_astro_load_bulk():
     """
-    This DAG performs the initial load of data from sources.  While the code to generate these datasets
-    is included for each function, the data is frozen as a parquet file for simple ingest and the steps
-    to create are commented out.
+    This DAG performs the initial load of data from sources.
+
+    If seed_baseline_url (set above) points to a parquet file with pre-embedded data it will be
+    ingested. Otherwise, new data is extracted, split, embedded and ingested.
+
+    The first time this DAG runs (without seeded baseline) it will take at lease 90 minutes to
+    extract data from all sources. Extracted data is then serialized to disk in the project
+    directory in order to simplify later iterations of ingest with different chunking strategies,
+    vector databases or embedding models.
+
     """
-    _check_schema = WeaviateCheckSchemaOperator(task_id='check_schema', 
-                                                weaviate_conn_id=_WEAVIATE_CONN_ID,
-                                                class_object_data='file://include/data/schema.json')
 
-    @task.branch
-    def recreate_schema_branch(schema_exists:bool) -> str:
-        # WeaviateHook(_WEAVIATE_CONN_ID).get_conn().schema.delete_all()
-        if schema_exists:
-            return ["check_object_count"]
-        elif not schema_exists:
-            return ["create_schema"]
-        else:
-            return None
+    from include.tasks import split
 
-    @task.branch
-    def check_object_count(weaviate_doc_count:dict, class_name:str) -> str:
+    @task
+    def get_schema_and_process(schema_file: str) -> list:
+        """
+        Retrieves and processes the schema from a given JSON file.
+
+        :param schema_file: path to the schema JSON file
+        """
         try:
-            weaviate_hook = WeaviateHook(_WEAVIATE_CONN_ID)
-            weaviate_hook.client = weaviate_hook.get_conn()
-            response = weaviate_hook.run(f'{{Aggregate {{ {class_name} {{ meta {{ count }} }} }} }}')
-        except Exception as e:
-            if e.status_code == 422 and 'no graphql provider present' in e.message:
-                response = None
+            class_objects = json.loads(Path(schema_file).read_text())
+        except FileNotFoundError:
+            logger.error(f"Schema file {schema_file} not found.")
+            raise
+        except json.JSONDecodeError:
+            logger.error(f"Invalid JSON in the schema file {schema_file}.")
+            raise
 
-        if response and \
-            response['data']['Aggregate'][class_name][0]['meta']['count'] >= weaviate_doc_count[class_name]:
-            print('Initial Upload complete. Skipping')
-            return None
+        class_objects["classes"][0].update({"class": WEAVIATE_CLASS})
+
+        if "classes" not in class_objects:
+            class_objects = [class_objects]
         else:
-            return ["extract_github_markdown", 
-                    "extract_github_rst", 
-                    "extract_github_python", 
-                    "extract_stack_overflow",
-                    "extract_slack",
-                    "extract_registry",
-                    "extract_github_issues"]
-       
-    _create_schema = WeaviateCreateSchemaOperator(task_id='create_schema', 
-                                                  weaviate_conn_id=_WEAVIATE_CONN_ID,
-                                                  class_object_data='file://include/data/schema.json',
-                                                  existing='fail')
-    
-    @task(trigger_rule='none_failed')
-    def extract_github_markdown(source:dict):
+            class_objects = class_objects["classes"]
+
+        logger.info("Schema processing completed.")
+        return class_objects
+
+    @task.branch
+    def check_schema(class_objects: list) -> list[str]:
         """
-        This task downloads github content as markdown documents in a 
-        pandas dataframe.
+        Check if the current schema includes the requested schema.  The current schema could be a superset
+        so check_schema_subset is used recursively to check that all objects in the requested schema are
+        represented in the current schema.
 
-        Dataframe fields are:
-        'docSource': ie. 'astro', 'learn', etc.
-        'sha': the github sha for the document
-        'docLink': URL for the specific document in github.
-        'content': Entire document content in markdown format.
+        :param class_objects: Class objects to be checked against the current schema.
+        """
+        from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
 
-        Code is provided for the processing of questions and answers but is 
-        commented out as the historical data is provided as a parquet file.
+        ask_astro_weaviate_hook = WeaviateHook(conn_id=_WEAVIATE_CONN_ID)
+        return (
+            ["check_seed_baseline"]
+            if ask_astro_weaviate_hook.check_subset_of_schema(classes_objects=class_objects)
+            else ["create_schema"]
+        )
+
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def create_schema(class_objects: list, existing: str = "ignore") -> None:
+        """
+        Creates or updates the schema in Weaviate based on the given class objects.
+
+        :param class_objects: A list of class objects for schema creation or update.
+        :param existing: Strategy to handle existing classes ('ignore' or 'replace'). Defaults to 'ignore'.
+        """
+        from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
+
+        ask_astro_weaviate_hook = WeaviateHook(conn_id=_WEAVIATE_CONN_ID)
+        ask_astro_weaviate_hook.create_or_replace_classes(
+            schema_json={cls["class"]: cls for cls in class_objects}, existing=existing
+        )
+
+    @task.branch(trigger_rule=TriggerRule.NONE_FAILED)
+    def check_seed_baseline(seed_baseline_url: str = None) -> str | set:
+        """
+        Check if we will ingest from pre-embedded baseline or extract each source.
         """
 
-        # downloaded_docs = []
-        
-        # gh_hook = GithubHook(_GITHUB_CONN_ID)
-        
-        # repo = gh_hook.client.get_repo(source['repo_base'])
-        # contents = repo.get_contents(source['doc_dir'])
+        if seed_baseline_url is not None:
+            return "import_baseline"
+        else:
+            return {
+                "extract_github_markdown",
+                "extract_airflow_docs",
+                "extract_stack_overflow",
+                "extract_astro_registry_cell_types",
+                "extract_github_issues",
+                "extract_astro_blogs",
+                "extract_astro_registry_dags",
+                "extract_astro_cli_docs",
+                "extract_astro_provider_doc",
+                "extract_astro_forum_doc",
+                "extract_astronomer_docs",
+                "get_cached_or_extract_cosmos_docs",
+            }
 
-        # while contents:
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def extract_github_markdown(source: dict):
+        from include.tasks.extract import github
 
-        #     file_content = contents.pop(0)
-        #     if file_content.type == "dir":
-        #         contents.extend(repo.get_contents(file_content.path))
+        parquet_file = f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet"
 
-        #     elif Path(file_content.name).suffix == '.md':
-
-        #         print(file_content.name)
-                
-        #         row = {
-        #             "docLink": file_content.html_url, 
-        #             "sha": file_content.sha,
-        #             "content": file_content.decoded_content.decode(),
-        #             "docSource": source['doc_dir'], 
-        #         }
-
-        #         downloaded_docs.append(row)
-                
-        # df = pd.DataFrame(downloaded_docs)
-
-        # df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
-        df = pd.read_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
+        if os.path.isfile(parquet_file):
+            if os.access(parquet_file, os.R_OK):
+                df = pd.read_parquet(parquet_file)
+            else:
+                raise Exception("Parquet file exists locally but is not readable.")
+        else:
+            df = github.extract_github_markdown(source, github_conn_id=_GITHUB_CONN_ID)
+            df.to_parquet(parquet_file)
 
         return df
 
-    @task(trigger_rule='none_failed')
-    def extract_github_rst(source:dict):
-        """
-        This task downloads github content as rst documents 
-        in a pandas dataframe.
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def extract_github_python(source: dict):
+        from include.tasks.extract import github
 
-        The 'content' field is converted from RST to Markdown (via pypandoc).  After 
-        removing the preamble (apache license), any empty lines and 'include' footers 
-        any empty docs are removed.  Document links and references are not included 
-        in the content.
+        parquet_file = f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet"
 
-        Dataframe fields are:
-        'docSource': ie. 'docs'
-        'sha': the github sha for the document
-        'docLink': URL for the specific document in github.
-        'content': Entire document in markdown format.
-
-        Code is provided for the processing of questions and answers but is 
-        commented out as the historical data is provided as a parquet file.
-        """
-
-        # downloaded_docs = []
-        
-        # gh_hook = GithubHook(_GITHUB_CONN_ID)
-
-        # repo = gh_hook.client.get_repo(source['repo_base'])
-        # contents = repo.get_contents(source['doc_dir'])
-
-        # apache_license_text = Path('include/data/apache_license.rst').read_text()
-
-        # while contents:
-
-        #     file_content = contents.pop(0)
-        #     if file_content.type == "dir":
-        #         contents.extend(repo.get_contents(file_content.path))
-
-        #     elif Path(file_content.name).suffix == '.rst' and file_content.name not in rst_exclude_docs:
-
-        #         print(file_content.name)
-
-        #         row = {
-        #             "docLink": file_content.html_url, 
-        #             "sha": file_content.sha,
-        #             "content": file_content.decoded_content.decode(),
-        #             "docSource": source['doc_dir'], 
-        #         }
-
-        #         downloaded_docs.append(row)
-                
-        # df = pd.DataFrame(downloaded_docs)
-
-        # df['content'] = df['content'].apply(lambda x: x.replace(apache_license_text, ''))
-        # df['content'] = df['content'].apply(lambda x: re.sub(r".*include.*", "", x))
-        # df['content'] = df['content'].apply(lambda x: re.sub(r'^\s*$', "", x))
-        # df = df[df['content']!='']
-        # df['content'] = df['content'].apply(lambda x: pypandoc.convert_text(source=x, to='md', 
-        #                                                                     format='rst',
-        #                                                                     extra_args=['--atx-headers']))
-
-        # df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
-        df = pd.read_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
+        if os.path.isfile(parquet_file):
+            if os.access(parquet_file, os.R_OK):
+                df = pd.read_parquet(parquet_file)
+            else:
+                raise Exception("Parquet file exists locally but is not readable.")
+        else:
+            df = github.extract_github_python(source, _GITHUB_CONN_ID)
+            df.to_parquet(parquet_file)
 
         return df
 
-    @task(trigger_rule='none_failed')
-    def extract_github_python(source:dict):
-        """
-        This task downloads github content as python code in a pandas dataframe.
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def extract_airflow_docs():
+        from include.tasks.extract import airflow_docs
 
-        The 'content' field of the dataframe is currently not split as the context 
-        window is large enough. Code for splitting is provided but commented out.
+        parquet_file = "include/data/apache/airflow/docs.parquet"
 
-        Dataframe fields are:
-        'docSource': ie. 'code-samples'
-        'sha': the github sha for the document
-        'docLink': URL for the specific document in github.
-        'content': The python code
-        'header': a placeholder of 'python' for bm25 search
+        if os.path.isfile(parquet_file):
+            if os.access(parquet_file, os.R_OK):
+                df = pd.read_parquet(parquet_file)
+            else:
+                raise Exception("Parquet file exists locally but is not readable.")
+        else:
+            df = airflow_docs.extract_airflow_docs.function(docs_base_url=airflow_docs_base_url)[0]
+            df.to_parquet(parquet_file)
 
-        Code is provided for the processing of questions and answers but is 
-        commented out as the historical data is provided as a parquet file.
-        """
-    
-        # downloaded_docs = []
+        return [df]
 
-        # gh_hook = GithubHook(_GITHUB_CONN_ID)
-        
-        # repo = gh_hook.client.get_repo(source['repo_base'])
-        # contents = repo.get_contents(source['doc_dir'])
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def extract_astro_cli_docs():
+        from include.tasks.extract import astro_cli_docs
 
-        # while contents:
-        #     file_content = contents.pop(0)
+        astro_cli_parquet_path = "include/data/astronomer/docs/astro-cli.parquet"
+        try:
+            df = pd.read_parquet(astro_cli_parquet_path)
+        except Exception:
+            df = astro_cli_docs.extract_astro_cli_docs()[0]
+            df.to_parquet(astro_cli_parquet_path)
 
-        #     if file_content.type == "dir":
-        #         contents.extend(repo.get_contents(file_content.path))
+        return [df]
 
-        #     elif Path(file_content.name).suffix == '.py':
-        #         print(file_content.name)
-                                
-        #         row = {
-        #             "docLink": file_content.html_url, 
-        #             "sha": file_content.sha,
-        #             "content": file_content.decoded_content.decode(),
-        #             "docSource": source['doc_dir'], 
-        #             "header": 'python', 
-        #         }
-                
-        #         downloaded_docs.append(row)
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def extract_astro_provider_doc():
+        from include.tasks.extract.astronomer_providers_docs import extract_provider_docs
 
-        # df = pd.DataFrame(downloaded_docs)
+        astro_provider_parquet_path = "include/data/astronomer/docs/astro-provider.parquet"
+        try:
+            df = pd.read_parquet(astro_provider_parquet_path)
+        except Exception:
+            df = extract_provider_docs()[0]
+            df.to_parquet(astro_provider_parquet_path)
 
-        # df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
-        df = pd.read_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
+        return [df]
 
-        return df
-    
-    @task(trigger_rule='none_failed')
-    def extract_stack_overflow(tag:dict, stackoverflow_cutoff_date:str):
-        """
-        This task generates stack overflow questions and answers as markdown 
-        documents in a pandas dataframe.
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def extract_stack_overflow(tag: str, stackoverflow_cutoff_date: str = stackoverflow_cutoff_date):
+        from include.tasks.extract import stack_overflow
 
-        Dataframe fields are:
-        'docSource': 'stackoverflow' plus the tag name (ie. 'airflow')
-        'docLink': URL for the specific question/answer.
-        'content': The base64 encoded content of the question/answer in markdown format.
-        'header': document type. (ie. 'question' or 'answer')
-
-        Code is provided for the processing of questions and answers but is 
-        commented out as the historical data is provided as a parquet file.
-        """
-
-        # question_template = "TITLE: {title}\nDATE: {date}\nBY: {user}\nSCORE: {score}\n{body}{question_comments}"
-        # answer_template = "DATE: {date}\nBY: {user}\nSCORE: {score}\n{body}{answer_comments}"
-        # comment_template = "{user} on {date} [Score: {score}]: {body}\n"
-
-        # post_types = {
-        #     '1': 'Question',
-        #     '2': 'Answer',
-        #     '3': 'Wiki',
-        #     '4': 'TagWikiExcerpt',
-        #     '5': 'TagWiki',
-        #     '6': 'ModeratorNomination',
-        #     '7': 'WikiPlaceholder',
-        #     '8': 'PrivilegeWiki'}
-        # posts_columns = {
-        #     '_COL_0':'post_id', 
-        #     '_COL_1':'type', 
-        #     '_COL_3':'parent_id', 
-        #     '_COL_4':'created_on', 
-        #     '_COL_6':'score', 
-        #     '_COL_8':'body',
-        #     '_COL_9':'user_id', 
-        #     '_COL_10':'user_name',
-        #     '_COL_15':'title',
-        #     '_COL_17':'answer_count'}
-        # comments_columns = {
-        #     '_COL_0':'comment_id', 
-        #     '_COL_1':'post_id', 
-        #     '_COL_2':'comment_score', 
-        #     '_COL_3':'comment_body',
-        #     '_COL_4':'comment_created_on',
-        #     '_COL_5':'comment_user_name',
-        #     '_COL_6':'comment_user_id'}
-        
-        # posts_df = pd.read_parquet('include/data/StackOverflow/Posts/data_0_0_0.snappy.parquet')[posts_columns.keys()]
-        # comments_df = pd.concat([
-        #     pd.read_parquet('include/data/StackOverflow/Comments/data_0_0_0.snappy.parquet')[comments_columns.keys()],
-        #     pd.read_parquet('include/data/StackOverflow/Comments/data_0_1_0.snappy.parquet')[comments_columns.keys()]
-        #     ], ignore_index=True)
-        
-        # posts_df.rename(posts_columns, axis=1, inplace=True)
-        # posts_df['type'] = posts_df['type'].apply(lambda x: post_types[x])
-        # posts_df['created_on'] = pd.to_datetime(posts_df['created_on'])
-        # posts_df[['post_id', 'parent_id', 'user_id', 'user_name']] = posts_df[['post_id', 'parent_id', 'user_id', 'user_name']].astype(str)
-        # posts_df = posts_df[posts_df['created_on'] >= stackoverflow_cutoff_date]
-        # posts_df['user_id'] = posts_df.apply(lambda x: x.user_id or x.user_name or 'Unknown User', axis=1)
-        # posts_df.reset_index(inplace=True, drop=True)
-
-        # comments_df.rename(comments_columns, axis=1, inplace=True)
-        # comments_df['comment_created_on'] = pd.to_datetime(comments_df['comment_created_on'])
-        # comments_df['comment_user_id'] = comments_df.apply(lambda x: x.comment_user_id or x.comment_user_name or 'Unknown User', axis=1)
-        # comments_df[['post_id', 'comment_user_id', 'comment_user_name']] = comments_df[['post_id', 'comment_user_id', 'comment_user_name']].astype(str)
-        # comments_df[['comment_score']] = comments_df[['comment_score']].astype(int)
-        # comments_df['comment_text'] = comments_df.apply(lambda x: comment_template.format(user=x.comment_user_id,
-        #                                                                                   date=x.comment_created_on,
-        #                                                                                   score=x.comment_score,
-        #                                                                                   body=x.comment_body), axis=1)
-        # comments_df = comments_df[['post_id', 'comment_text']].groupby('post_id').agg(list)
-        # comments_df['comment_text'] = comments_df['comment_text'].apply(lambda x: '\n'.join(x))
-        # comments_df.reset_index(inplace=True)
-
-        # questions_df = posts_df[posts_df['type']=='Question']
-        # questions_df = questions_df.drop('parent_id', axis=1)
-        # questions_df.rename({'body':'question_body', 'post_id': 'question_id'}, axis=1, inplace=True)
-        # questions_df[['answer_count','score']] = questions_df[['answer_count','score']].astype(int)
-        # questions_df = questions_df[questions_df['score']>=1]
-        # questions_df = questions_df[questions_df['answer_count']>=1]
-        # questions_df.reset_index(inplace=True, drop=True)
-        # questions_df = pd.merge(questions_df, comments_df, left_on='question_id', right_on='post_id', how='left')
-        # questions_df['comment_text'].fillna('', inplace=True)
-        # questions_df.drop('post_id', axis=1, inplace=True)
-        # questions_df['link'] = questions_df['question_id'].apply(lambda x: f"https://stackoverflow.com/questions/{x}")
-        # questions_df['question_text'] = questions_df.apply(lambda x: question_template.format(title=x.title,
-        #                                                                                       user=x.user_id,
-        #                                                                                       date=x.created_on,
-        #                                                                                       score=x.score,
-        #                                                                                       body=x.question_body,
-        #                                                                                       question_comments=x.comment_text), axis=1)
-        # questions_df = questions_df[['link', 'question_id', 'question_text']].set_index('question_id')
-        # questions_df['docSource'] = f'stackoverflow {tag}'
-        # questions_df = questions_df[['docSource', 'link', 'question_text']]
-        # questions_df.columns = ['docSource', 'docLink', 'content']
-        # questions_df['header'] = 'question'
-
-        # answers_df = posts_df[posts_df['type']=='Answer'][['created_on', 'score', 'user_id', 'post_id', 'parent_id', 'body']]
-        # answers_df.rename({'body':'answer_body', 'post_id': 'answer_id', 'parent_id': 'question_id'}, axis=1, inplace=True)
-        # answers_df.reset_index(inplace=True, drop=True)
-        # answers_df = pd.merge(answers_df, comments_df, left_on='answer_id', right_on='post_id', how='left')
-        # answers_df['comment_text'].fillna('', inplace=True)
-        # answers_df.drop('post_id', axis=1, inplace=True)
-        # answers_df['link'] = answers_df['question_id'].apply(lambda x: f"https://stackoverflow.com/questions/{x}")
-        # answers_df['answer_text'] = answers_df.apply(lambda x: answer_template.format(user=x.user_id,
-        #                                                                               date=x.created_on,
-        #                                                                               score=x.score,
-        #                                                                               body=x.answer_body,
-        #                                                                               answer_comments=x.comment_text), axis=1)
-        # answers_df = answers_df.groupby('question_id')['answer_text'].apply(lambda x: ''.join(x))
-
-        # answers_df = questions_df.join(answers_df).apply(lambda x: pd.Series([
-        #     f'stackoverflow {tag}',
-        #     x.docLink, 
-        #     x.answer_text]), axis=1)
-        # answers_df.columns=['docSource', 'docLink','content']
-        # answers_df['header'] = 'answer'
-
-        # df = pd.concat([questions_df, answers_df], axis=0).reset_index(drop=True)
-
-        # df.to_parquet('include/data/stackoverflow_base.parquet')
-        df = pd.read_parquet('include/data/stackoverflow_base.parquet')
-        df['sha'] = df.apply(generate_uuid5, axis=1)
+        try:
+            df = pd.read_parquet("include/data/stack_overflow/base.parquet")
+        except Exception:
+            df = stack_overflow.extract_stack_overflow(tag=tag, stackoverflow_cutoff_date=stackoverflow_cutoff_date)
+            df.to_parquet("include/data/stack_overflow/base.parquet")
 
         return df
 
-    @task(trigger_rule='none_failed')
-    def extract_slack(source:dict):
-        """
-        This task downloads archived slack messages as documents in a pandas dataframe.
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def extract_astro_forum_doc():
+        from include.tasks.extract.astro_forum_docs import get_forum_df
 
-        Dataframe fields are:
-        'docSource': slack team and channel names
-        'docLink': URL for the specific message/reply
-        'content': The message/reply content in markdown format.
-        'header': document type. (ie. 'question' or 'answer')
+        astro_forum_parquet_path = "include/data/astronomer/docs/astro-forum.parquet"
+        try:
+            df = pd.read_parquet(astro_forum_parquet_path)
+        except Exception:
+            df = get_forum_df()[0]
+            df.to_parquet(astro_forum_parquet_path)
 
-        Code is provided for the processing of questions and answers but is 
-        commented out as the historical data is provided as a parquet file.
-        """
+        return [df]
 
-        df = pd.read_parquet('include/data/slack/troubleshooting.parquet')
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def extract_github_issues(repo_base: str):
+        from include.tasks.extract import github
 
-        message_md_format = "# slack: {team_name}\n\n## {channel_name}\n\n{content}"
-        reply_md_format = "### [{ts}] <@{user}>\n\n{text}"
-        link_format = "https://app.slack.com/client/{team_id}/{channel_id}/p{ts}"
+        parquet_file = f"include/data/{repo_base}/issues.parquet"
 
-        df = df[['user', 'text', 'ts', 'thread_ts', 'client_msg_id', 'type']]\
-                .drop_duplicates()\
-                .reset_index(drop=True)
-        
-        df['thread_ts'] = df['thread_ts'].astype(float)
-        df['ts'] = df['ts'].astype(float)
-
-        df['thread_ts'].fillna(value=df.ts, inplace=True)
-        
-        df['content'] = df.apply(lambda x: reply_md_format.format(ts=datetime.fromtimestamp(x.ts),
-                                                                  user=x.user,
-                                                                  text=x.text), axis=1)
-
-        df = df.sort_values('ts').groupby('thread_ts').agg({'content': '\n'.join}).reset_index()
-
-        df['content'] = df['content'].apply(lambda x: message_md_format.format(team_name=source['team_name'],
-                                                                     channel_name=source['channel_name'],
-                                                                     content=x))
-       
-        df['docLink'] = df['thread_ts'].apply(lambda x: link_format.format(team_id=source['team_id'],
-                                                                    channel_id=source['channel_id'],
-                                                                    ts=str(x).replace('.','')))
-        df['docSource'] = source['channel_name']
-
-        df['sha'] = df['content'].apply(generate_uuid5)
-
-        df = df[['docSource', 'sha', 'content', 'docLink']]
+        if os.path.isfile(parquet_file):
+            if os.access(parquet_file, os.R_OK):
+                df = pd.read_parquet(parquet_file)
+            else:
+                raise Exception("Parquet file exists locally but is not readable.")
+        else:
+            df = github.extract_github_issues(repo_base, _GITHUB_CONN_ID, _GITHUB_ISSUE_CUTOFF_DATE)
+            df.to_parquet(parquet_file)
 
         return df
 
-    @task(trigger_rule='none_failed')
-    def extract_github_issues(source:dict):
-        """
-        This task downloads github issues as markdown documents in a pandas dataframe.
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def extract_astro_registry_cell_types():
+        from include.tasks.extract import registry
 
-        Dataframe fields are:
-        'docSource': repo name + 'issues'
-        'docLink': URL for the specific question/answer.
-        'content': The base64 encoded content of the question/answer in markdown format.
-        'header': document type. (ie. 'airflow issue')
+        parquet_file = "include/data/astronomer/registry/registry_cells.parquet"
 
-        Code is provided for the processing of questions and answers but is 
-        commented out as the historical data is provided as a parquet file.
-        """
-        # gh_hook = GithubHook(_GITHUB_CONN_ID)
-        
-        # repo = gh_hook.client.get_repo(source['repo_base'])
-        # issues = repo.get_issues()
+        if os.path.isfile(parquet_file):
+            if os.access(parquet_file, os.R_OK):
+                df = pd.read_parquet(parquet_file)
+            else:
+                raise Exception("Parquet file exists locally but is not readable.")
+        else:
+            df = registry.extract_astro_registry_cell_types()[0]
+            df.to_parquet(parquet_file)
 
-        # issue_autoresponse_text = 'Thanks for opening your first issue here!'
-        # pr_autoresponse_text = 'Congratulations on your first Pull Request and welcome to the Apache Airflow community!'
-        # drop_content = [issue_autoresponse_text, pr_autoresponse_text]
+        return [df]
 
-        # issue_markdown_template = "## ISSUE TITLE: {title}\nDATE: {date}\nBY: {user}\nSTATE: {state}\n{body}\n{comments}"
-        # comment_markdown_template = "#### COMMENT: {user} on {date}\n{body}\n"
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def extract_astro_registry_dags():
+        from include.tasks.extract import registry
 
-        # downloaded_docs = []
-        # page_num = 0
-        
-        # page = issues.get_page(page_num)
-        
-        # while page:
+        parquet_file = "include/data/astronomer/registry/registry_dags.parquet"
 
-        #     for issue in page:
-        #         print(issue.number)
-        #         comments=[]
-        #         for comment in issue.get_comments():
-        #             #TODO: this is very slow.  Look for vectorized approach.
-        #             if not any(substring in comment.body for substring in drop_content):
-        #                 comments.append(comment_markdown_template.format(user=comment.user.login, 
-        #                                                                  date=issue.created_at.strftime("%m-%d-%Y"), 
-        #                                                                  body=comment.body))
-        #         downloaded_docs.append({
-        #             "docLink": issue.html_url, 
-        #             "sha": '',
-        #             "content": issue_markdown_template.format(title=issue.title, 
-        #                                                       date=issue.created_at.strftime("%m-%d-%Y"), 
-        #                                                       user=issue.user.login,
-        #                                                       state=issue.state, 
-        #                                                       body=issue.body,
-        #                                                       comments='\n'.join(comments)),
-        #             "docSource": f"{source['repo_base']} {source['doc_dir']}", 
-        #             "header": f"{source['repo_base']} issue", 
-        #         })
-        #     page_num=page_num+1
-        #     page = issues.get_page(page_num)
-                
-        # df = pd.DataFrame(downloaded_docs)
+        if os.path.isfile(parquet_file):
+            if os.access(parquet_file, os.R_OK):
+                df = pd.read_parquet(parquet_file)
+            else:
+                raise Exception("Parquet file exists locally but is not readable.")
+        else:
+            df = registry.extract_astro_registry_dags()[0]
+            df.to_parquet(parquet_file)
 
-        # df.to_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
-        df = pd.read_parquet(f"include/data/{source['repo_base']}/{source['doc_dir']}.parquet")
-        df['sha'] = df.apply(generate_uuid5, axis=1)
+        return [df]
 
-        return df
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def extract_astro_blogs():
+        from include.tasks.extract import blogs
 
-    @task(trigger_rule='none_failed')
-    def extract_registry(source:dict):
+        parquet_file = "include/data/astronomer/blogs/astro_blogs.parquet"
 
-        # data_class = source['base_url'].split('/')[-1].split('?')[0]
+        if os.path.isfile(parquet_file):
+            if os.access(parquet_file, os.R_OK):
+                df = pd.read_parquet(parquet_file)
+            else:
+                raise Exception("Parquet file exists locally but is not readable.")
+        else:
+            df = blogs.extract_astro_blogs(blog_cutoff_date)[0]
+            df.to_parquet(parquet_file)
 
-        # response = requests.get(source['base_url'], headers=source['headers']).json()
-        # total_count = response[source['count_field']]
-        # data = response.get(data_class, [])
-        # while len(data) < total_count-1:
-        #     response = requests.get(f"{source['base_url']}&offset={len(data)+1}").json()
-        #     data.extend(response.get(data_class, []))
+        return [df]
 
-        # df = pd.DataFrame(data)
-        # df.rename({'githubUrl': 'docLink', 'searchId': 'sha'}, axis=1, inplace=True)
-        # df['docSource'] = source['name']
-        # df['description'] = df['description'].apply(lambda x: html2text.html2text(x) if x else 'No Description')
-        # df['content'] = df.apply(lambda x: md_template.format(providerName=x.providerName, 
-        #                                                       version=x.version, 
-        #                                                       name=x.name,
-        #                                                       description=x.description), axis=1)
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def get_cached_or_extract_cosmos_docs():
+        from include.tasks.extract import cosmos_docs
 
-        # df = df[['docSource', 'sha', 'content', 'docLink']]
+        parquet_file_path = "include/data/astronomer/cosmos/cosmos_docs.parquet"
 
-        # df.to_parquet('include/data/registry.parquet')
-        
-        df = pd.read_parquet('include/data/registry.parquet')
+        try:
+            df = pd.read_parquet(parquet_file_path)
+        except FileNotFoundError:
+            df = cosmos_docs.extract_cosmos_docs.function()[0]
+            df.to_parquet(parquet_file_path)
 
-        return df
-    
-    @task()
-    def split_data(md_dfs:List[pd.DataFrame], 
-                   rst_dfs:List[pd.DataFrame], 
-                   slack_dfs:List[pd.DataFrame], 
-                   stackoverflow_dfs:List[pd.DataFrame], 
-                   code_dfs:List[pd.DataFrame], 
-                   issues_dfs:List[pd.DataFrame], 
-                   reg_dfs:List[pd.DataFrame]):
-        """
-        This task concatenates multiple dataframes from upstream dynamic tasks and 
-        splits markdown content on markdown headers.
+        return [df]
 
-        Dataframe fields are:
-        'docSource': ie. 'astro', 'learn', 'docs', etc.
-        'sha': the github sha for the document
-        'docLink': URL for the specific document in github.
-        'content': Chunked content in markdown format.
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def extract_astronomer_docs():
+        from include.tasks.extract.astro_docs import extract_astro_docs
 
-        """
+        parquet_file = "include/data/astronomer/blogs/astro_docs.parquet"
 
-        md_df = pd.concat(md_dfs, axis=0, ignore_index=True)
-        rst_df = pd.concat(rst_dfs, axis=0, ignore_index=True)
-        slack_df = pd.concat(slack_dfs, axis=0, ignore_index=True)
-        stackoverflow_df = pd.concat(stackoverflow_dfs, axis=0, ignore_index=True)
-        code_df = pd.concat(code_dfs, axis=0, ignore_index=True)
-        issues_df = pd.concat(issues_dfs, axis=0, ignore_index=True)
-        reg_df = pd.concat(reg_dfs, axis=0, ignore_index=True)
+        if os.path.isfile(parquet_file):
+            if not os.access(parquet_file, os.R_OK):
+                raise AirflowException("Parquet file exists locally but is not readable.")
+            df = pd.read_parquet(parquet_file)
+        else:
+            df = extract_astro_docs()[0]
+            df.to_parquet(parquet_file)
 
-        df = pd.concat([md_df, 
-                        rst_df, 
-                        slack_df, 
-                        reg_df, 
-                        code_df, 
-                        stackoverflow_df,
-                        issues_df,
-                    ], axis=0, ignore_index=True)
+        return [df]
 
-        # headers_to_split_on = [
-        #     ("#", "Header 1"),
-        #     ("##", "Header 2"),
-        #     # ("###", "Header 3"),
-        # ]
+    @task(trigger_rule=TriggerRule.NONE_FAILED)
+    def import_baseline(
+        document_column: str,
+        class_name: str,
+        seed_baseline_url: str | None = None,
+        existing: str = "error",
+        uuid_column: str | None = None,
+        vector_column: str = "Vector",
+        batch_config_params: dict | None = None,
+        verbose: bool = True,
+    ):
+        from airflow.providers.weaviate.hooks.weaviate import WeaviateHook
 
-        # splitter = MarkdownHeaderTextSplitter(headers_to_split_on=headers_to_split_on)
-        splitter = RecursiveCharacterTextSplitter()
-        df['doc_chunks'] = df['content'].apply(lambda x: splitter.split_documents([Document(page_content=x)]))
+        ask_astro_weaviate_hook = WeaviateHook(conn_id=_WEAVIATE_CONN_ID)
+        seed_filename = f"include/data/{seed_baseline_url.split('/')[-1]}"
 
-        df = df[df['doc_chunks'].apply(lambda x: len(x))>0].reset_index(drop=True)
-        # _ = df['doc_chunks'].apply(lambda x: x[0].metadata.update({'Header 1': 'Summary'}) if x[0].metadata == {} else x[0] )
-        df = df.explode('doc_chunks', ignore_index=True)
-        df['content'] = df['doc_chunks'].apply(lambda x: html2text.html2text(x.page_content).replace('\n',' '))
-        df['content'] = df['content'].apply(lambda x: x.replace('\\',''))
-        # df['header'] = df['doc_chunks'].apply(lambda x: '. '.join(list(x.metadata.values())))
+        if os.path.isfile(seed_filename):
+            if not os.access(seed_filename, os.R_OK):
+                raise AirflowException("Baseline file exists locally but is not readable.")
+            df = pd.read_parquet(seed_filename)
+        else:
+            df = pd.read_parquet(seed_baseline_url)
+            df.to_parquet(seed_filename)
 
-        df.drop(['doc_chunks'], inplace=True, axis=1)
-        df.drop(['header'], inplace=True, axis=1)
-        df.reset_index(inplace=True, drop=True)
+        return ask_astro_weaviate_hook.create_or_replace_document_objects(
+            data=df,
+            class_name=class_name,
+            existing=existing,
+            document_column=document_column,
+            uuid_column=uuid_column,
+            vector_column=vector_column,
+            verbose=verbose,
+            batch_config_params=batch_config_params,
+        )
 
-        return df
+    md_docs = extract_github_markdown.expand(source=markdown_docs_sources)
+    issues_docs = extract_github_issues.expand(repo_base=issues_docs_sources)
+    stackoverflow_docs = extract_stack_overflow.expand(tag=stackoverflow_tags)
+    registry_cells_docs = extract_astro_registry_cell_types()
+    blogs_docs = extract_astro_blogs()
+    registry_dags_docs = extract_astro_registry_dags()
+    _astro_docs = extract_astronomer_docs()
+    _airflow_docs = extract_airflow_docs()
+    _astro_cli_docs = extract_astro_cli_docs()
+    _extract_astro_providers_docs = extract_astro_provider_doc()
+    _astro_forum_docs = extract_astro_forum_doc()
+    _cosmos_docs = get_cached_or_extract_cosmos_docs()
 
-    @task.weaviate_import(weaviate_conn_id=_WEAVIATE_CONN_ID)
-    def import_data(md_docs:pd.DataFrame, class_name:str):
-        """
-        This task concatenates multiple dataframes from upstream dynamic tasks and 
-        vectorizes with import to weaviate.
+    _get_schema = get_schema_and_process(schema_file="include/data/schema.json")
+    _check_schema = check_schema(class_objects=_get_schema)
+    _create_schema = create_schema(class_objects=_get_schema)
+    _check_seed_baseline = check_seed_baseline(seed_baseline_url=seed_baseline_url)
 
-        A 'uuid' is generated based on the content and metadata (the git sha, document url,  
-        the document source (ie. astro) and a concatenation of the headers).
+    markdown_tasks = [
+        md_docs,
+        issues_docs,
+        stackoverflow_docs,
+        blogs_docs,
+        registry_cells_docs,
+    ]
 
-        Vectorization includes the headers for bm25 search.
-        """
-        
-        df = pd.concat([md_docs], ignore_index=True)
+    html_tasks = [
+        _airflow_docs,
+        _astro_cli_docs,
+        _extract_astro_providers_docs,
+        _astro_forum_docs,
+        _astro_docs,
+        _cosmos_docs,
+    ]
 
-        df['uuid'] = df.apply(lambda x: generate_uuid5(x.to_dict()), axis=1)
+    python_code_tasks = [registry_dags_docs]
 
-        print(f"Passing {len(df)} objects for import.")
+    split_md_docs = task(split.split_markdown).expand(dfs=markdown_tasks)
 
-        return {"data": df, "class_name": class_name, "uuid_column": "uuid", "batch_size": 1000, "error_threshold": 12}
-    
-    _recreate_schema_branch = recreate_schema_branch(_check_schema.output)
-    _check_object_count = check_object_count(weaviate_doc_count, 'Docs')
+    split_code_docs = task(split.split_python).expand(dfs=python_code_tasks)
 
-    md_docs = extract_github_markdown.partial().expand(source=markdown_docs_sources)
-    rst_docs = extract_github_rst.partial().expand(source=rst_docs_sources)
-    issues_md = extract_github_issues.partial().expand(source=issues_docs_sources)
-    code_samples = extract_github_python.partial().expand(source=code_samples_sources)
-    stackoverflow_md = extract_stack_overflow.partial(stackoverflow_cutoff_date=stackoverflow_cutoff_date).expand(tag=stackoverflow_tags)
-    slack_md = extract_slack.partial().expand(source=slack_channel_sources)
-    registry_md = extract_registry.partial().expand(source=http_json_sources)
-    
-    split_md_docs = split_data(md_dfs=md_docs, 
-                               rst_dfs=rst_docs, 
-                               stackoverflow_dfs=stackoverflow_md,
-                               code_dfs=code_samples,
-                               slack_dfs=slack_md,
-                               issues_dfs=issues_md,
-                               reg_dfs=registry_md)
+    split_html_docs = task(split.split_html).expand(dfs=html_tasks)
 
-    _unimported_md = import_data(md_docs=split_md_docs, class_name='Docs')
-    
-    _check_schema >> _recreate_schema_branch >> [_create_schema, _check_object_count] 
-    _check_object_count >> [md_docs, rst_docs, code_samples, stackoverflow_md, issues_md, slack_md, registry_md]
-    _create_schema >> [md_docs, rst_docs, code_samples, stackoverflow_md, issues_md, slack_md, registry_md]
+    _import_data = WeaviateDocumentIngestOperator.partial(
+        class_name=WEAVIATE_CLASS,
+        existing="replace",
+        document_column="docLink",
+        batch_config_params={"batch_size": 7, "dynamic": False},
+        verbose=True,
+        conn_id=_WEAVIATE_CONN_ID,
+        task_id="WeaviateDocumentIngestOperator",
+    ).expand(input_data=[split_md_docs, split_code_docs, split_html_docs])
+
+    _import_baseline = import_baseline(
+        seed_baseline_url=seed_baseline_url,
+        class_name=WEAVIATE_CLASS,
+        existing="error",
+        document_column="docLink",
+        uuid_column="id",
+        vector_column="vector",
+        batch_config_params={"batch_size": 7, "dynamic": False},
+        verbose=True,
+    )
+
+    _check_schema >> [_check_seed_baseline, _create_schema]
+
+    _create_schema >> markdown_tasks + python_code_tasks + html_tasks + [_check_seed_baseline]
+
+    _check_seed_baseline >> markdown_tasks + python_code_tasks + html_tasks + [_import_baseline]
+
 
 ask_astro_load_bulk()
-
-def test():
-    from weaviate_provider.hooks.weaviate import WeaviateHook
-    weaviate_client = WeaviateHook(_WEAVIATE_CONN_ID).get_conn()
-    search = weaviate_client.query\
-        .get(properties = ['content'], class_name='Docs')\
-        .with_limit(2000)\
-        .with_where({"path": ["docSource"], 
-                     "operator": "Equal", 
-                     "valueText": "registry_cell_types"}).do()
-    len(search['data']['Get']['Docs'])
-
-    self = WeaviateImportDataOperator(task_id='test',
-                                      data=df,
-                                      class_name='Docs',
-                                      uuid_column='uuid')
-
