@@ -183,7 +183,6 @@ def test_retrieval(question_number_subset: str):
             "test_number",
             "question",
             "expected_references",
-            "weaviate_search_references",
             "askastro_answer",
             "askastro_references",
             "langsmith_link",
@@ -195,10 +194,6 @@ def test_retrieval(question_number_subset: str):
 
         if question_number_subset:
             questions_df = questions_df[questions_df.test_number.isin(question_number_subset)]
-
-        questions_df["weaviate_search_references"] = questions_df.question.apply(
-            lambda x: weaviate_search(weaviate_client=weaviate_client, question=x, class_name=WEAVIATE_CLASS)
-        )
 
         questions_df[["askastro_answer", "askastro_references", "langsmith_link"]] = questions_df.question.apply(
             lambda x: pd.Series(

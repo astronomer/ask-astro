@@ -90,42 +90,6 @@ def generate_answer(
     return (answer, references, langsmith_link)
 
 
-def weaviate_search(weaviate_client: WeaviateClient, question: str, class_name: str) -> str:
-    """
-    This function uses Weaviate's
-    [Similarity Search](https://weaviate.io/developers/weaviate/search/similarity)
-    and returns a pandas series of reference documents.  This is a one-shot retrieval unlike
-    Ask Astro frontend which uses LangChain's MultiQueryRetrieval.
-
-    :param weaviate_client: An instantiated weaviate client to use for the search.
-    :param question: A question.
-    :param class_name: The name of the class to search.
-    """
-
-    try:
-        results = (
-            weaviate_client.query.get(class_name=class_name, properties=["docLink"])
-            .with_near_text(
-                {
-                    "concepts": question,
-                }
-            )
-            .with_limit(8)
-            .with_additional(["id", "certainty"])
-            .do()["data"]["Get"][class_name]
-        )
-
-        references = "\n".join(
-            [f"{result['docLink']} [{round(result['_additional']['certainty'], 3)}]" for result in results]
-        )
-
-    except Exception as e:
-        logger.info(e)
-        references = []
-
-    return references
-
-
 def get_or_create_drive_folder(gd_hook: GoogleDriveHook, folder_name: str, parent_id: str | None) -> str:
     """
     Creates a google drive folder if it does not exist.
