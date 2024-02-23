@@ -424,7 +424,7 @@ def ask_astro_load_bulk():
         class_name=WEAVIATE_CLASS,
         existing="replace",
         document_column="docLink",
-        batch_config_params={"batch_size": 6, "dynamic": False},
+        batch_config_params={"batch_size": 7, "dynamic": False},
         verbose=True,
         conn_id=_WEAVIATE_CONN_ID,
         task_id="WeaviateDocumentIngestOperator",
@@ -437,7 +437,7 @@ def ask_astro_load_bulk():
         document_column="docLink",
         uuid_column="id",
         vector_column="vector",
-        batch_config_params={"batch_size": 6, "dynamic": False},
+        batch_config_params={"batch_size": 7, "dynamic": False},
         verbose=True,
     )
 
