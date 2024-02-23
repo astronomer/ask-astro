@@ -54,7 +54,7 @@ def load_firestore_to_snowflake():
             .stream()
         )
 
-        rows: list[tuple[str, Optional[int], bool, datetime]] = []
+        rows: list[tuple[str, int | None, bool, datetime]] = []
         for doc in docs:
             doc_dict = doc.to_dict()
             uuid = doc_dict["uuid"]
