@@ -59,7 +59,7 @@ def load_firestore_to_snowflake():
         for doc in docs:
             doc_dict = doc.to_dict()
             uuid = doc_dict["uuid"]
-            score = doc_dict.get("score") or 0
+            score = doc_dict.get("score")
             status = doc_dict.get("status") == "complete"
             response_received_at = datetime.fromtimestamp(doc_dict.get("response_received_at"))
             rows.append((uuid, score, status, response_received_at))
