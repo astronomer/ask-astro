@@ -6,7 +6,6 @@ to snowflake.
 import os
 import time
 from datetime import date, datetime, timedelta
-from typing import Optional
 
 import snowflake.connector
 from google.cloud import firestore
