@@ -12,7 +12,6 @@ import pandas as pd
 from include.tasks.extract.utils.retrieval_tests import (
     generate_answer,
     get_or_create_drive_folder,
-    weaviate_search,
 )
 
 from airflow.decorators import dag, task
@@ -187,8 +186,6 @@ def test_retrieval(question_number_subset: str):
             "askastro_references",
             "langsmith_link",
         ]
-
-        weaviate_client = WeaviateHook(_WEAVIATE_CONN_ID).get_conn()
 
         questions_df = pd.read_csv(test_question_template_path)
 
