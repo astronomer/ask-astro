@@ -9,13 +9,13 @@ from pathlib import Path
 from textwrap import dedent
 
 import pandas as pd
-from include.tasks.extract.utils.retrieval_tests import (
-    generate_answer,
-    get_or_create_drive_folder,
-)
 
 from airflow.decorators import dag, task
 from airflow.exceptions import AirflowException
+from airflow.include.tasks.extract.utils.evaluate_helpers import (
+    generate_answer,
+    get_or_create_drive_folder,
+)
 from airflow.models.param import Param
 from airflow.providers.google.suite.hooks.drive import GoogleDriveHook
 from airflow.providers.google.suite.hooks.sheets import GSheetsHook
@@ -62,7 +62,7 @@ default_args = {"retries": 3, "retry_delay": 30, "trigger_rule": "none_failed"}
         )
     },
 )
-def test_retrieval(question_number_subset: str):
+def evaluate_rag_quality(question_number_subset: str):
     """
     This DAG performs a test of document retrieval from Ask Astro's vector database.
 
@@ -251,4 +251,4 @@ def test_retrieval(question_number_subset: str):
     _check_schema >> _results_file >> _upload_results
 
 
-test_retrieval(question_number_subset=None)
+evaluate_rag_quality(question_number_subset=None)

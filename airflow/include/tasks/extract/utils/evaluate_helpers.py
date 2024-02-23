@@ -5,7 +5,6 @@ import logging
 
 import aiohttp
 import backoff
-from weaviate.client import Client as WeaviateClient
 
 from airflow.providers.google.suite.hooks.drive import GoogleDriveHook
 
