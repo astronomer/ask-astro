@@ -112,7 +112,6 @@ async def on_mention(body: dict[str, Any], ack: AsyncAck, say: AsyncSay, client:
 
             if request.client is None:
                 request.client = "slack"
-
         await answer_question(request)
 
         async with TaskGroup() as tg:

@@ -87,7 +87,6 @@ async def on_post_request(request: Request) -> json:
                     },
                 )
             )
-        
         req = AskAstroRequest(
             uuid=uuid.uuid1(),
             prompt=request.json["prompt"],
