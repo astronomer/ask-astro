@@ -17,6 +17,7 @@ def ask_astro_request_fixture():
         messages=[HumanMessage(content="Test message")],
         sources=[Source(name="Test Source", snippet="Test Snippet")],
         status="Test Status",
+        client="Test",
     )
     return request
 
@@ -50,6 +51,7 @@ def test_from_dict():
         "score": 5,
         "sent_at": 123456789,
         "response": None,
+        "client" : "Test"
     }
     request = AskAstroRequest.from_dict(data)
 
@@ -60,3 +62,4 @@ def test_from_dict():
     assert isinstance(request.messages[0], HumanMessage)
     assert len(request.sources) == 1
     assert isinstance(request.sources[0], Source)
+    assert request.client == "Test"
