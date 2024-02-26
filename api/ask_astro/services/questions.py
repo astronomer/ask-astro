@@ -50,11 +50,11 @@ def _preprocess_request(request: AskAstroRequest) -> None:
         request.messages = request.messages[-10:]
     # Logic to change prompt for web apps
     if request.client is not None and request.client == "webapp":
-        request.prompt = \
-        request.prompt.replace("Slack","Markdown").\
-            replace("Format links using this format: <URL|Text to display>. Examples: GOOD: <https://www.example.com|This message *is* a link>. BAD: [This message *is* a link](https://www.example.com).",\
-                    "Format links using this format: [Text to display](URL). Examples: GOOD: [This message **is** a link](https://www.example.com). BAD: <https://www.example.com|This message **is** a link>.")
-   # parse out backslack escape character to prevent hybrid search erroring out with invalid syntax string
+        request.prompt = request.prompt.replace("Slack", "Markdown").replace(
+            "Format links using this format: <URL|Text to display>. Examples: GOOD: <https://www.example.com|This message *is* a link>. BAD: [This message *is* a link](https://www.example.com).",
+            "Format links using this format: [Text to display](URL). Examples: GOOD: [This message **is** a link](https://www.example.com). BAD: <https://www.example.com|This message **is** a link>.",
+        )
+    # parse out backslack escape character to prevent hybrid search erroring out with invalid syntax string
     request.prompt = re.sub(r"(?<!\\)\\(?!\\)", "", request.prompt)
 
 

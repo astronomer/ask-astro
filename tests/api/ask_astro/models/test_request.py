@@ -51,7 +51,7 @@ def test_from_dict():
         "score": 5,
         "sent_at": 123456789,
         "response": None,
-        "client" : "Test"
+        "client": "Test",
     }
     request = AskAstroRequest.from_dict(data)
 
