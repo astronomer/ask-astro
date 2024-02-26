@@ -57,6 +57,7 @@ class AskAstroRequest(BaseModel):
         False,
         description="Whether the request is an example",
     )
+    client: str = Field(None, description="The client type used to send the request -- webapp/slack")
 
     def to_firestore(self) -> dict[str, Any]:
         """
@@ -81,6 +82,7 @@ class AskAstroRequest(BaseModel):
             "response_received_at": self.response_received_at,
             "is_processed": self.is_processed,
             "is_example": self.is_example,
+            "client": self.client,
         }
 
     @classmethod
@@ -105,4 +107,5 @@ class AskAstroRequest(BaseModel):
             response_received_at=response_dict.get("response_received_at"),
             is_processed=response_dict.get("is_processed", False),
             is_example=response_dict.get("is_example", False),
+            client=response_dict["client"],
         )

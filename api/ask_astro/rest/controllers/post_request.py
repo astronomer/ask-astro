@@ -87,12 +87,8 @@ async def on_post_request(request: Request) -> json:
                     },
                 )
             )
-
         req = AskAstroRequest(
-            uuid=uuid.uuid1(),
-            prompt=request.json["prompt"],
-            status="in_progress",
-            messages=messages,
+            uuid=uuid.uuid1(), prompt=request.json["prompt"], status="in_progress", messages=messages, client="webapp"
         )
 
         request.app.add_task(lambda: answer_question(req))
