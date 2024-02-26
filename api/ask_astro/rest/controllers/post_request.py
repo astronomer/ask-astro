@@ -89,8 +89,8 @@ async def on_post_request(request: Request) -> json:
             )
 
         # Set client types for web apps
-        if "client" in request and request["client"] is None:
-            request.client = "webapp"
+        if request.json and request.json["client"] is None:
+            request.json["client"] = "webapp"
         
         req = AskAstroRequest(
             uuid=uuid.uuid1(),
