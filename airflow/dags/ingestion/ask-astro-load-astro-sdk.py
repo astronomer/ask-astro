@@ -37,6 +37,10 @@ def get_astro_sdk_content():
     ),
 )
 def ask_astro_load_astro_sdk():
+    from include.tasks import chunking_utils
+
+    split_docs = task(chunking_utils.split_html).expand(dfs=[get_astro_sdk_content()])
+
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,
         existing="replace",
@@ -45,7 +49,7 @@ def ask_astro_load_astro_sdk():
         verbose=True,
         conn_id=_WEAVIATE_CONN_ID,
         task_id="WeaviateDocumentIngestOperator",
-    ).expand(input_data=[get_astro_sdk_content()])
+    ).expand(input_data=[split_docs])
 
 
 ask_astro_load_astro_sdk()

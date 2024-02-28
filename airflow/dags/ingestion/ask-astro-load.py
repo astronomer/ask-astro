@@ -75,7 +75,7 @@ def ask_astro_load_bulk():
 
     """
 
-    from include.tasks import split
+    from include.tasks import chunking_utils
 
     @task
     def get_schema_and_process(schema_file: str) -> list:
@@ -432,11 +432,11 @@ def ask_astro_load_bulk():
 
     python_code_tasks = [registry_dags_docs]
 
-    split_md_docs = task(split.split_markdown).expand(dfs=markdown_tasks)
+    split_md_docs = task(chunking_utils.split_markdown).expand(dfs=markdown_tasks)
 
-    split_code_docs = task(split.split_python).expand(dfs=python_code_tasks)
+    split_code_docs = task(chunking_utils.split_python).expand(dfs=python_code_tasks)
 
-    split_html_docs = task(split.split_html).expand(dfs=html_tasks)
+    split_html_docs = task(chunking_utils.split_html).expand(dfs=html_tasks)
 
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,

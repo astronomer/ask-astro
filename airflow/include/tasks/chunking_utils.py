@@ -1,12 +1,27 @@
 from __future__ import annotations
 
+import logging
+
 import pandas as pd
+import tiktoken
 from langchain.schema import Document
 from langchain.text_splitter import (
-    Language,
     RecursiveCharacterTextSplitter,
 )
 from langchain_community.document_transformers import Html2TextTransformer
+
+logger = logging.getLogger("airflow.task")
+
+TARGET_CHUNK_SIZE = 2500
+
+
+def enforce_max_token_len(text: str) -> str:
+    encoding = tiktoken.get_encoding("cl100k_base")
+    encoded_text = encoding.encode(text)
+    if len(encoded_text) > 8191:
+        logger.info("Token length of string exceeds the max content length of the tokenizer. Truncating...")
+        return encoding.decode(encoded_text[:8191])
+    return text
 
 
 def split_markdown(dfs: list[pd.DataFrame]) -> pd.DataFrame:
@@ -27,11 +42,25 @@ def split_markdown(dfs: list[pd.DataFrame]) -> pd.DataFrame:
 
     df = pd.concat(dfs, axis=0, ignore_index=True)
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=4000, chunk_overlap=200, separators=["\n\n", "\n", " ", ""])
+    # directly from the langchain splitter library
+    separators = ["\n\n", "\n", " ", ""]
+    splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        # cl100k_base is used for text ada 002 and later embedding models
+        encoding_name="cl100k_base",
+        chunk_size=TARGET_CHUNK_SIZE,
+        chunk_overlap=200,
+        separators=separators,
+        is_separator_regex=True,
+    )
 
-    df["doc_chunks"] = df["content"].apply(lambda x: splitter.split_documents([Document(page_content=x)]))
+    df["doc_chunks"] = df["content"].apply(lambda x: splitter.split_text([Document(page_content=x)]))
     df = df.explode("doc_chunks", ignore_index=True)
     df["content"] = df["doc_chunks"].apply(lambda x: x.page_content)
+
+    # Remove blank doc chunks
+    df = df[~df["content"].apply(lambda x: x.isspace() or x == "")]
+
+    df["content"] = df["content"].apply(enforce_max_token_len)
     df.drop(["doc_chunks"], inplace=True, axis=1)
     df.reset_index(inplace=True, drop=True)
 
@@ -56,15 +85,36 @@ def split_python(dfs: list[pd.DataFrame]) -> pd.DataFrame:
 
     df = pd.concat(dfs, axis=0, ignore_index=True)
 
-    splitter = RecursiveCharacterTextSplitter.from_language(
-        language=Language.PYTHON,
-        # chunk_size=50,
-        chunk_overlap=0,
+    # directly from the langchain splitter library
+    python_separators = [
+        # First, try to split along class definitions
+        "\nclass ",
+        "\ndef ",
+        "\n\tdef ",
+        # Now split by the normal type of lines
+        "\n\n",
+        "\n",
+        " ",
+        "",
+    ]
+
+    splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        # cl100k_base is used for text ada 002 and later embedding models
+        encoding_name="cl100k_base",
+        chunk_size=TARGET_CHUNK_SIZE,
+        chunk_overlap=200,
+        separators=python_separators,
+        is_separator_regex=True,
     )
 
     df["doc_chunks"] = df["content"].apply(lambda x: splitter.split_documents([Document(page_content=x)]))
     df = df.explode("doc_chunks", ignore_index=True)
     df["content"] = df["doc_chunks"].apply(lambda x: x.page_content)
+
+    # Remove blank doc chunks
+    df = df[~df["content"].apply(lambda x: x.isspace() or x == "")]
+
+    df["content"] = df["content"].apply(enforce_max_token_len)
     df.drop(["doc_chunks"], inplace=True, axis=1)
     df.reset_index(inplace=True, drop=True)
 
@@ -93,9 +143,10 @@ def split_html(dfs: list[pd.DataFrame]) -> pd.DataFrame:
     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         # cl100k_base is used for text ada 002 and later embedding models
         encoding_name="cl100k_base",
-        chunk_size=4000,
+        chunk_size=TARGET_CHUNK_SIZE,
         chunk_overlap=200,
         separators=separators,
+        is_separator_regex=True,
     )
 
     # Split by chunking first
@@ -110,17 +161,8 @@ def split_html(dfs: list[pd.DataFrame]) -> pd.DataFrame:
     # Remove blank doc chunks
     df = df[~df["content"].apply(lambda x: x.isspace() or x == "")]
 
+    df["content"] = df["content"].apply(enforce_max_token_len)
     df.drop(["doc_chunks"], inplace=True, axis=1)
     df.reset_index(inplace=True, drop=True)
 
     return df
-
-
-def split_list(urls: list[str], chunk_size: int = 0) -> list[list[str]]:
-    """
-    split the list of string into chunk of list of string
-
-    param urls: URL list we want to chunk
-    param chunk_size: Max size of chunked list
-    """
-    return [urls[i : i + chunk_size] for i in range(0, len(urls), chunk_size)]

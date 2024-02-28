@@ -43,7 +43,7 @@ def ask_astro_load_github():
     data from a point-in-time data capture. By using the upsert logic of the weaviate_import decorator
     any existing documents that have been updated will be removed and re-added.
     """
-    from include.tasks import split
+    from include.tasks import chunking_utils
     from include.tasks.extract import github
 
     md_docs = (
@@ -58,7 +58,7 @@ def ask_astro_load_github():
         .expand(repo_base=issues_docs_sources)
     )
 
-    split_md_docs = task(split.split_markdown).expand(dfs=[md_docs, issues_docs])
+    split_md_docs = task(chunking_utils.split_markdown).expand(dfs=[md_docs, issues_docs])
 
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,
