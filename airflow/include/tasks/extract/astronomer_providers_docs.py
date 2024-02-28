@@ -21,9 +21,11 @@ def extract_provider_docs() -> list[pd.DataFrame]:
     docs_url_base = f"{docs_url_parts.scheme}://{docs_url_parts.netloc}"
 
     # make sure we didn't accidentally pickup any unrelated links in recursion
+    # get rid of older versions of the docs, only care about "stable" version docs
     old_version_doc_pattern = r"/(\d+\.)*\d+/"
     non_doc_links = {
-        link if (docs_url_base not in link) or re.search(old_version_doc_pattern, link) else "" for link in all_links
+        link if (docs_url_base not in link) or re.search(old_version_doc_pattern, link) or "/latest/" in link else ""
+        for link in all_links
     }
     docs_links = all_links - non_doc_links
 
