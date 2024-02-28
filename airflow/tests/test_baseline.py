@@ -8,6 +8,7 @@ from weaviate_provider.hooks.weaviate import WeaviateHook
 from weaviate_provider.operators.weaviate import WeaviateCheckSchemaBranchOperator, WeaviateCreateSchemaOperator
 
 from airflow.decorators import dag, task
+from airflow.utils.trigger_rule import TriggerRule
 
 seed_baseline_url = (
     "https://astronomer-demos-public-readonly.s3.us-west-2.amazonaws.com/ask-astro/baseline_data_v2.parquet"
@@ -55,7 +56,7 @@ def test_ask_astro_load_baseline():
     )
 
     _import_baseline = task.weaviate_import(
-        ingest.import_baseline, trigger_rule="none_failed", weaviate_conn_id=_WEAVIATE_CONN_ID
+        ingest.import_baseline, trigger_rule=TriggerRule.NONE_FAILED, weaviate_conn_id=_WEAVIATE_CONN_ID
     )(class_name="Docs", seed_baseline_url=seed_baseline_url)
 
     @task()

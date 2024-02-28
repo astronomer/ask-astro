@@ -7,12 +7,14 @@ from urllib.parse import urljoin, urlparse
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+from tenacity import RetryCallState, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 from weaviate.util import generate_uuid5
 
 logger = logging.getLogger("airflow.task")
 
-
+attempted_urls = set()
 internal_urls = set()
+internal_page_hashset = set()
 
 
 def is_valid_url(url: str) -> bool:
@@ -25,19 +27,29 @@ def is_valid_url(url: str) -> bool:
     return bool(parsed.netloc) and bool(parsed.scheme)
 
 
+def _fetch_page_content_retry_default_return(retry_state: RetryCallState) -> str:
+    logger.info(
+        "Error fetching content for %s. May be expected if making attempts to validate unknown URLs.",
+        retry_state.args[0],
+    )
+    return ""
+
+
+@retry(
+    retry=retry_if_exception_type(requests.RequestException),
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, max=10),
+    retry_error_callback=_fetch_page_content_retry_default_return,
+)
 def fetch_page_content(url: str) -> str:
     """
     Fetch the content of a html page
 
     param url: The url of a page
     """
-    try:
-        response = requests.get(url, headers={"User-agent": "Ask Astro"})
-        response.raise_for_status()  # Raise an HTTPError for bad responses
-        return response.content
-    except requests.RequestException:
-        logger.info("Error fetching content for %s: %s", url, url)
-        return ""
+    response = requests.get(url, headers={"User-agent": "Ask Astro"})
+    response.raise_for_status()  # Raise an HTTPError for bad responses
+    return response.content
 
 
 def is_excluded_url(url: str, exclude_literal: list[str]) -> bool:
@@ -98,16 +110,19 @@ def truncate_tokens(text: str, encoding_name: str = "gpt-3.5-turbo", max_length:
         logger.info(e)
 
 
-def get_page_links(url: str, exclude_literal: list[str]) -> set[str]:
+def get_page_links(url: str, current_page_content: bytes, exclude_literal: list[str]) -> None:
     """
-    Extract all valid and internal links from the given URL.
+    Recursively extract all valid and internal links from the given URL.
+    Deduplicates any links with the exact same page content in the process.
 
     param url (str): The URL to extract links from.
+    param current_page_content: Bytes of the content of the url passed in for hashing.
     param exclude_docs (list): List of strings to exclude from the URL path.
     """
-    urls = set()
     domain_name = urlparse(url).netloc
-    soup = BeautifulSoup(requests.get(url).content, "html.parser")
+    page_content_hash = generate_uuid5(current_page_content)
+    internal_page_hashset.add(page_content_hash)
+    soup = BeautifulSoup(current_page_content, "html.parser")
     for a_tag in soup.findAll("a"):
         href = a_tag.attrs.get("href")
         if href == "" or href is None:
@@ -117,16 +132,20 @@ def get_page_links(url: str, exclude_literal: list[str]) -> set[str]:
         href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
         if (
             not is_valid_url(href)
+            or not href.startswith("https")
             or href in internal_urls
+            or href in attempted_urls
             or domain_name not in href
             or is_excluded_url(href, exclude_literal)
         ):
             continue
-        urls.add(href)
+        attempted_urls.add(href)
+        new_page_content = fetch_page_content(href)
+        if (not new_page_content) or generate_uuid5(new_page_content) in page_content_hash:
+            continue
         logger.info(href)
         internal_urls.add(href)
-
-    return urls
+        get_page_links(href, new_page_content, exclude_literal)
 
 
 def get_internal_links(base_url: str, exclude_literal: list[str] | None = None) -> set[str]:
@@ -139,10 +158,9 @@ def get_internal_links(base_url: str, exclude_literal: list[str] | None = None) 
     if exclude_literal is None:
         exclude_literal = []
 
-    links = get_page_links(base_url, exclude_literal)
-
-    for link in links:
-        get_page_links(link, exclude_literal)
+    page_content = fetch_page_content(base_url)
+    get_page_links(base_url, page_content, exclude_literal)
+    internal_urls.add(base_url)
 
     return internal_urls
 

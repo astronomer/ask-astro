@@ -11,12 +11,17 @@ from tenacity import retry, retry_if_not_exception_type, stop_after_attempt, wai
 from ask_astro.clients.firestore import firestore_client
 from ask_astro.config import FirestoreCollections, PromptPreprocessingConfig
 from ask_astro.models.request import AskAstroRequest, Source
+from ask_astro.settings import SERVICE_MAINTENANCE_BANNER_STATUS
 
 logger = getLogger(__name__)
 
 
 class InvalidRequestPromptError(Exception):
     """Exception raised when the prompt string in the request object is invalid"""
+
+
+class RequestDuringMaintenanceException(Exception):
+    """Exception raised when a request is still somehow received on the backend when server is in maintenance"""
 
 
 class QuestionAnsweringError(Exception):
@@ -37,6 +42,10 @@ async def _update_firestore_request(request: AskAstroRequest) -> None:
 
 
 def _preprocess_request(request: AskAstroRequest) -> None:
+    if SERVICE_MAINTENANCE_BANNER_STATUS:
+        error_msg = "Ask Astro is currently undergoing maintenance and will be back shortly. We apologize for any inconvenience this may cause!"
+        request.response = error_msg
+        raise RequestDuringMaintenanceException(error_msg)
     if len(request.prompt) > PromptPreprocessingConfig.max_char:
         error_msg = "Question text is too long. Please try making a new thread and shortening your question."
         request.response = error_msg
@@ -48,6 +57,12 @@ def _preprocess_request(request: AskAstroRequest) -> None:
     # take the most recent 10 question and answers in the history
     if len(request.messages) > PromptPreprocessingConfig.max_chat_history_len:
         request.messages = request.messages[-10:]
+    # Logic to change prompt for web apps
+    if request.client is not None and request.client == "webapp":
+        request.prompt = request.prompt.replace("Slack", "Markdown").replace(
+            "Format links using this format: <URL|Text to display>. Examples: GOOD: <https://www.example.com|This message *is* a link>. BAD: [This message *is* a link](https://www.example.com).",
+            "Format links using this format: [Text to display](URL). Examples: GOOD: [This message **is** a link](https://www.example.com). BAD: <https://www.example.com|This message **is** a link>.",
+        )
     # parse out backslack escape character to prevent hybrid search erroring out with invalid syntax string
     request.prompt = re.sub(r"(?<!\\)\\(?!\\)", "", request.prompt)
 
@@ -104,7 +119,7 @@ async def answer_question(request: AskAstroRequest) -> None:
     except Exception as e:
         # If there's an error, mark the request as errored and add it to the database
         request.status = "error"
-        if not isinstance(e, InvalidRequestPromptError):
+        if not isinstance(e, InvalidRequestPromptError) and not isinstance(e, RequestDuringMaintenanceException):
             request.response = "Sorry, something went wrong. Please try again later."
             raise QuestionAnsweringError("An error occurred during question answering.") from e
         else:

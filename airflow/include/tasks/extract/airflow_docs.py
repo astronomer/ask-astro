@@ -8,9 +8,11 @@ import requests
 from bs4 import BeautifulSoup
 from weaviate.util import generate_uuid5
 
+from airflow.decorators import task
 from include.tasks.extract.utils.html_utils import get_internal_links
 
 
+@task
 def extract_airflow_docs(docs_base_url: str) -> list[pd.DataFrame]:
     """
     This task return all internal url for Airflow docs
@@ -36,7 +38,10 @@ def extract_airflow_docs(docs_base_url: str) -> list[pd.DataFrame]:
     docs_url_parts = urllib.parse.urlsplit(docs_base_url)
     docs_url_base = f"{docs_url_parts.scheme}://{docs_url_parts.netloc}"
     # make sure we didn't accidentally pickup any unrelated links in recursion
-    non_doc_links = {link if docs_url_base not in link else "" for link in all_links}
+    old_version_doc_pattern = r"/(\d+\.)*\d+/"
+    non_doc_links = {
+        link if (docs_url_base not in link) or re.search(old_version_doc_pattern, link) else "" for link in all_links
+    }
     docs_links = all_links - non_doc_links
 
     df = pd.DataFrame(docs_links, columns=["docLink"])
