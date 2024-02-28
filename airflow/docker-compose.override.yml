@@ -6,7 +6,7 @@ services:
     networks:
     - airflow
   weaviate:
-    image: semitechnologies/weaviate:1.21.0
+    image: semitechnologies/weaviate:1.23.10
     command: "--host 0.0.0.0 --port '8081' --scheme http"
     volumes:
     - ${PWD}/include/weaviate/backup:/var/lib/weaviate/backup
