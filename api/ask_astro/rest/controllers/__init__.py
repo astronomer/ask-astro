@@ -8,6 +8,7 @@ from typing import Callable
 from sanic import Sanic, response
 
 from ask_astro.rest.controllers.get_request import on_get_request
+from ask_astro.rest.controllers.health_status import on_get_health_status
 from ask_astro.rest.controllers.list_recent_requests import on_list_recent_requests
 from ask_astro.rest.controllers.post_request import on_post_request
 from ask_astro.rest.controllers.submit_feedback import on_submit_feedback
@@ -31,6 +32,7 @@ def register_routes(api: Sanic):
         RouteConfig(on_get_request, "/requests/<request_id:uuid>", ["GET"], "get_request"),
         RouteConfig(on_post_request, "/requests", ["POST"], "post_request"),
         RouteConfig(on_submit_feedback, "/requests/<request_id:uuid>/feedback", ["POST"], "submit_feedback"),
+        RouteConfig(on_get_health_status, "/health_status", ["GET"], "health_status"),
     ]
 
     for route_config in routes:

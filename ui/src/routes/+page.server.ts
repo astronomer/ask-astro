@@ -21,22 +21,29 @@ const limiter = new RateLimiter({
   }
 });
 
+const publicServiceAnnouncement = "Public Service Announcement: Ask Astro is currently undergoing maintenance and will be back shortly. We apologize for any inconvenience this may cause!";
+
 export const load: PageServerLoad = async (event) => {
   await limiter.cookieLimiter?.preflight(event);
-  const publicServiceAnnouncement = "Public Service Announcement: Ask Astro is currently experiencing " +
-      "downtime. Our team is actively investigating the issue and will provide updates as soon as it is resolved.";
+
+  let health_status;
+  try {
+    health_status = await fetch(`${ASK_ASTRO_API_URL}/health`);
+    health_status = await health_status.json();
+  } catch (err) {
+  }
 
   try {
     const requests = await fetch(`${ASK_ASTRO_API_URL}/requests`);
     return {
       requests: await requests.json(),
-      publicServiceAnnouncement
+      publicServiceAnnouncement: (health_status?.status === "maintenance" || !health_status) ? publicServiceAnnouncement : null,
     };
   } catch (err) {
     console.error(err);
     return {
       requests: [],
-      publicServiceAnnouncement
+      publicServiceAnnouncement: (health_status?.status === "maintenance" || !health_status) ? publicServiceAnnouncement : null,
     };
   }
 };
