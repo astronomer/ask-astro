@@ -28,7 +28,7 @@ export const load: PageServerLoad = async (event) => {
 
   let health_status;
   try {
-    health_status = await fetch(`${ASK_ASTRO_API_URL}/health`);
+    health_status = await fetch(`${ASK_ASTRO_API_URL}/health_status`);
     health_status = await health_status.json();
   } catch (err) {
   }
