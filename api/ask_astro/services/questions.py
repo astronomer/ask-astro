@@ -119,7 +119,7 @@ async def answer_question(request: AskAstroRequest) -> None:
     except Exception as e:
         # If there's an error, mark the request as errored and add it to the database
         request.status = "error"
-        if not isinstance(e, InvalidRequestPromptError) and not isinstance(e, RequestDuringMaintenanceException):
+        if not isinstance(e, (InvalidRequestPromptError, RequestDuringMaintenanceException)):
             request.response = "Sorry, something went wrong. Please try again later."
             raise QuestionAnsweringError("An error occurred during question answering.") from e
         else:
