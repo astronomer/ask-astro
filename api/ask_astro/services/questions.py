@@ -71,6 +71,7 @@ def _preprocess_request(request: AskAstroRequest) -> None:
     retry=retry_if_not_exception_type(InvalidRequestPromptError),
     stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=1, max=10),
+    reraise=True,
 )
 async def answer_question(request: AskAstroRequest) -> None:
     """
