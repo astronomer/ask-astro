@@ -61,7 +61,8 @@ def load_firestore_to_snowflake():
             score = doc_dict.get("score")
             status = doc_dict.get("status") == "complete"
             response_received_at = datetime.fromtimestamp(doc_dict.get("response_received_at"))
-            rows.append((uuid, score, status, response_received_at))
+            client = doc_dict.get("client")
+            rows.append((uuid, score, status, response_received_at, client))
 
         return rows
 
@@ -77,9 +78,9 @@ def load_firestore_to_snowflake():
 
         insert_sql = f"""
             INSERT INTO
-                {METRICS_SNOWFLAKE_DB_DATABASE}.{METRICS_SNOWFLAKE_DB_SCHEMA}.request(uuid, score, success, created_at)
+                {METRICS_SNOWFLAKE_DB_DATABASE}.{METRICS_SNOWFLAKE_DB_SCHEMA}.request(uuid, score, success, created_at, client)
             VALUES
-                (?, ?, ?, ?)
+                (?, ?, ?, ?, ?)
         """
         conn.cursor().executemany(insert_sql, rows)
 
