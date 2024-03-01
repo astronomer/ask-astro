@@ -11,12 +11,17 @@ from tenacity import retry, retry_if_not_exception_type, stop_after_attempt, wai
 from ask_astro.clients.firestore import firestore_client
 from ask_astro.config import FirestoreCollections, PromptPreprocessingConfig
 from ask_astro.models.request import AskAstroRequest, Source
+from ask_astro.settings import SHOW_SERVICE_MAINTENANCE_BANNER
 
 logger = getLogger(__name__)
 
 
 class InvalidRequestPromptError(Exception):
     """Exception raised when the prompt string in the request object is invalid"""
+
+
+class RequestDuringMaintenanceException(Exception):
+    """Exception raised when a request is still somehow received on the backend when server is in maintenance"""
 
 
 class QuestionAnsweringError(Exception):
@@ -37,6 +42,10 @@ async def _update_firestore_request(request: AskAstroRequest) -> None:
 
 
 def _preprocess_request(request: AskAstroRequest) -> None:
+    if SHOW_SERVICE_MAINTENANCE_BANNER:
+        error_msg = "Ask Astro is currently undergoing maintenance and will be back shortly. We apologize for any inconvenience this may cause!"
+        request.response = error_msg
+        raise RequestDuringMaintenanceException(error_msg)
     if len(request.prompt) > PromptPreprocessingConfig.max_char:
         error_msg = "Question text is too long. Please try making a new thread and shortening your question."
         request.response = error_msg
@@ -62,6 +71,7 @@ def _preprocess_request(request: AskAstroRequest) -> None:
     retry=retry_if_not_exception_type(InvalidRequestPromptError),
     stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=1, max=10),
+    reraise=True,
 )
 async def answer_question(request: AskAstroRequest) -> None:
     """
@@ -110,7 +120,7 @@ async def answer_question(request: AskAstroRequest) -> None:
     except Exception as e:
         # If there's an error, mark the request as errored and add it to the database
         request.status = "error"
-        if not isinstance(e, InvalidRequestPromptError):
+        if not isinstance(e, (InvalidRequestPromptError, RequestDuringMaintenanceException)):
             request.response = "Sorry, something went wrong. Please try again later."
             raise QuestionAnsweringError("An error occurred during question answering.") from e
         else:

@@ -12,7 +12,7 @@ from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncWebClient
 
 from ask_astro.models.request import AskAstroRequest
-from ask_astro.services.questions import answer_question
+from ask_astro.services.questions import InvalidRequestPromptError, RequestDuringMaintenanceException, answer_question
 from ask_astro.slack.utils import get_blocks, markdown_to_slack
 
 logger = getLogger(__name__)
@@ -121,6 +121,9 @@ async def on_mention(body: dict[str, Any], ack: AsyncAck, say: AsyncSay, client:
     except Exception as e:
         await client.reactions_remove(name=THOUGHT_BALLOON_REACTION, channel=channel_id, timestamp=ts)
         await try_add_reaction(client, FAILURE_REACTION, channel_id, ts)
-        await say(text=FAILURE_MESSAGE, thread_ts=ts)
+        if not isinstance(e, (InvalidRequestPromptError, RequestDuringMaintenanceException)):
+            await say(text=FAILURE_MESSAGE, thread_ts=ts)
+        else:
+            await say(text=str(request.response), thread_ts=ts)
 
         raise e

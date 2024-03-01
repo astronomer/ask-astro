@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 from langchain.schema import AIMessage, BaseMessage, HumanMessage
@@ -109,3 +109,9 @@ class AskAstroRequest(BaseModel):
             is_example=response_dict.get("is_example", False),
             client=response_dict["client"],
         )
+
+
+class HealthStatus(BaseModel):
+    """Represents the health status of the service."""
+
+    status: Literal["ok", "maintenance"] = Field(..., description="The health status of the service")

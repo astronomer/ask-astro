@@ -84,6 +84,7 @@
         </div>
       {/if}
 
+      {#if !$page.data.publicServiceAnnouncement}
       <form
         method="post"
         action="/?/submitPrompt"
@@ -115,8 +116,8 @@
           {/if}
         </div>
       </form>
+      {/if}
     </section>
-
     <slot />
 
     <div class="footer">
