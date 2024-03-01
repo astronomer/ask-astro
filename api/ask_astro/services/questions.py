@@ -11,7 +11,7 @@ from tenacity import retry, retry_if_not_exception_type, stop_after_attempt, wai
 from ask_astro.clients.firestore import firestore_client
 from ask_astro.config import FirestoreCollections, PromptPreprocessingConfig
 from ask_astro.models.request import AskAstroRequest, Source
-from ask_astro.settings import SERVICE_MAINTENANCE_BANNER_STATUS
+from ask_astro.settings import SHOW_SERVICE_MAINTENANCE_BANNER
 
 logger = getLogger(__name__)
 
@@ -42,7 +42,7 @@ async def _update_firestore_request(request: AskAstroRequest) -> None:
 
 
 def _preprocess_request(request: AskAstroRequest) -> None:
-    if SERVICE_MAINTENANCE_BANNER_STATUS:
+    if SHOW_SERVICE_MAINTENANCE_BANNER:
         error_msg = "Ask Astro is currently undergoing maintenance and will be back shortly. We apologize for any inconvenience this may cause!"
         request.response = error_msg
         raise RequestDuringMaintenanceException(error_msg)
