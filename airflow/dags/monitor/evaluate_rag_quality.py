@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import json
 import logging
 import os
@@ -8,11 +9,9 @@ from pathlib import Path
 from textwrap import dedent
 
 import pandas as pd
-from include.tasks.extract.utils.retrieval_tests import (
+from include.tasks.extract.utils.evaluate_helpers import (
     generate_answer,
     get_or_create_drive_folder,
-    weaviate_search,
-    weaviate_search_multiquery_retriever,
 )
 
 from airflow.decorators import dag, task
@@ -63,7 +62,7 @@ default_args = {"retries": 3, "retry_delay": 30, "trigger_rule": "none_failed"}
         )
     },
 )
-def test_retrieval(question_number_subset: str):
+def evaluate_rag_quality(question_number_subset: str):
     """
     This DAG performs a test of document retrieval from Ask Astro's vector database.
 
@@ -175,7 +174,7 @@ def test_retrieval(question_number_subset: str):
         question_number_subset = context["params"]["question_number_subset"]
 
         if question_number_subset:
-            question_number_subset = json.loads(question_number_subset)
+            question_number_subset = ast.literal_eval(question_number_subset)
 
         results_file = f"include/data/test_questions_{ts_nodash}.csv"
 
@@ -183,29 +182,15 @@ def test_retrieval(question_number_subset: str):
             "test_number",
             "question",
             "expected_references",
-            "weaviate_search_references",
-            "weaviate_mqr_references",
             "askastro_answer",
             "askastro_references",
             "langsmith_link",
         ]
 
-        weaviate_client = WeaviateHook(_WEAVIATE_CONN_ID).get_conn()
-
         questions_df = pd.read_csv(test_question_template_path)
 
         if question_number_subset:
             questions_df = questions_df[questions_df.test_number.isin(question_number_subset)]
-
-        questions_df["weaviate_search_references"] = questions_df.question.apply(
-            lambda x: weaviate_search(weaviate_client=weaviate_client, question=x, class_name=WEAVIATE_CLASS)
-        )
-
-        questions_df["weaviate_mqr_references"] = questions_df.question.apply(
-            lambda x: weaviate_search_multiquery_retriever(
-                weaviate_client=weaviate_client, question=x, class_name=WEAVIATE_CLASS, azure_endpoint=azure_endpoint
-            )
-        )
 
         questions_df[["askastro_answer", "askastro_references", "langsmith_link"]] = questions_df.question.apply(
             lambda x: pd.Series(
@@ -266,4 +251,4 @@ def test_retrieval(question_number_subset: str):
     _check_schema >> _results_file >> _upload_results
 
 
-test_retrieval(question_number_subset=None)
+evaluate_rag_quality(question_number_subset=None)
