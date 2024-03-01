@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import re
+import urllib.parse
 
 import pandas as pd
-import urllib3
 from bs4 import BeautifulSoup
 from weaviate.util import generate_uuid5
 
@@ -15,19 +15,20 @@ def extract_provider_docs() -> list[pd.DataFrame]:
     base_url = "https://astronomer-providers.readthedocs.io/en/stable/"
 
     all_links = get_internal_links(base_url, exclude_docs)
-    # df = urls_to_dataframe(urls, "astronomer-providers")
 
-    docs_url_parts = urllib3.parse.urlsplit(base_url)
+    docs_url_parts = urllib.parse.urlsplit(base_url)
     docs_url_base = f"{docs_url_parts.scheme}://{docs_url_parts.netloc}"
 
     # make sure we didn't accidentally pickup any unrelated links in recursion
     # get rid of older versions of the docs, only care about "stable" version docs
+
     old_version_doc_pattern = r"/(\d+\.)*\d+/"
-    non_doc_links = {
-        link if (docs_url_base not in link) or re.search(old_version_doc_pattern, link) or "/latest/" in link else ""
-        for link in all_links
-    }
-    docs_links = all_links - non_doc_links
+
+    def is_doc_link_invalid(link):
+        return (docs_url_base not in link) or re.search(old_version_doc_pattern, link) or "/latest/" in link
+
+    invalid_doc_links = {link if is_doc_link_invalid(link) else "" for link in all_links}
+    docs_links = all_links - invalid_doc_links
 
     df = pd.DataFrame(docs_links, columns=["docLink"])
 
