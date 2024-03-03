@@ -53,7 +53,7 @@ def split_markdown(dfs: list[pd.DataFrame]) -> pd.DataFrame:
         is_separator_regex=True,
     )
 
-    df["doc_chunks"] = df["content"].apply(lambda x: splitter.split_text([Document(page_content=x)]))
+    df["doc_chunks"] = df["content"].apply(lambda x: splitter.split_documents([Document(page_content=x)]))
     df = df.explode("doc_chunks", ignore_index=True)
     df["content"] = df["doc_chunks"].apply(lambda x: x.page_content)
 
