@@ -3,7 +3,7 @@ from datetime import datetime
 from textwrap import dedent
 
 import pandas as pd
-from include.tasks import ingest, split
+from include.tasks import chunking_utils, ingest
 from weaviate_provider.hooks.weaviate import WeaviateHook
 from weaviate_provider.operators.weaviate import WeaviateCheckSchemaBranchOperator, WeaviateCreateSchemaOperator
 
@@ -164,7 +164,7 @@ def test_ask_astro_load_baseline():
     original_doc = get_existing_doc()
     test_doc = create_test_object(original_doc)
 
-    split_md_docs = task(split.split_markdown).expand(dfs=[test_doc])
+    split_md_docs = task(chunking_utils.split_markdown).expand(dfs=[test_doc])
 
     _upsert_data = (
         task.weaviate_import(ingest.import_upsert_data, weaviate_conn_id=_WEAVIATE_CONN_ID)

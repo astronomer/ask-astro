@@ -31,12 +31,12 @@ def ask_astro_load_astronomer_docs():
     """
     This DAG performs incremental load for any new docs in astronomer docs.
     """
-    from include.tasks import split
+    from include.tasks import chunking_utils
     from include.tasks.extract.astro_docs import extract_astro_docs
 
     astro_docs = task(extract_astro_docs)()
 
-    split_html_docs = task(split.split_html).expand(dfs=[astro_docs])
+    split_html_docs = task(chunking_utils.split_html).expand(dfs=[astro_docs])
 
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,

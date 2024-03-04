@@ -65,13 +65,13 @@ def is_excluded_url(url: str, exclude_literal: list[str]) -> bool:
 
 def clean_tags(text_content: str, tags: list[str] | None = None) -> str | None:
     """
-    Clean the HTML content by removing script and style tags, collapsing whitespaces, and extracting text.
+    Clean the HTML content by removing unrelated tags, collapsing whitespaces, and extracting text.
 
     param text_content (str): The HTML content to be cleaned.
     param tags: List of html tag want to clean
     """
     if tags is None:
-        tags = ["script", "style"]
+        tags = ["script", "style", "button", "img", "svg"]
     soup = BeautifulSoup(text_content, "html.parser").find("body")
 
     if soup is None:
@@ -141,7 +141,7 @@ def get_page_links(url: str, current_page_content: bytes, exclude_literal: list[
             continue
         attempted_urls.add(href)
         new_page_content = fetch_page_content(href)
-        if (not new_page_content) or generate_uuid5(new_page_content) in page_content_hash:
+        if (not new_page_content) or generate_uuid5(new_page_content) in internal_page_hashset:
             continue
         logger.info(href)
         internal_urls.add(href)

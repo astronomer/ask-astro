@@ -32,16 +32,16 @@ def ask_astro_load_registry():
     data from a point-in-time data capture. By using the upsert logic of the weaviate_import decorator
     any existing documents that have been updated will be removed and re-added.
     """
-    from include.tasks import split
+    from include.tasks import chunking_utils
     from include.tasks.extract import registry
 
     registry_cells_docs = task(registry.extract_astro_registry_cell_types)()
 
     registry_dags_docs = task(registry.extract_astro_registry_dags)()
 
-    split_md_docs = task(split.split_markdown).expand(dfs=[registry_cells_docs])
+    split_md_docs = task(chunking_utils.split_markdown).expand(dfs=[registry_cells_docs])
 
-    split_code_docs = task(split.split_python).expand(dfs=[registry_dags_docs])
+    split_code_docs = task(chunking_utils.split_python).expand(dfs=[registry_dags_docs])
 
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,

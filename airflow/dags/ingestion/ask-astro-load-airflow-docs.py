@@ -35,10 +35,10 @@ def ask_astro_load_airflow_docs():
     data from a point-in-time data capture. By using the upsert logic of the weaviate_import decorator
     any existing documents that have been updated will be removed and re-added.
     """
-    from include.tasks import split
+    from include.tasks import chunking_utils
     from include.tasks.extract import airflow_docs
 
-    extracted_airflow_docs = task(split.split_html).expand(
+    extracted_airflow_docs = task(chunking_utils.split_html).expand(
         dfs=[airflow_docs.extract_airflow_docs(docs_base_url=airflow_docs_base_url)]
     )
 

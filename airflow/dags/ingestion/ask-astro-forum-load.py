@@ -36,9 +36,9 @@ def get_astro_forum_content():
     ),
 )
 def ask_astro_load_astro_forum():
-    from include.tasks import split
+    from include.tasks import chunking_utils
 
-    split_docs = task(split.split_html).expand(dfs=[get_astro_forum_content()])
+    split_docs = task(chunking_utils.split_html).expand(dfs=[get_astro_forum_content()])
 
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,

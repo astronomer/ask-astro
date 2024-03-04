@@ -32,11 +32,11 @@ def ask_astro_load_astro_cli_docs():
     data from a point-in-time data capture. By using the upsert logic of the weaviate_import decorator
     any existing documents that have been updated will be removed and re-added.
     """
-    from include.tasks import split
+    from include.tasks import chunking_utils
     from include.tasks.extract import astro_cli_docs
 
     extract_astro_cli_docs = task(astro_cli_docs.extract_astro_cli_docs)()
-    split_md_docs = task(split.split_html).expand(dfs=[extract_astro_cli_docs])
+    split_md_docs = task(chunking_utils.split_html).expand(dfs=[extract_astro_cli_docs])
 
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,

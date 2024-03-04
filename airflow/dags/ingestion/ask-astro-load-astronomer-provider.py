@@ -43,6 +43,10 @@ def ask_astro_load_astronomer_providers():
     any existing documents that have been updated will be removed and re-added.
     """
 
+    from include.tasks import chunking_utils
+
+    split_docs = task(chunking_utils.split_html).expand(dfs=[get_provider_content()])
+
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,
         existing="replace",
@@ -51,7 +55,7 @@ def ask_astro_load_astronomer_providers():
         verbose=True,
         conn_id=_WEAVIATE_CONN_ID,
         task_id="WeaviateDocumentIngestOperator",
-    ).expand(input_data=[get_provider_content()])
+    ).expand(input_data=[split_docs])
 
 
 ask_astro_load_astronomer_providers()

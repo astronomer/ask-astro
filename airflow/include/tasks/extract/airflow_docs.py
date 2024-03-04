@@ -4,12 +4,11 @@ import re
 import urllib.parse
 
 import pandas as pd
-import requests
 from bs4 import BeautifulSoup
 from weaviate.util import generate_uuid5
 
 from airflow.decorators import task
-from include.tasks.extract.utils.html_utils import get_internal_links
+from include.tasks.extract.utils.html_utils import fetch_page_content, get_internal_links
 
 
 @task
@@ -46,7 +45,7 @@ def extract_airflow_docs(docs_base_url: str) -> list[pd.DataFrame]:
 
     df = pd.DataFrame(docs_links, columns=["docLink"])
 
-    df["html_content"] = df["docLink"].apply(lambda x: requests.get(x).content)
+    df["html_content"] = df["docLink"].apply(fetch_page_content)
 
     df["content"] = df["html_content"].apply(
         lambda x: str(BeautifulSoup(x, "html.parser").find(class_="body", role="main"))
