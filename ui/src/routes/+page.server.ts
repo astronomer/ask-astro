@@ -35,8 +35,9 @@ export const load: PageServerLoad = async (event) => {
 
   try {
     const requests = await fetch(`${ASK_ASTRO_API_URL}/requests`);
+    const requests_json = await requests.json();
     return {
-      requests: await requests.json(),
+      requests: requests_json.requests,
       publicServiceAnnouncement: (health_status?.status === "maintenance" || !health_status) ? publicServiceAnnouncement : null,
     };
   } catch (err) {
