@@ -6,7 +6,7 @@ authors = ["Wei Lee <weilee.rx@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 
 [tool.poetry.group.dev.dependencies]
 invoke = "^2.2.0"
