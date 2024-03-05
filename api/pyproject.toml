@@ -6,7 +6,7 @@ authors = ["Philippe Gagnon <12717218+pgagnon@users.noreply.github.com>"]
 packages = [{include = "ask_astro"}]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 typing-extensions = "*"
 pydash = "*"
 aiohttp = {version = "*", extras=["speedups"]}
