@@ -7,6 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+sanic-cors = "^2.2.0"
 
 [tool.poetry.group.dev.dependencies]
 invoke = "^2.2.0"
