@@ -6,6 +6,7 @@ import os
 from logging import getLogger
 
 from sanic import Request, Sanic
+from sanic_cors import CORS
 
 from ask_astro.rest.controllers import register_routes
 from ask_astro.slack.app import app_handler, slack_app
@@ -17,6 +18,8 @@ logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 logger = getLogger(__name__)
 
 api = Sanic(name="ask_astro")
+
+CORS(api, resources={r"/api/*": {"origins": "*"}})
 
 
 # route slack requests to the slack app
