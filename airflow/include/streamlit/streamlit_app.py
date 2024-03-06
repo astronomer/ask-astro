@@ -138,7 +138,7 @@ with weaviate_gen_tab:
              question to see the prompt."""
     )
 
-    prompt_path = Path(__file__).parent.joinpath("combine_docs_chat_prompt.txt")
+    prompt_path = Path(__file__).parent.joinpath("combine_docs_sys_prompt_webapp.txt")
     prompt = prompt_path.read_text()
 
     st.write(f"The prompt text can be found in the file __`{prompt_path}`__")
