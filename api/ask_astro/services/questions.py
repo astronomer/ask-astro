@@ -82,7 +82,7 @@ async def answer_question(request: AskAstroRequest) -> None:
     try:
         from langchain import callbacks
 
-        from ask_astro.chains.answer_question import answer_question_chain
+        from ask_astro.chains.answer_question import slack_answer_question_chain, webapp_answer_question_chain
 
         # First, mark the request as in_progress and add it to the database
         request.status = "in_progress"
@@ -93,16 +93,27 @@ async def answer_question(request: AskAstroRequest) -> None:
 
         # Run the question answering chain
         with callbacks.collect_runs() as cb:
-            result = await asyncio.to_thread(
-                lambda: answer_question_chain(
-                    {
-                        "question": request.prompt,
-                        "chat_history": [],
-                        "messages": request.messages,
-                    },
-                    metadata={"request_id": str(request.uuid)},
+            if request.client == "slack":
+                result = await asyncio.to_thread(
+                    lambda: slack_answer_question_chain(
+                        {
+                            "question": request.prompt,
+                            "chat_history": request.messages,
+                        },
+                        metadata={"request_id": str(request.uuid), "client": str(request.client)},
+                    )
                 )
-            )
+            else:
+                result = await asyncio.to_thread(
+                    lambda: webapp_answer_question_chain(
+                        {
+                            "question": request.prompt,
+                            "chat_history": [],
+                            "messages": request.messages,
+                        },
+                        metadata={"request_id": str(request.uuid), "client": str(request.client)},
+                    )
+                )
             request.langchain_run_id = cb.traced_runs[0].id
 
         logger.info("Question answering chain finished with result %s", result)

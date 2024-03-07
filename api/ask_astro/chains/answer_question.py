@@ -29,10 +29,18 @@ from ask_astro.settings import (
     MULTI_QUERY_RETRIEVER_TEMPERATURE,
 )
 
-with open("ask_astro/templates/combine_docs_chat_prompt.txt") as system_prompt_fd:
-    """Load system prompt template from a file and structure it."""
-    messages = [
-        SystemMessagePromptTemplate.from_template(system_prompt_fd.read()),
+with open("ask_astro/templates/combine_docs_sys_prompt_webapp.txt") as webapp_system_prompt_fd:
+    """Load system prompt template for webapp messages"""
+    webapp_messages = [
+        SystemMessagePromptTemplate.from_template(webapp_system_prompt_fd.read()),
+        MessagesPlaceholder(variable_name="messages"),
+        HumanMessagePromptTemplate.from_template("{question}"),
+    ]
+
+with open("ask_astro/templates/combine_docs_sys_prompt_slack.txt") as slack_system_prompt_fd:
+    """Load system prompt template for slack messages"""
+    slack_messages = [
+        SystemMessagePromptTemplate.from_template(slack_system_prompt_fd.read()),
         MessagesPlaceholder(variable_name="messages"),
         HumanMessagePromptTemplate.from_template("{question}"),
     ]
@@ -92,7 +100,7 @@ llm_chain_filter_compression_retriever = ContextualCompressionRetriever(
 )
 
 # Set up a ConversationalRetrievalChain to generate answers using the retriever.
-answer_question_chain = ConversationalRetrievalChain(
+webapp_answer_question_chain = ConversationalRetrievalChain(
     retriever=llm_chain_filter_compression_retriever,
     return_source_documents=True,
     question_generator=LLMChain(
@@ -110,6 +118,28 @@ answer_question_chain = ConversationalRetrievalChain(
             temperature=CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_TEMPERATURE,
         ),
         chain_type="stuff",
-        prompt=ChatPromptTemplate.from_messages(messages),
+        prompt=ChatPromptTemplate.from_messages(webapp_messages),
+    ),
+)
+
+slack_answer_question_chain = ConversationalRetrievalChain(
+    retriever=llm_chain_filter_compression_retriever,
+    return_source_documents=True,
+    question_generator=LLMChain(
+        llm=AzureChatOpenAI(
+            **AzureOpenAIParams.us_east2,
+            deployment_name=CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_DEPLOYMENT_NAME,
+            temperature=CONVERSATIONAL_RETRIEVAL_LLM_CHAIN_TEMPERATURE,
+        ),
+        prompt=CONDENSE_QUESTION_PROMPT,
+    ),
+    combine_docs_chain=load_qa_chain(
+        AzureChatOpenAI(
+            **AzureOpenAIParams.us_east2,
+            deployment_name=CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_DEPLOYMENT_NAME,
+            temperature=CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_TEMPERATURE,
+        ),
+        chain_type="stuff",
+        prompt=ChatPromptTemplate.from_messages(slack_messages),
     ),
 )
