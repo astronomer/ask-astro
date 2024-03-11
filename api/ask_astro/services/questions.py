@@ -98,7 +98,8 @@ async def answer_question(request: AskAstroRequest) -> None:
                     lambda: slack_answer_question_chain(
                         {
                             "question": request.prompt,
-                            "chat_history": request.messages,
+                            "chat_history": [],
+                            "messages": request.messages,
                         },
                         metadata={"request_id": str(request.uuid), "client": str(request.client)},
                     )
