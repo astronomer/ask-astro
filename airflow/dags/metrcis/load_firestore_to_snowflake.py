@@ -49,8 +49,8 @@ def load_firestore_to_snowflake():
         end_ts = time.mktime(yesterday.timetuple())
 
         docs = (
-            requests_col.where(filter=FieldFilter("response_received_at", ">=", start_ts))
-            .where(filter=FieldFilter("response_received_at", "<", end_ts))
+            requests_col.where(filter=FieldFilter("sent_at", ">=", start_ts))
+            .where(filter=FieldFilter("sent_at", "<", end_ts))
             .stream()
         )
 
@@ -60,9 +60,9 @@ def load_firestore_to_snowflake():
             uuid = doc_dict["uuid"]
             score = doc_dict.get("score")
             status = doc_dict.get("status") == "complete"
-            response_received_at = datetime.fromtimestamp(doc_dict.get("response_received_at"))
+            sent_at = datetime.fromtimestamp(doc_dict.get("sent_at"))
             client = doc_dict.get("client")
-            rows.append((uuid, score, status, response_received_at, client))
+            rows.append((uuid, score, status, sent_at, client))
 
         return rows
 
