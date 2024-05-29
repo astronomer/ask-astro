@@ -214,12 +214,12 @@ def extract_github_issues(repo_base: str, github_conn_id: str, cutoff_date: str 
     issues_drop_text = [
         dedent(
             """                     <\\!--\r
-                         .*Licensed to the Apache Software Foundation \\(ASF\\) under one.*under the License\\.\r
+                         .*?Licensed to the Apache Software Foundation \\(ASF\\) under one.*?under the License\\.\r
                           -->"""
         ),
         "<!-- Please keep an empty line above the dashes. -->",
-        "<!--\r\nThank you.*http://chris.beams.io/posts/git-commit/\r\n-->",
-        r"\*\*\^ Add meaningful description above.*newsfragments\)\.",
+        "<!--\r\nThank you.*?http://chris.beams.io/posts/git-commit/\r\n-->",
+        r"\*\*\^ Add meaningful description above.*?newsfragments\)\.",
     ]
 
     issue_markdown_template = dedent(
