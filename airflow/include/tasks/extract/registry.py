@@ -8,18 +8,59 @@ from html2text import html2text
 
 modules_url = "https://api.astronomer.io/registryV2/v1alpha1/organizations/public/modules?limit=1000"
 modules_link_template = "https://registry.astronomer.io/providers/{providerName}/versions/{version}/modules/{_name}"
+module_info_url_template = "https://api.astronomer.io/registryV2/v1alpha1/organizations/public/providers/{provider_name}/versions/latest/modules/{module_name}"
 
 dags_url = "https://api.astronomer.io/registryV2/v1alpha1/organizations/public/dags?limit=1000"
 dags_link_template = "https://registry.astronomer.io/dags/{_name}/versions/{version}"
 
-registry_cell_md_template = dedent(
-    """
-    # Registry
-    ## Provider: {providerName}
+
+def get_individual_module_detail(provider_name, module_name):
+    data = requests.get(module_info_url_template.format(provider_name=provider_name, module_name=module_name)).json()
+    import_path = data["importPath"]
+
+    module_name = data["name"]
+    version = data["version"]
+    provider_name = data["providerName"]
+    description = html2text(data["description"]).strip() if data["description"] else "No Description"
+    description = description.replace("\n", " ")
+    parameters = data["parameters"]
+
+    param_details = []
+    param_usage = []
+
+    for param in parameters:
+        param_name = param["name"]
+        param_type = param.get("type", "UNKNOWN")
+        if param_type == "UNKNOWN" and "typeDef" in param and "rawAnnotation" in param["typeDef"]:
+            param_type = param["typeDef"]["rawAnnotation"]
+        required = "(REQUIRED) " if param["required"] else ""
+        param_details.append(
+            f"{param_name} ({param_type}): {required}{param.get('description', 'No Param Description')}"
+        )
+        param_usage.append(f"\t{param_name}=MY_{param_name.upper()}")
+
+    param_details_str = "\n\t".join(param_details)
+    param_usage_str = ",\n\t".join(param_usage)
+
+    # Format the final string
+    module_info = dedent(
+        f"""
+    Module Name: {module_name}
     Version: {version}
-    Module: {module}
-    Module Description: {description}"""
-)
+    Provider Name: {provider_name}
+    Import Statement: `from {import_path} import {module_name}`
+    Module Description: {description}
+
+    Parameters:
+        {param_details_str}
+
+    Usage Example:
+        f = AsyncKubernetesHook(
+            {param_usage_str}
+        )"""
+    )
+
+    return module_info
 
 
 def extract_astro_registry_cell_types() -> list[pd.DataFrame]:
@@ -51,12 +92,8 @@ def extract_astro_registry_cell_types() -> list[pd.DataFrame]:
     df["docSource"] = "astronomer registry modules"
 
     df["description"] = df["description"].apply(lambda x: html2text(x) if x else "No Description")
-    df["content"] = df.apply(
-        lambda x: registry_cell_md_template.format(
-            providerName=x.providerName, version=x.version, module=x["name"], description=x.description
-        ),
-        axis=1,
-    )
+
+    df["content"] = df.apply(lambda x: pd.Series(get_individual_module_detail(x.providerName, x["name"])), axis=1)
 
     # column order matters for uuid generation
     df = df[["docSource", "sha", "content", "docLink"]]

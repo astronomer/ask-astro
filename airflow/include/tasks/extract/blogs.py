@@ -52,9 +52,7 @@ def extract_astro_blogs(blog_cutoff_date: datetime) -> list[pd.DataFrame]:
     df = pd.DataFrame(links, columns=["docLink"])
     df.drop_duplicates(inplace=True)
     df["content"] = df["docLink"].apply(lambda x: requests.get(x).content)
-    df["title"] = df["content"].apply(
-        lambda x: BeautifulSoup(x, "lxml").find(class_="post-card__meta").find(class_="title").get_text()
-    )
+    df["title"] = df["content"].apply(lambda x: BeautifulSoup(x, "html").find(class_="hero__title").get_text())
 
     df["content"] = df["content"].apply(lambda x: BeautifulSoup(x, "lxml").find(class_="prose").get_text())
     df["content"] = df.apply(lambda x: blog_format.format(title=x.title, content=x.content), axis=1)

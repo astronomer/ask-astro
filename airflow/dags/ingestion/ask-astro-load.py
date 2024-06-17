@@ -21,16 +21,13 @@ ask_astro_env = os.environ.get("ASK_ASTRO_ENV", "dev")
 _WEAVIATE_CONN_ID = f"weaviate_{ask_astro_env}"
 _GITHUB_CONN_ID = "github_ro"
 WEAVIATE_CLASS = os.environ.get("WEAVIATE_CLASS", "DocsDev")
-_GITHUB_ISSUE_CUTOFF_DATE = os.environ.get("GITHUB_ISSUE_CUTOFF_DATE", "2022-1-1")
 
 markdown_docs_sources = [
     {"doc_dir": "", "repo_base": "OpenLineage/docs"},
     {"doc_dir": "", "repo_base": "OpenLineage/OpenLineage"},
 ]
 
-issues_docs_sources = [
-    "apache/airflow",
-]
+
 slack_channel_sources = [
     {
         "channel_name": "troubleshooting",
@@ -150,7 +147,6 @@ def ask_astro_load_bulk():
                 "extract_airflow_docs",
                 "extract_stack_overflow",
                 "extract_astro_registry_cell_types",
-                "extract_github_issues",
                 "extract_astro_blogs",
                 "extract_astro_registry_dags",
                 "extract_astro_cli_docs",
@@ -261,23 +257,6 @@ def ask_astro_load_bulk():
             df.to_parquet(astro_forum_parquet_path)
 
         return [df]
-
-    @task(trigger_rule=TriggerRule.NONE_FAILED)
-    def extract_github_issues(repo_base: str):
-        from include.tasks.extract import github
-
-        parquet_file = f"include/data/{repo_base}/issues.parquet"
-
-        if os.path.isfile(parquet_file):
-            if os.access(parquet_file, os.R_OK):
-                df = pd.read_parquet(parquet_file)
-            else:
-                raise Exception("Parquet file exists locally but is not readable.")
-        else:
-            df = github.extract_github_issues(repo_base, _GITHUB_CONN_ID, _GITHUB_ISSUE_CUTOFF_DATE)
-            df.to_parquet(parquet_file)
-
-        return df
 
     @task(trigger_rule=TriggerRule.NONE_FAILED)
     def extract_astro_registry_cell_types():
@@ -396,7 +375,6 @@ def ask_astro_load_bulk():
         )
 
     md_docs = extract_github_markdown.expand(source=markdown_docs_sources)
-    issues_docs = extract_github_issues.expand(repo_base=issues_docs_sources)
     stackoverflow_docs = extract_stack_overflow.expand(tag=stackoverflow_tags)
     registry_cells_docs = extract_astro_registry_cell_types()
     blogs_docs = extract_astro_blogs()
@@ -415,7 +393,6 @@ def ask_astro_load_bulk():
 
     markdown_tasks = [
         md_docs,
-        issues_docs,
         stackoverflow_docs,
         blogs_docs,
         registry_cells_docs,

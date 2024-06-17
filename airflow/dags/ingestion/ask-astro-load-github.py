@@ -52,13 +52,7 @@ def ask_astro_load_github():
         .expand(source=markdown_docs_sources)
     )
 
-    issues_docs = (
-        task(github.extract_github_issues)
-        .partial(github_conn_id=_GITHUB_CONN_ID, cutoff_date=_GITHUB_ISSUE_CUTOFF_DATE)
-        .expand(repo_base=issues_docs_sources)
-    )
-
-    split_md_docs = task(chunking_utils.split_markdown).expand(dfs=[md_docs, issues_docs])
+    split_md_docs = task(chunking_utils.split_markdown).expand(dfs=[md_docs])
 
     _import_data = WeaviateDocumentIngestOperator.partial(
         class_name=WEAVIATE_CLASS,

@@ -110,7 +110,9 @@ def truncate_tokens(text: str, encoding_name: str = "gpt-3.5-turbo", max_length:
         logger.info(e)
 
 
-def get_page_links(url: str, current_page_content: bytes, exclude_literal: list[str]) -> None:
+def get_page_links(
+    url: str, current_page_content: bytes, exclude_literal: list[str], prefix_url: str | None = None
+) -> None:
     """
     Recursively extract all valid and internal links from the given URL.
     Deduplicates any links with the exact same page content in the process.
@@ -118,6 +120,7 @@ def get_page_links(url: str, current_page_content: bytes, exclude_literal: list[
     param url (str): The URL to extract links from.
     param current_page_content: Bytes of the content of the url passed in for hashing.
     param exclude_docs (list): List of strings to exclude from the URL path.
+    param prefix_url (str | None): Ensure all urls scrapped begins with this prefix url. None for skipping this check.
     """
     domain_name = urlparse(url).netloc
     page_content_hash = generate_uuid5(current_page_content)
@@ -130,36 +133,43 @@ def get_page_links(url: str, current_page_content: bytes, exclude_literal: list[
         href = urljoin(url, href)
         parsed_href = urlparse(href)
         href = parsed_href.scheme + "://" + parsed_href.netloc + parsed_href.path
+        if href in attempted_urls:
+            continue
+        attempted_urls.add(href)
         if (
             not is_valid_url(href)
             or not href.startswith("https")
             or href in internal_urls
-            or href in attempted_urls
             or domain_name not in href
             or is_excluded_url(href, exclude_literal)
+            or (prefix_url and not href.startswith(prefix_url))
         ):
             continue
-        attempted_urls.add(href)
         new_page_content = fetch_page_content(href)
         if (not new_page_content) or generate_uuid5(new_page_content) in internal_page_hashset:
             continue
         logger.info(href)
         internal_urls.add(href)
-        get_page_links(href, new_page_content, exclude_literal)
+        get_page_links(href, new_page_content, exclude_literal, prefix_url)
 
 
-def get_internal_links(base_url: str, exclude_literal: list[str] | None = None) -> set[str]:
+def get_internal_links(
+    base_url: str, exclude_literal: list[str] | None = None, prefix_url: str | None = None
+) -> set[str]:
     """
     Extract the internal links of website
 
     param base_url: The base URL of site
     param exclude_literal: Exclude URL that contain pattern from this list
+    param prefix_url (str | None): Ensure all urls scrapped begins with this prefix url. None for skipping this check.
     """
     if exclude_literal is None:
         exclude_literal = []
 
     page_content = fetch_page_content(base_url)
-    get_page_links(base_url, page_content, exclude_literal)
+    get_page_links(
+        url=base_url, current_page_content=page_content, exclude_literal=exclude_literal, prefix_url=prefix_url
+    )
     internal_urls.add(base_url)
 
     return internal_urls
