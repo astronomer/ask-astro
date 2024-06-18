@@ -66,7 +66,7 @@ class WeaviateConfig:
 class CohereConfig:
     """Contains the config variables for the Cohere API."""
 
-    rerank_top_n = int(os.environ.get("COHERE_RERANK_TOP_N", 10))
+    rerank_top_n = int(os.environ.get("COHERE_RERANK_TOP_N", 8))
 
 
 class PromptPreprocessingConfig:

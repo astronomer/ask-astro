@@ -1,8 +1,14 @@
-from langchain.retrievers.document_compressors.chain_filter_prompt import (
-    prompt_template,
-)
 from langchain_core.output_parsers import BaseOutputParser
 from langchain_core.prompts import PromptTemplate
+
+prompt_template = """Given the following question starting with "Question:", and context starting with "Context:" surrounded by >>> symbols, return YES if the context can be used to answer the question and NO if it cannot.
+
+> Question: {question}
+> Context:
+>>>
+{context}
+>>>
+> Context surrounded by >>> is helpful and can be used to answer the question (YES / NO):"""
 
 
 class CustomBooleanOutputParser(BaseOutputParser[bool]):

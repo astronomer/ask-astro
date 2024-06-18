@@ -19,15 +19,15 @@ def extract_astro_cli_docs() -> list[pd.DataFrame]:
     'content': HTML content of the page
     'sha': A UUID from the other fields
     """
-    astronomer_base_url = "https://docs.astronomer.io"
+    astronomer_base_url = "https://www.astronomer.io/docs"
     astro_cli_overview_endpoint = "/astro/cli/overview"
 
-    response = requests.get(f"{astronomer_base_url}/{astro_cli_overview_endpoint}")
+    response = requests.get(f"{astronomer_base_url}{astro_cli_overview_endpoint}")
     soup = BeautifulSoup(response.text, "lxml")
     astro_cli_links = {
         f"{astronomer_base_url}{link.get('href')}"
         for link in soup.find_all("a")
-        if link.get("href").startswith("/astro/cli")
+        if link.get("href").startswith("/docs/astro/cli")
     }
 
     df = pd.DataFrame(astro_cli_links, columns=["docLink"])

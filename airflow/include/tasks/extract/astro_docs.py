@@ -8,7 +8,7 @@ from weaviate.util import generate_uuid5
 
 from include.tasks.extract.utils.html_utils import fetch_page_content, get_internal_links
 
-base_url = "https://docs.astronomer.io/"
+base_url = "https://www.astronomer.io/docs"
 
 
 def process_astro_doc_page_content(page_content: str) -> str:
@@ -57,17 +57,18 @@ def process_astro_doc_page_content(page_content: str) -> str:
 
 def extract_astro_docs(base_url: str = base_url) -> list[pd.DataFrame]:
     """
-    Extract documentation pages from docs.astronomer.io and its subdomains.
+    Extract documentation pages from www.astronomer.io/docs and its subdomains.
 
     :return: A list of pandas dataframes with extracted data.
     """
-    all_links = get_internal_links(base_url, exclude_literal=["learn/tags"])
+    all_links = get_internal_links(base_url=base_url, exclude_literal=["learn/tags"], prefix_url=base_url)
 
     # for software references, we only want latest docs, ones with version number (old) is removed
-    old_version_doc_pattern = r"^https://docs\.astronomer\.io/software/\d+\.\d+/.+$"
+    old_version_doc_pattern = r"^https://www\.astronomer\.io/docs/software/\d+\.\d+/.+$"
     # remove duplicate xml files, we only want html pages
     non_doc_links = {
-        link if link.endswith("xml") or re.match(old_version_doc_pattern, link) else "" for link in all_links
+        link if link.endswith("xml") or re.match(old_version_doc_pattern, link) or not link.startswith(base_url) else ""
+        for link in all_links
     }
     docs_links = all_links - non_doc_links
 

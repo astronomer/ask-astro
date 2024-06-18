@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from typing import Any
+
 from langchain import LLMChain
 from langchain.chains import ConversationalRetrievalChain
+from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain.chains.conversational_retrieval.prompts import CONDENSE_QUESTION_PROMPT
 from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import AzureChatOpenAI
@@ -15,6 +18,8 @@ from langchain.prompts.prompt import PromptTemplate
 from langchain.retrievers import ContextualCompressionRetriever, MultiQueryRetriever
 from langchain.retrievers.document_compressors import CohereRerank, LLMChainFilter
 from langchain.retrievers.weaviate_hybrid_search import WeaviateHybridSearchRetriever
+from langchain_core.documents import Document
+from langchain_core.prompts import format_document
 
 from ask_astro.chains.custom_llm_filter_prompt import custom_llm_chain_filter_prompt_template
 from ask_astro.chains.custom_llm_output_lines_parser import CustomLineListOutputParser
@@ -81,7 +86,9 @@ multi_query_retriever = MultiQueryRetriever.from_llm(
 multi_query_retriever.llm_chain.output_parser = CustomLineListOutputParser(max_lines=2)
 
 # Rerank
-cohere_reranker_compressor = CohereRerank(user_agent="langchain", top_n=CohereConfig.rerank_top_n)
+cohere_reranker_compressor = CohereRerank(
+    model="rerank-english-v3.0", user_agent="langchain", top_n=CohereConfig.rerank_top_n
+)
 reranker_retriever = ContextualCompressionRetriever(
     base_compressor=cohere_reranker_compressor, base_retriever=multi_query_retriever
 )
@@ -99,6 +106,45 @@ llm_chain_filter_compression_retriever = ContextualCompressionRetriever(
     base_compressor=llm_chain_filter, base_retriever=reranker_retriever
 )
 
+
+# customize how the documents are combined to the final LLM call, overriding LangChain's default
+def custom_combine_docs_override(self, docs: list[Document], **kwargs: Any) -> dict:
+    # same function as the one in stuff doc chain, just changing this one line for doc number
+    doc_strings = [f"Document {i+1}:\n" + format_document(doc, self.document_prompt) for i, doc in enumerate(docs)]
+
+    inputs = {k: v for k, v in kwargs.items() if k in self.llm_chain.prompt.input_variables}
+    inputs[self.document_variable_name] = self.document_separator.join(doc_strings)
+    return inputs
+
+
+custom_document_combine_prompt = PromptTemplate(
+    input_variables=["page_content", "docLink"],
+    template="Document Link: {docLink}\n{page_content}\n===End of Document===\n",
+)
+StuffDocumentsChain._get_inputs = custom_combine_docs_override
+
+custom_stuff_docs_chain_webapp: StuffDocumentsChain = load_qa_chain(
+    AzureChatOpenAI(
+        **AzureOpenAIParams.us_east2,
+        deployment_name=CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_DEPLOYMENT_NAME,
+        temperature=CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_TEMPERATURE,
+    ),
+    chain_type="stuff",
+    prompt=ChatPromptTemplate.from_messages(webapp_messages),
+)
+custom_stuff_docs_chain_webapp.document_prompt = custom_document_combine_prompt
+
+custom_stuff_docs_chain_slack: StuffDocumentsChain = load_qa_chain(
+    AzureChatOpenAI(
+        **AzureOpenAIParams.us_east2,
+        deployment_name=CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_DEPLOYMENT_NAME,
+        temperature=CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_TEMPERATURE,
+    ),
+    chain_type="stuff",
+    prompt=ChatPromptTemplate.from_messages(slack_messages),
+)
+custom_stuff_docs_chain_slack.document_prompt = custom_document_combine_prompt
+
 # Set up a ConversationalRetrievalChain to generate answers using the retriever.
 webapp_answer_question_chain = ConversationalRetrievalChain(
     retriever=llm_chain_filter_compression_retriever,
@@ -111,15 +157,7 @@ webapp_answer_question_chain = ConversationalRetrievalChain(
         ),
         prompt=CONDENSE_QUESTION_PROMPT,
     ),
-    combine_docs_chain=load_qa_chain(
-        AzureChatOpenAI(
-            **AzureOpenAIParams.us_east2,
-            deployment_name=CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_DEPLOYMENT_NAME,
-            temperature=CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_TEMPERATURE,
-        ),
-        chain_type="stuff",
-        prompt=ChatPromptTemplate.from_messages(webapp_messages),
-    ),
+    combine_docs_chain=custom_stuff_docs_chain_webapp,
 )
 
 slack_answer_question_chain = ConversationalRetrievalChain(
@@ -133,13 +171,5 @@ slack_answer_question_chain = ConversationalRetrievalChain(
         ),
         prompt=CONDENSE_QUESTION_PROMPT,
     ),
-    combine_docs_chain=load_qa_chain(
-        AzureChatOpenAI(
-            **AzureOpenAIParams.us_east2,
-            deployment_name=CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_DEPLOYMENT_NAME,
-            temperature=CONVERSATIONAL_RETRIEVAL_LOAD_QA_CHAIN_TEMPERATURE,
-        ),
-        chain_type="stuff",
-        prompt=ChatPromptTemplate.from_messages(slack_messages),
-    ),
+    combine_docs_chain=custom_stuff_docs_chain_slack,
 )

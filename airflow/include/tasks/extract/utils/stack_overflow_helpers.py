@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from textwrap import dedent
 
@@ -23,16 +24,17 @@ answer_template = dedent(
 )
 
 comment_template = "\n{user} on {date} [Score: {score}]: {body}\n"
+STACK_APP_API_KEY = os.environ.get("STACK_APP_API_KEY")
 
 
 def fetch_questions_through_stack_api(
-    tag: str, stackoverflow_cutoff_date: str, *, page_size: int = 100, max_pages: int = 10000000
+    tag: str, stackoverflow_cutoff_date: str, *, page_size: int = 100, max_pages: int = 1000
 ) -> dict:
     """Fetch data from stackoverflow site through stack api"""
     fromdate = datetime.strptime(stackoverflow_cutoff_date, "%Y-%m-%d")
     first_question_id, first_question_creation_date = fetch_first_question_after_fromdate(tag=tag, fromdate=fromdate)
 
-    stack_api = StackAPI(name="stackoverflow", page_size=page_size, max_pages=max_pages)
+    stack_api = StackAPI(name="stackoverflow", page_size=page_size, max_pages=max_pages, key=STACK_APP_API_KEY)
 
     # https://api.stackexchange.com/docs/read-filter#filters=!-(5KXGCFLp3w9.-7QsAKFqaf5yFPl**9q*_hsHzYGjJGQ6BxnCMvDYijFE&filter=default&run=true
     filter_ = "!-(5KXGCFLp3w9.-7QsAKFqaf5yFPl**9q*_hsHzYGjJGQ6BxnCMvDYijFE"
