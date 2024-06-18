@@ -29,7 +29,7 @@ Ask Astro uses a set of Airflow DAGs that: ingest data from a source via an API 
 - [Astronomer docs](https://docs.astronomer.io)
 - [Astronomer blog](https://www.astronomer.io/blog/)
 - [Astronomer Registry](https://registry.astronomer.io)
-- [Apache Airflow GitHub](https://github.com/apache/airflow) issues and pull requests
+- [Apache Airflow GitHub](https://github.com/apache/airflow) pull requests
 - [OpenLineage GitHub](https://github.com/OpenLineage/OpenLineage)
 - [OpenLineage GitHub docs](https://github.com/OpenLineage/docs)
 - [StackOverflow's Stack Exchange Data Dump](https://archive.org/details/stackexchange)
@@ -47,12 +47,14 @@ See the [Ingest README](https://github.com/astronomer/ask-astro/tree/main/airflo
 
 Ask Astro uses LangChain's `ConversationalRetrievalChain` to generate a response. This chain does the following:
 
-1. Use an LLM to generate 3 variations of the original user prompt with different wording. This is to ensure we retrieve as much helpful context as possible from our vector database
-2. Embed each of the prompts with OpenAI's embeddings model
-3. Retrieve documents from Weaviate using the embedded vectors from each prompt
-4. Combine the original user prompt with relevant sources found from the vector database, and make an LLM call to generate an answer
+1. Use an LLM to generate 2 variations of the original user prompt with different wording. This is to ensure we retrieve as much helpful context as possible from our vector database
+2. Embed each of 2 reworded prompts + original user prompt with OpenAI's embeddings model
+3. Retrieve up to 100 documents for each prompt from Weaviate using the embedded vectors from each prompt
+4. Using Cohere Reranker to rerank the combined up to 300 candidate pool of documents to only 8 most relevant documents
+5. Use a fast and cheapt LLM (`gpt-3.5-turbo`) to check relevancy of each of the 8 documents.
+6. Combine the original user prompt with most relevant sources found, and make a final LLM call to generate an answer
 
-This generally works well. For prompt rewording, we use `gpt-3.5-turbo`, which runs very quickly and inexpensively. For the actual user-facing answer generation, we use `gpt-4` to ensure high quality answers.
+This generally works well. For prompt rewording, we use `gpt-3.5-turbo`, which runs very quickly and inexpensively. For the actual user-facing answer generation, we use `gpt-4o` to ensure high quality answers.
 
 
 ## Feedback Loops

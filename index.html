@@ -347,7 +347,7 @@ document.write(`
 <li><p><a class="reference external" href="https://docs.astronomer.io">Astronomer docs</a></p></li>
 <li><p><a class="reference external" href="https://www.astronomer.io/blog/">Astronomer blog</a></p></li>
 <li><p><a class="reference external" href="https://registry.astronomer.io">Astronomer Registry</a></p></li>
-<li><p><a class="reference external" href="https://github.com/apache/airflow">Apache Airflow GitHub</a> issues and pull requests</p></li>
+<li><p><a class="reference external" href="https://github.com/apache/airflow">Apache Airflow GitHub</a> pull requests</p></li>
 <li><p><a class="reference external" href="https://github.com/OpenLineage/OpenLineage">OpenLineage GitHub</a></p></li>
 <li><p><a class="reference external" href="https://github.com/OpenLineage/docs">OpenLineage GitHub docs</a></p></li>
 <li><p><a class="reference external" href="https://archive.org/details/stackexchange">StackOverflow’s Stack Exchange Data Dump</a></p></li>
@@ -363,12 +363,14 @@ document.write(`
 </p>
 <p>Ask Astro uses LangChain’s <code class="docutils literal notranslate"><span class="pre">ConversationalRetrievalChain</span></code> to generate a response. This chain does the following:</p>
 <ol class="arabic simple">
-<li><p>Use an LLM to generate 3 variations of the original user prompt with different wording. This is to ensure we retrieve as much helpful context as possible from our vector database</p></li>
-<li><p>Embed each of the prompts with OpenAI’s embeddings model</p></li>
-<li><p>Retrieve documents from Weaviate using the embedded vectors from each prompt</p></li>
-<li><p>Combine the original user prompt with relevant sources found from the vector database, and make an LLM call to generate an answer</p></li>
+<li><p>Use an LLM to generate 2 variations of the original user prompt with different wording. This is to ensure we retrieve as much helpful context as possible from our vector database</p></li>
+<li><p>Embed each of 2 reworded prompts + original user prompt with OpenAI’s embeddings model</p></li>
+<li><p>Retrieve up to 100 documents for each prompt from Weaviate using the embedded vectors from each prompt</p></li>
+<li><p>Using Cohere Reranker to rerank the combined up to 300 candidate pool of documents to only 8 most relevant documents</p></li>
+<li><p>Use a fast and cheapt LLM (<code class="docutils literal notranslate"><span class="pre">gpt-3.5-turbo</span></code>) to check relevancy of each of the 8 documents.</p></li>
+<li><p>Combine the original user prompt with most relevant sources found, and make a final LLM call to generate an answer</p></li>
 </ol>
-<p>This generally works well. For prompt rewording, we use <code class="docutils literal notranslate"><span class="pre">gpt-3.5-turbo</span></code>, which runs very quickly and inexpensively. For the actual user-facing answer generation, we use <code class="docutils literal notranslate"><span class="pre">gpt-4</span></code> to ensure high quality answers.</p>
+<p>This generally works well. For prompt rewording, we use <code class="docutils literal notranslate"><span class="pre">gpt-3.5-turbo</span></code>, which runs very quickly and inexpensively. For the actual user-facing answer generation, we use <code class="docutils literal notranslate"><span class="pre">gpt-4o</span></code> to ensure high quality answers.</p>
 </section>
 <section id="feedback-loops">
 <h1>Feedback Loops<a class="headerlink" href="#feedback-loops" title="Permalink to this heading">#</a></h1>
