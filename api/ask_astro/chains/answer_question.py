@@ -110,7 +110,11 @@ llm_chain_filter_compression_retriever = ContextualCompressionRetriever(
 # customize how the documents are combined to the final LLM call, overriding LangChain's default
 def custom_combine_docs_override(self, docs: list[Document], **kwargs: Any) -> dict:
     # same function as the one in stuff doc chain, just changing this one line for doc number
-    doc_strings = [f"Document {i+1}:\n" + format_document(doc, self.document_prompt) for i, doc in enumerate(docs)]
+    doc_strings = [
+        f"Document {i+1}:\n" + format_document(doc, self.document_prompt)
+        for i, doc in enumerate(docs)
+        if doc.metadata["relevance_score"] > 0.6
+    ]
 
     inputs = {k: v for k, v in kwargs.items() if k in self.llm_chain.prompt.input_variables}
     inputs[self.document_variable_name] = self.document_separator.join(doc_strings)
