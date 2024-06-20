@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from langchain import LLMChain
+from langchain.callbacks.manager import Callbacks
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain.chains.conversational_retrieval.prompts import CONDENSE_QUESTION_PROMPT
@@ -85,10 +87,38 @@ multi_query_retriever = MultiQueryRetriever.from_llm(
 # Override the default LineListOutputParser from LangChain
 multi_query_retriever.llm_chain.output_parser = CustomLineListOutputParser(max_lines=2)
 
+
+def compress_documents(
+    self,
+    documents: Sequence[Document],
+    query: str,
+    callbacks: Callbacks | None = None,
+    min_relevance_score: float = 0.6,
+) -> Sequence[Document]:
+    """
+    Same function as the one in Langchain, overriding to add relevance score thresholding
+    """
+    if len(documents) == 0:  # to avoid empty api call
+        return []
+    doc_list = list(documents)
+    _docs = [d.page_content for d in doc_list]
+    results = self.client.rerank(model=self.model, query=query, documents=_docs, top_n=self.top_n)
+    final_results = []
+    for r in results:
+        doc = doc_list[r.index]
+        if r.relevance_score < min_relevance_score:
+            continue
+        doc.metadata["relevance_score"] = r.relevance_score
+        final_results.append(doc)
+    return final_results
+
+
 # Rerank
+CohereRerank.compress_documents = compress_documents
 cohere_reranker_compressor = CohereRerank(
     model="rerank-english-v3.0", user_agent="langchain", top_n=CohereConfig.rerank_top_n
 )
+
 reranker_retriever = ContextualCompressionRetriever(
     base_compressor=cohere_reranker_compressor, base_retriever=multi_query_retriever
 )
@@ -110,11 +140,7 @@ llm_chain_filter_compression_retriever = ContextualCompressionRetriever(
 # customize how the documents are combined to the final LLM call, overriding LangChain's default
 def custom_combine_docs_override(self, docs: list[Document], **kwargs: Any) -> dict:
     # same function as the one in stuff doc chain, just changing this one line for doc number
-    doc_strings = [
-        f"Document {i+1}:\n" + format_document(doc, self.document_prompt)
-        for i, doc in enumerate(docs)
-        if doc.metadata["relevance_score"] > 0.6
-    ]
+    doc_strings = [f"Document {i+1}:\n" + format_document(doc, self.document_prompt) for i, doc in enumerate(docs)]
 
     inputs = {k: v for k, v in kwargs.items() if k in self.llm_chain.prompt.input_variables}
     inputs[self.document_variable_name] = self.document_separator.join(doc_strings)
