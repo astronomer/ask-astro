@@ -93,7 +93,6 @@ def compress_documents(
     documents: Sequence[Document],
     query: str,
     callbacks: Callbacks | None = None,
-    min_relevance_score: float = 0.6,
 ) -> Sequence[Document]:
     """
     Same function as the one in Langchain, overriding to add relevance score thresholding
@@ -106,7 +105,7 @@ def compress_documents(
     final_results = []
     for r in results:
         doc = doc_list[r.index]
-        if r.relevance_score < min_relevance_score:
+        if r.relevance_score < CohereConfig.min_relevance_score:
             continue
         doc.metadata["relevance_score"] = r.relevance_score
         final_results.append(doc)
@@ -140,7 +139,10 @@ llm_chain_filter_compression_retriever = ContextualCompressionRetriever(
 # customize how the documents are combined to the final LLM call, overriding LangChain's default
 def custom_combine_docs_override(self, docs: list[Document], **kwargs: Any) -> dict:
     # same function as the one in stuff doc chain, just changing this one line for doc number
-    doc_strings = [f"Document {i+1}:\n" + format_document(doc, self.document_prompt) for i, doc in enumerate(docs)]
+    doc_strings = [
+        f"===Beginning of Document===\nDocument {i+1}:\n" + format_document(doc, self.document_prompt)
+        for i, doc in enumerate(docs)
+    ]
 
     inputs = {k: v for k, v in kwargs.items() if k in self.llm_chain.prompt.input_variables}
     inputs[self.document_variable_name] = self.document_separator.join(doc_strings)
