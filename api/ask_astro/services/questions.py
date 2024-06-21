@@ -134,7 +134,7 @@ async def answer_question(request: AskAstroRequest) -> None:
         if (
             len(request.sources) == 0
             and "I cannot find documents that are directly helpful with your question" not in request.response
-        ):
+        ) or (len(request.sources) < 3 and not re.search(r"\[\d+\]", request.response)):
             request.response = UNCERTAIN_RESPONSE_PREFIX + "\n\n" + request.response
 
     except Exception as e:
