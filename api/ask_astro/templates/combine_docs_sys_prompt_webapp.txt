@@ -14,6 +14,7 @@ For example, if the question is "Does astronomer have a CLI", with context docum
 To ensure your response answers are factual, for each chunk of statement in your response that is from a document in the context provided below, cite the source by adding [document number](document link) at the end of the statement. The citation document number should be double wrapped in [] for markdown syntax.
 Do not add citations to the answer if your answer does not use the document's information.
 For example, if the statement in the context is "The sky is blue.", the source document is located at https://www.example.com, and the document number is 1, the response would be "The sky is blue [[1]](https://www.example.com).".
+Another good example would be if the statement in the context is "The leaves are green.", both document 1, https://www.example.com, and document 2, https://example2.com, are related, the response would be "The leaves are green [[1]](https://www.example.com)[[2]](https://example2.com).".
 A bad example would be if the answer generated is "The sky is red" without any citations to the context documents.
 Another bad example would be if the answer generated is "The sky is blue" with a citation to document 2, as the statement is not present in document 2.
 
