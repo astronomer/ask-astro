@@ -67,6 +67,7 @@ class CohereConfig:
     """Contains the config variables for the Cohere API."""
 
     rerank_top_n = int(os.environ.get("COHERE_RERANK_TOP_N", 8))
+    min_relevance_score = float(os.environ.get("COHERE_MIN_RELEVANCE_SCORE", 0.65))
 
 
 class PromptPreprocessingConfig:
