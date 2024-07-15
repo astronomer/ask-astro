@@ -6,23 +6,23 @@
 
 <br />
 
-# ask-astro Airflow
+# ask-astro Apache Airflow®
 
-Ask Astro is an open-source reference implementation of [Andreessen Horowitz's LLM Application Architecture](https://a16z.com/emerging-architectures-for-llm-applications/) built by [Astronomer](https://astronomer.io). It provides an end-to-end example of a Q&A LLM application used to answer questions about Apache Airflow and Astronomer.
+Ask Astro is an open-source reference implementation of [Andreessen Horowitz's LLM Application Architecture](https://a16z.com/emerging-architectures-for-llm-applications/) built by [Astronomer](https://astronomer.io). It provides an end-to-end example of a Q&A LLM application used to answer questions about Apache Airflow® and Astronomer.
 
 ## Ingest and Embedding
 In order to make the responses as factual and accurate as possible, Ask Astro uses [Retrieval Augmented Generation (RAG)](https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html). Use the following setup procedures to ingest and embed documents for RAG with Apache Airflow and Astro.
 
 Ask Astro uses a set of Airflow DAGs that ingests data from a source via an API or Python library, preprocesses and splits the data into smaller chunks, embeds those chunks, and writes the embeddings to Weaviate. Ask Astro retrieves data from the following sources:
 
-- [Apache Airflow docs](https://airflow.apache.org/docs/)
+- [Apache Airflow® docs](https://airflow.apache.org/docs/)
 - [Astronomer docs](https://docs.astronomer.io)
 - [Astronomer blog](https://www.astronomer.io/blog/)
 - [Astronomer Registry](https://registry.astronomer.io)
-- [Apache Airflow GitHub](https://github.com/apache/airflow) issues and pull requests
+- [Apache Airflow® GitHub](https://github.com/apache/airflow) issues and pull requests
 - [OpenLineage GitHub](https://github.com/OpenLineage/OpenLineage)
 - [OpenLineage GitHub docs](https://github.com/OpenLineage/docs)
-- Apache Airflow Slack's [#troubleshooting channel](https://app.slack.com/client/TCQ18L22Z/CCQ7EGB1P)
+- Apache Airflow® Slack's [#troubleshooting channel](https://app.slack.com/client/TCQ18L22Z/CCQ7EGB1P)
 - [StackOverflow's Stack Exchange Data Dump](https://archive.org/details/stackexchange)
 - [astro-cli](https://docs.astronomer.io/astro/cli/overview)
 

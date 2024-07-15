@@ -40,7 +40,7 @@ $ poetry install
 
 ![docs.generate-tasks-help-screenshot](_static/images/task_help_message/docs-generate-tasks-help-screenshot.svg)
 
-### Airflow DAGs Tasks
+### Apache Airflow® DAGs Tasks
 
 - Run ask-astro airflow
 
