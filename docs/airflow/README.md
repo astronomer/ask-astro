@@ -8,7 +8,7 @@
 
 # ask-astro Apache Airflow®
 
-Ask Astro is an open-source reference implementation of [Andreessen Horowitz's LLM Application Architecture](https://a16z.com/emerging-architectures-for-llm-applications/) built by [Astronomer](https://astronomer.io). It provides an end-to-end example of a Q&A LLM application used to answer questions about Apache Airflow® and Astronomer.
+Ask Astro is an open-source reference implementation of [Andreessen Horowitz's LLM Application Architecture](https://a16z.com/emerging-architectures-for-llm-applications/) built by [Astronomer](https://astronomer.io). It provides an end-to-end example of a Q&A LLM application used to answer questions about [Apache Airflow®](https://airflow.apache.org/) and Astronomer.
 
 ## Ingest and Embedding
 In order to make the responses as factual and accurate as possible, Ask Astro uses [Retrieval Augmented Generation (RAG)](https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html). Use the following setup procedures to ingest and embed documents for RAG with Apache Airflow and Astro.
