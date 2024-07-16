@@ -4,7 +4,7 @@
 
 <br />
 
-Ask Astro is an open-source reference implementation of [Andreessen Horowitz's LLM Application Architecture](https://a16z.com/emerging-architectures-for-llm-applications/) built by [Astronomer](https://astronomer.io). It provides an end-to-end example of a Q&A LLM application used to answer questions about Apache Airflow and Astronomer, including:
+Ask Astro is an open-source reference implementation of [Andreessen Horowitz's LLM Application Architecture](https://a16z.com/emerging-architectures-for-llm-applications/) built by [Astronomer](https://astronomer.io). It provides an end-to-end example of a Q&A LLM application used to answer questions about [Apache Airflow®](https://airflow.apache.org/) and Astronomer, including:
 
 - Airflow DAGs for data ingestion from various sources to a vector database
 - An API containing the business logic of taking a user's prompt and ultimately generating a response
@@ -25,11 +25,11 @@ In order to make the responses as factual and accurate as possible, it's general
 
 Ask Astro uses a set of Airflow DAGs that: ingest data from a source via an API or Python library, preprocesses and splits the data into smaller chunks, embeds those chunks, and writes the embeddings to Weaviate. As of today, Ask Astro retrieves data from the following sources:
 
-- [Apache Airflow docs](https://airflow.apache.org/docs/)
+- [Apache Airflow® docs](https://airflow.apache.org/docs/)
 - [Astronomer docs](https://docs.astronomer.io)
 - [Astronomer blog](https://www.astronomer.io/blog/)
 - [Astronomer Registry](https://registry.astronomer.io)
-- [Apache Airflow GitHub](https://github.com/apache/airflow) pull requests
+- [Apache Airflow® GitHub](https://github.com/apache/airflow) pull requests
 - [OpenLineage GitHub](https://github.com/OpenLineage/OpenLineage)
 - [OpenLineage GitHub docs](https://github.com/OpenLineage/docs)
 - [StackOverflow's Stack Exchange Data Dump](https://archive.org/details/stackexchange)
@@ -99,7 +99,7 @@ python3 scripts/local_dev.py run-airflow    # To run Airflow
 
 - [Run ask-astro UI](./ui/README.md)
 
-**Apache Airflow**
+**Apache Airflow®**
 
 - [Run airflow](./airflow/README.md)
 
@@ -113,8 +113,8 @@ The following sections describe how to deploy the various components of Ask Astr
 ### User Interface
 - [UI](./ui/README.md)
 
-### Apache Airflow
-- [Airflow](./airflow/README.md)
+### Apache Airflow®
+- [Apache Airflow®](./airflow/README.md)
 
 ## Slackbot
 - [Slackbot](./api/setup_slack_bot.md)

@@ -15,11 +15,11 @@
   let prompt = "";
   let showDescription = false;
 
-  let placeholderText = "Ask an Airflow or Astronomer question...";
+  let placeholderText = "Ask an Apache Airflow® or Astronomer question...";
   $: {
     placeholderText = !!$page.params?.request_id
       ? "Continue this conversation with another question..."
-      : "Ask an Airflow or Astronomer question...";
+      : "Ask an Apache Airflow® or Astronomer question...";
   }
 </script>
 
@@ -70,7 +70,7 @@
             target="_blank"
             >Andreessen Horowitz's LLM Application Architecture</a
           >. It's meant to showcase how to build an LLM application on top of
-          Apache Airflow. You can read more about the project and find the
+          Apache Airflow®. You can read more about the project and find the
           source code
           <a href="https://github.com/astronomer/ask-astro"> on GitHub</a>. Note
           that anything you ask may be publicly visible and should not include

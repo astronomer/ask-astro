@@ -6,12 +6,12 @@ This document outlines the monitoring and observability practices implemented fo
 
 ## Infrastructure Monitoring
 
-### Airflow DAGs
+### Apache Airflow® DAGs
 
 - **Monitoring DAG**: This [DAG](../airflow/dags/monitor/monitor.py) runs every 5 minutes to check the health of all infrastructure components.
 - **Ingestion DAG Monitoring**: This [DAG](../airflow/dags/monitor/monitor_ingestion_dags.py) monitors the health of ingestion processes.
 
-- ![Airflow DAGs](./_static/images/monitoring/airflow_dags.png)
+- ![Apache Airflow® DAGs](./_static/images/monitoring/airflow_dags.png)
 
 ### Alerting
 
@@ -31,7 +31,7 @@ This document outlines the monitoring and observability practices implemented fo
 4. **UI Monitoring**: Regular checks of the UI for a 200 response status.
    - UI Link: [https://ask.astronomer.io/](https://ask.astronomer.io/)
 
-5. **Airflow Data Ingestion and Feedback DAGs**: Monitors for completeness and errors.
+5. **Apache Airflow® Data Ingestion and Feedback DAGs**: Monitors for completeness and errors.
 
 6. **Open AI Integration**: Ensures the availability and response quality of Open AI services.
 

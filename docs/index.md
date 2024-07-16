@@ -28,7 +28,7 @@ api/setup_slack_bot.md
 
 ```{toctree}
 :hidden:
-:caption: 💻 Develop Airflow DAGs
+:caption: 💻 Develop Apache Airflow® DAGs
 
 airflow/README.md
 ```
