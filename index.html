@@ -146,9 +146,9 @@
 <li class="toctree-l1"><a class="reference internal" href="api/google_firestore.html">Setting Up Firestore for the Ask Astro Application on Google Cloud Run</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/setup_slack_bot.html">Create an ask-astro Slack bot</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">💻 Develop Airflow DAGs</span></p>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">💻 Develop Apache Airflow® DAGs</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="airflow/README.html">ask-astro Airflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="airflow/README.html">ask-astro Apache Airflow®</a></li>
 </ul>
 
     </div>
@@ -303,7 +303,7 @@ document.write(`
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment">Deployment</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backend-api">Backend API</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#user-interface">User Interface</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apache-airflow">Apache Airflow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apache-airflow">Apache Airflow®</a></li>
 </ul>
 </li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#slackbot">Slackbot</a><ul class="visible nav section-nav flex-column">
@@ -325,7 +325,7 @@ document.write(`
   <img src="_static/logo.svg" />
 </p>
 <br />
-<p>Ask Astro is an open-source reference implementation of <a class="reference external" href="https://a16z.com/emerging-architectures-for-llm-applications/">Andreessen Horowitz’s LLM Application Architecture</a> built by <a class="reference external" href="https://astronomer.io">Astronomer</a>. It provides an end-to-end example of a Q&amp;A LLM application used to answer questions about Apache Airflow and Astronomer, including:</p>
+<p>Ask Astro is an open-source reference implementation of <a class="reference external" href="https://a16z.com/emerging-architectures-for-llm-applications/">Andreessen Horowitz’s LLM Application Architecture</a> built by <a class="reference external" href="https://astronomer.io">Astronomer</a>. It provides an end-to-end example of a Q&amp;A LLM application used to answer questions about <a class="reference external" href="https://airflow.apache.org/">Apache Airflow®</a> and Astronomer, including:</p>
 <ul class="simple">
 <li><p>Airflow DAGs for data ingestion from various sources to a vector database</p></li>
 <li><p>An API containing the business logic of taking a user’s prompt and ultimately generating a response</p></li>
@@ -343,11 +343,11 @@ document.write(`
 <p>In order to make the responses as factual and accurate as possible, it’s generally best practice to use <a class="reference external" href="https://proceedings.neurips.cc/paper/2020/hash/6b493230205f780e1bc26945df7481e5-Abstract.html">Retrieval Augmented Generation (RAG)</a>. However, in order for RAG to be effective, a vector database needs to be populated with the most up-to-date and relevant information.</p>
 <p>Ask Astro uses a set of Airflow DAGs that: ingest data from a source via an API or Python library, preprocesses and splits the data into smaller chunks, embeds those chunks, and writes the embeddings to Weaviate. As of today, Ask Astro retrieves data from the following sources:</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://airflow.apache.org/docs/">Apache Airflow docs</a></p></li>
+<li><p><a class="reference external" href="https://airflow.apache.org/docs/">Apache Airflow® docs</a></p></li>
 <li><p><a class="reference external" href="https://docs.astronomer.io">Astronomer docs</a></p></li>
 <li><p><a class="reference external" href="https://www.astronomer.io/blog/">Astronomer blog</a></p></li>
 <li><p><a class="reference external" href="https://registry.astronomer.io">Astronomer Registry</a></p></li>
-<li><p><a class="reference external" href="https://github.com/apache/airflow">Apache Airflow GitHub</a> pull requests</p></li>
+<li><p><a class="reference external" href="https://github.com/apache/airflow">Apache Airflow® GitHub</a> pull requests</p></li>
 <li><p><a class="reference external" href="https://github.com/OpenLineage/OpenLineage">OpenLineage GitHub</a></p></li>
 <li><p><a class="reference external" href="https://github.com/OpenLineage/docs">OpenLineage GitHub docs</a></p></li>
 <li><p><a class="reference external" href="https://archive.org/details/stackexchange">StackOverflow’s Stack Exchange Data Dump</a></p></li>
@@ -412,7 +412,7 @@ python3<span class="w"> </span>scripts/local_dev.py<span class="w"> </span>run-a
 <ul class="simple">
 <li><p><a class="reference internal" href="ui/README.html"><span class="std std-doc">Run ask-astro UI</span></a></p></li>
 </ul>
-<p><strong>Apache Airflow</strong></p>
+<p><strong>Apache Airflow®</strong></p>
 <ul class="simple">
 <li><p><a class="reference internal" href="airflow/README.html"><span class="std std-doc">Run airflow</span></a></p></li>
 </ul>
@@ -434,9 +434,9 @@ python3<span class="w"> </span>scripts/local_dev.py<span class="w"> </span>run-a
 </ul>
 </section>
 <section id="apache-airflow">
-<h2>Apache Airflow<a class="headerlink" href="#apache-airflow" title="Permalink to this heading">#</a></h2>
+<h2>Apache Airflow®<a class="headerlink" href="#apache-airflow" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="airflow/README.html"><span class="std std-doc">Airflow</span></a></p></li>
+<li><p><a class="reference internal" href="airflow/README.html"><span class="std std-doc">Apache Airflow®</span></a></p></li>
 </ul>
 </section>
 </section>
@@ -498,7 +498,7 @@ python3<span class="w"> </span>scripts/local_dev.py<span class="w"> </span>run-a
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#deployment">Deployment</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#backend-api">Backend API</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#user-interface">User Interface</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apache-airflow">Apache Airflow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apache-airflow">Apache Airflow®</a></li>
 </ul>
 </li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#slackbot">Slackbot</a><ul class="visible nav section-nav flex-column">
