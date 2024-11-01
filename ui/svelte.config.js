@@ -6,6 +6,11 @@ const config = {
   preprocess: [vitePreprocess({})],
   kit: {
     adapter: adapter(),
+    csp: {
+      directives: {
+        'script-src': ['self', 'https://www.astronomer.io'],
+      },
+    }
   },
 };
 

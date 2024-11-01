@@ -23,21 +23,6 @@
   }
 </script>
 
-<svelte:head>
-  <link
-    rel="preload"
-    href="/fonts/Inter-VariableFont_slnt,wght.ttf"
-    as="font"
-    crossorigin="anonymous"
-  />
-  <link
-    rel="preload"
-    href="/fonts/IntelOneMono-Light.ttf"
-    as="font"
-    crossorigin="anonymous"
-  />
-</svelte:head>
-
 <div class="app">
   <main>
     <section class="pb-8 pt-12">
@@ -85,37 +70,37 @@
       {/if}
 
       {#if !$page.data.publicServiceAnnouncement}
-      <form
-        method="post"
-        action="/?/submitPrompt"
-        use:enhance={() => {
-          if (isSubmittingPrompt) return;
+        <form
+          method="post"
+          action="/?/submitPrompt"
+          use:enhance={() => {
+            if (isSubmittingPrompt) return;
 
-          isSubmittingPrompt = true;
-          return async ({ result }) => {
-            isSubmittingPrompt = false;
+            isSubmittingPrompt = true;
+            return async ({ result }) => {
+              isSubmittingPrompt = false;
 
-            prompt = "";
-            await applyAction(result);
-          };
-        }}
-      >
-        <div class="flex w-full gap-2">
-          <input
-            placeholder={placeholderText}
-            name="prompt"
-            class="search-input flex-auto"
-            bind:value={prompt}
-          />
-          {#if includeCurrentRequest}
+              prompt = "";
+              await applyAction(result);
+            };
+          }}
+        >
+          <div class="flex w-full gap-2">
             <input
-              type="hidden"
-              name="from_request_uuid"
-              value={$page.params.request_id}
+              placeholder={placeholderText}
+              name="prompt"
+              class="search-input flex-auto"
+              bind:value={prompt}
             />
-          {/if}
-        </div>
-      </form>
+            {#if includeCurrentRequest}
+              <input
+                type="hidden"
+                name="from_request_uuid"
+                value={$page.params.request_id}
+              />
+            {/if}
+          </div>
+        </form>
       {/if}
     </section>
     <slot />
