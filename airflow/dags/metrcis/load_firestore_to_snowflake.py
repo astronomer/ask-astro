@@ -6,11 +6,13 @@ to snowflake.
 import os
 import time
 from datetime import date, datetime, timedelta
+from uuid import UUID
 
 import snowflake.connector
 from google.cloud import firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
 from include.utils.slack import send_failure_notification
+from langchain.schema import BaseMessage
 
 from airflow.decorators import dag, task
 
@@ -38,7 +40,9 @@ snowflake.connector.paramstyle = "qmark"
 )
 def load_firestore_to_snowflake():
     @task()
-    def load_request_data_from_firestore() -> list[tuple[str, int, bool, int]]:
+    def load_request_data_from_firestore() -> (
+        list[tuple[UUID, int | None, str, int, str | None, str, str | None, list[BaseMessage]]]
+    ):
         firestore_client = firestore.Client(project="ask-astro")
 
         requests_col = firestore_client.collection(FIRESTORE_REQUESTS_COLLECTION)
@@ -54,7 +58,7 @@ def load_firestore_to_snowflake():
             .stream()
         )
 
-        rows: list[tuple[str, int | None, bool, datetime]] = []
+        rows: list[tuple[UUID, int | None, str, int, str | None, str, str | None, list[BaseMessage]]] = []
         for doc in docs:
             doc_dict = doc.to_dict()
             uuid = doc_dict["uuid"]
@@ -62,7 +66,10 @@ def load_firestore_to_snowflake():
             status = doc_dict.get("status") == "complete"
             sent_at = datetime.fromtimestamp(doc_dict.get("sent_at"))
             client = doc_dict.get("client")
-            rows.append((uuid, score, status, sent_at, client))
+            prompt = doc_dict.get("prompt")
+            response = doc_dict.get("response")
+            messages = doc_dict.get("messages")
+            rows.append((uuid, score, status, sent_at, client, prompt, response, messages))
 
         return rows
 
@@ -78,9 +85,9 @@ def load_firestore_to_snowflake():
 
         insert_sql = f"""
             INSERT INTO
-                {METRICS_SNOWFLAKE_DB_DATABASE}.{METRICS_SNOWFLAKE_DB_SCHEMA}.request(uuid, score, success, created_at, client)
+                {METRICS_SNOWFLAKE_DB_DATABASE}.{METRICS_SNOWFLAKE_DB_SCHEMA}.request(uuid, score, success, created_at, client, prompt, response, messages)
             VALUES
-                (?, ?, ?, ?, ?)
+                (?, ?, ?, ?, ?, ?, ?, ?)
         """
         conn.cursor().executemany(insert_sql, rows)
 
