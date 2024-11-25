@@ -5,7 +5,7 @@ to snowflake.
 
 import os
 import time
-from datetime import date, datetime, timedelta
+from datetime import datetime
 
 import snowflake.connector
 from google.cloud import firestore
@@ -38,15 +38,17 @@ snowflake.connector.paramstyle = "qmark"
 )
 def load_firestore_to_snowflake():
     @task()
-    def load_request_data_from_firestore() -> list[tuple[str, int, bool, int]]:
+    def load_request_data_from_firestore(
+        data_interval_start, data_interval_end
+    ) -> list[tuple[str, str, str, str, bool, datetime, str]]:
         firestore_client = firestore.Client(project="ask-astro")
 
         requests_col = firestore_client.collection(FIRESTORE_REQUESTS_COLLECTION)
 
-        yesterday = date.today() - timedelta(days=1)
-        one_day_before_yesterday = date.today() - timedelta(days=2)
-        start_ts = time.mktime(one_day_before_yesterday.timetuple())
-        end_ts = time.mktime(yesterday.timetuple())
+        start_ts = time.mktime(data_interval_start.timetuple())
+        end_ts = time.mktime(data_interval_end.timetuple())
+
+        print(f"Processing documents from {data_interval_start} to {data_interval_end}")
 
         docs = (
             requests_col.where(filter=FieldFilter("sent_at", ">=", start_ts))
@@ -54,20 +56,24 @@ def load_firestore_to_snowflake():
             .stream()
         )
 
-        rows: list[tuple[str, int | None, bool, datetime]] = []
+        rows: list[tuple[str, str, str, str, bool, datetime, str]] = []
         for doc in docs:
             doc_dict = doc.to_dict()
             uuid = doc_dict["uuid"]
             score = doc_dict.get("score")
+            prompt = doc_dict.get("prompt")
+            response = doc_dict.get("response")
             status = doc_dict.get("status") == "complete"
             sent_at = datetime.fromtimestamp(doc_dict.get("sent_at"))
             client = doc_dict.get("client")
-            rows.append((uuid, score, status, sent_at, client))
+            rows.append((uuid, score, prompt, response, status, sent_at, client))
+
+        print(f"Found {len(rows)} rows")
 
         return rows
 
     @task()
-    def write_request_data_to_snowflake(rows: list[tuple[str, int, bool, int]]) -> None:
+    def write_request_data_to_snowflake(rows: list[tuple[str, str, str, str, bool, datetime, str]]) -> None:
         conn = snowflake.connector.connect(
             user=METRICS_SNOWFLAKE_DB_USER,
             password=METRICS_SNOWFLAKE_DB_PASSWORD,
@@ -77,10 +83,29 @@ def load_firestore_to_snowflake():
         )
 
         insert_sql = f"""
-            INSERT INTO
-                {METRICS_SNOWFLAKE_DB_DATABASE}.{METRICS_SNOWFLAKE_DB_SCHEMA}.request(uuid, score, success, created_at, client)
-            VALUES
-                (?, ?, ?, ?, ?)
+        MERGE INTO {METRICS_SNOWFLAKE_DB_DATABASE}.{METRICS_SNOWFLAKE_DB_SCHEMA}.request AS target
+        USING (
+            SELECT
+                ? AS uuid,
+                ? AS score,
+                ? AS prompt,
+                ? AS response,
+                ? AS success,
+                ? AS created_at,
+                ? AS client
+        ) AS source
+        ON target.uuid = source.uuid
+        WHEN MATCHED THEN
+            UPDATE SET
+                score = source.score,
+                prompt = source.prompt,
+                response = source.response,
+                success = source.success,
+                created_at = source.created_at,
+                client = source.client
+        WHEN NOT MATCHED THEN
+            INSERT (uuid, score, prompt, response, success, created_at, client)
+            VALUES (source.uuid, source.score, source.prompt, source.response, source.success, source.created_at, source.client);
         """
         conn.cursor().executemany(insert_sql, rows)
 
