@@ -21,8 +21,6 @@ def extract_airflow_docs(docs_base_url: str) -> list[pd.DataFrame]:
     exclude_docs = [
         "changelog.html",
         "commits.html",
-        "docs/apache-airflow/stable/release_notes.html",
-        "docs/stable/release_notes.html",
         "_api",
         "_modules",
         "installing-providers-from-sources.html",
