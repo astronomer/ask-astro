@@ -28,6 +28,9 @@ class QuestionAnsweringError(Exception):
     """Exception raised when an error occurs during question answering"""
 
 
+UNCERTAIN_RESPONSE_PREFIX = "I cannot find documents that are directly helpful with your question, but I provided my best guess below. Please use caution as the answer below is more likely to contain incorrect information and your should always verify the answers with Astronomer support at www.astronomer.io/contact"
+
+
 async def _update_firestore_request(request: AskAstroRequest) -> None:
     """
     Update the Firestore database with the given request.
@@ -123,11 +126,22 @@ async def answer_question(request: AskAstroRequest) -> None:
         request.status = "complete"
         request.response = result["answer"]
         request.response_received_at = int(time.time())
+        docs = result.get("source_documents", [])
         request.sources = [
             Source(name=doc.metadata.get("docLink"), snippet=doc.page_content)
-            for doc in result.get("source_documents", [])
+            for doc in docs
             if doc.metadata.get("docLink", "").startswith("https://")
         ]
+        # somewhat hacky way to ensure the prefix is in front every time, as sometimes LLM forgets
+        if "I cannot find documents that are directly helpful with your question" not in request.response and (
+            len(request.sources) == 0
+            or (
+                # get max relevance_score field of every doc in docs variable list
+                max([doc.metadata.get("relevance_score") for doc in docs]) < 0.8
+                and not re.search(r"\[\d+\]", request.response)
+            )
+        ):
+            request.response = UNCERTAIN_RESPONSE_PREFIX + "\n\n" + request.response
 
     except Exception as e:
         # If there's an error, mark the request as errored and add it to the database
